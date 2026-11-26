@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import type { Text } from '@glot/contract'
-import { TEXT_STATE_LABELS, TEXT_STATE_TONES } from '@glot/ui/constants'
 import GlotTextValue from '@glot/ui/components/GlotTextValue.vue'
 
 defineProps<{ text: Text }>()
 
 const emit = defineEmits<{ close: [] }>()
+const session = useNuxtApp().$auth.useSession()
+const { write, approve } = useRights()
 const details = ref<boolean>(false)
 </script>
 
@@ -54,36 +55,15 @@ const details = ref<boolean>(false)
       </dl>
     </header>
     <ul class="min-h-0 flex-1 overflow-auto px-2 py-2 md:px-3">
-      <li
+      <TextLanguage
         v-for="translation in text.translations"
         :key="translation.language"
-        class="grid grid-cols-[auto_1fr] gap-3 rounded-card px-2 py-3 md:px-3"
-      >
-        <span
-          :class="TEXT_STATE_TONES[translation.state]"
-          class="grid h-5 w-7 place-items-center rounded-md font-mono text-[10.5px] font-semibold"
-          >{{ translation.language }}</span
-        >
-        <div class="min-w-0">
-          <GlotTextValue
-            v-if="translation.value"
-            :value="translation.value"
-            class="block text-[14px] leading-snug [overflow-wrap:anywhere]"
-          />
-          <p v-else class="text-ink-3">No {{ languageName(translation.language) }} text yet.</p>
-          <p class="mt-1 text-xs text-ink-3">
-            {{ languageName(translation.language) }} · {{ TEXT_STATE_LABELS[translation.state] }}
-            <template v-if="translation.aiWritten"> · written by AI</template>
-          </p>
-          <p
-            v-for="failure in translation.failures"
-            :key="failure.code"
-            class="mt-1 text-xs text-bad"
-          >
-            {{ failure.message }}
-          </p>
-        </div>
-      </li>
+        :text="text"
+        :translation="translation"
+        :user-id="session.data?.user.id"
+        :can-write="write.includes(translation.language)"
+        :can-approve="approve.includes(translation.language)"
+      />
     </ul>
   </section>
 </template>
