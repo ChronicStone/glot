@@ -2,6 +2,7 @@ import { checkFailureSchema } from '@glot/checks/validators'
 import { draftSelectSchema } from '@glot/database/validators/drafts'
 import { textStateSchema } from '@glot/database/validators/texts'
 import * as z from 'zod'
+import { draftSchema } from './drafts.validator.ts'
 import { languageCodeSchema } from './languages.validator.ts'
 
 export const keyRefSchema = z
@@ -22,7 +23,13 @@ export const translationSchema = z.object({
     .array(checkFailureSchema)
     .describe('The checks this text fails, each with a code and a reason. Empty when none fails.'),
   reviewedBy: z.string().nullable(),
+  selfApproved: z
+    .boolean()
+    .describe('True when the person who approved the text is the one who wrote it.'),
   aiWritten: z.boolean(),
+  draft: draftSchema
+    .nullable()
+    .describe('Your own draft of this text, or a draft someone sent for review.'),
 })
 
 export const textSchema = z.object({
