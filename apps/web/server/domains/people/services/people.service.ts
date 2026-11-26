@@ -138,6 +138,7 @@ export class PeopleService {
 
   async update(input: PersonUpdateInput) {
     const { user } = await this.#managedMembership(input.membershipId)
+
     const changes = {
       role: input.role,
       languages: input.languages,
