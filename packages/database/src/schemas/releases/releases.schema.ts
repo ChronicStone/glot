@@ -35,6 +35,8 @@ export const releases = pgTable(
     commit: text().notNull(),
     pullRequestNumber: integer(),
     pullRequestUrl: text(),
+    changeCount: integer().notNull().default(0),
+    approvalCount: integer().notNull().default(0),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     mergedAt: timestamp({ withTimezone: true }),
