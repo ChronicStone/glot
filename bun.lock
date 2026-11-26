@@ -39,6 +39,7 @@
         "@orpc/zod": "catalog:",
         "@tailwindcss/vite": "catalog:",
         "@tanstack/vue-query": "catalog:",
+        "@tanstack/vue-virtual": "catalog:",
         "@ui-sdk/core": "catalog:",
         "@ui-sdk/vue": "catalog:",
         "drizzle-orm": "catalog:",
@@ -157,9 +158,11 @@
       "name": "@glot/ui",
       "version": "0.0.0",
       "dependencies": {
+        "@glot/checks": "workspace:*",
         "@glot/contract": "workspace:*",
         "@glot/database": "workspace:*",
         "@glot/utils": "workspace:*",
+        "@lucide/vue": "catalog:",
         "@ui-sdk/core": "catalog:",
         "@ui-sdk/vue": "catalog:",
         "vue": "catalog:",
@@ -858,7 +861,11 @@
 
     "@tanstack/query-core": ["@tanstack/query-core@5.108.4", "", {}, "sha512-2Ks5dlLWz4eXJrthOyG0qW3SLt3xx0RrQmAmN0rnmogiaaOYuWiAe6HAm9KE2b2v8nig+vraNz8fsfZ6fF6zFg=="],
 
+    "@tanstack/virtual-core": ["@tanstack/virtual-core@3.19.11", "", {}, "sha512-/5iHb0RHBvj8Di59FDs4ESNm45jls33aZAi4zccVXZjc/6ZvwQP6nzEYeT6weXjTf9E6/vrp2JhYWRyO+ZP13A=="],
+
     "@tanstack/vue-query": ["@tanstack/vue-query@5.108.4", "", { "dependencies": { "@tanstack/match-sorter-utils": "^9.1.2", "@tanstack/query-core": "5.108.4", "@vue/devtools-api": "^6.6.3", "vue-demi": "^0.14.10" }, "peerDependencies": { "@vue/composition-api": "^1.1.2", "vue": "^2.6.0 || ^3.3.0" }, "optionalPeers": ["@vue/composition-api"] }, "sha512-yvvIjGz3g8vxN+CCBFS7HC6o+RtIsMtgTQFbXsxxeNjOro219CT+55peW6APpGlkxU9FZGIVy6KuNgWlL7agnQ=="],
+
+    "@tanstack/vue-virtual": ["@tanstack/vue-virtual@3.13.52", "", { "dependencies": { "@tanstack/virtual-core": "3.19.11" }, "peerDependencies": { "vue": "^2.7.0 || ^3.0.0" } }, "sha512-qTwG7HNr5o+FPd/u+T05N73A8howtkB9FgQI71VcBzx6J2KsYzlVugRz/0ji17kl26D8SAdKux1Wmk3yhTI1Kw=="],
 
     "@testing-library/dom": ["@testing-library/dom@10.4.2", "", { "dependencies": { "@babel/code-frame": "^7.10.4", "@babel/runtime": "^7.12.5", "@types/aria-query": "^5.0.1", "aria-query": "5.3.0", "dom-accessibility-api": "^0.5.9", "lz-string": "^1.5.0", "picocolors": "1.1.1", "pretty-format": "^27.0.2" } }, "sha512-yzr2S9HyAIdhz2/6qHgbs665Q7PKVcDF05vsOlHPxG1mo36gKVesdYVeDLnXgfjJ03CrKRk08knc6+E/9m8v2Q=="],
 

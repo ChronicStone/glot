@@ -14,9 +14,11 @@
     "typecheck": "tsrs -p tsconfig.typecheck.json --noEmit --runExternalCode"
   },
   "dependencies": {
+    "@glot/checks": "workspace:*",
     "@glot/contract": "workspace:*",
     "@glot/database": "workspace:*",
     "@glot/utils": "workspace:*",
+    "@lucide/vue": "catalog:",
     "@ui-sdk/core": "catalog:",
     "@ui-sdk/vue": "catalog:",
     "vue": "catalog:"

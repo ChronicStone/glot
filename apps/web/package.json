@@ -30,6 +30,7 @@
     "@orpc/zod": "catalog:",
     "@tailwindcss/vite": "catalog:",
     "@tanstack/vue-query": "catalog:",
+    "@tanstack/vue-virtual": "catalog:",
     "@ui-sdk/core": "catalog:",
     "@ui-sdk/vue": "catalog:",
     "drizzle-orm": "catalog:",
