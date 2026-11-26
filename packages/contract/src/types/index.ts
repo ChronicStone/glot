@@ -9,3 +9,5 @@ export type * from './reviews.types.ts'
 export type * from './glossary.types.ts'
 
 export type * from './contract.types.ts'
+
+export type * from './people.types.ts'

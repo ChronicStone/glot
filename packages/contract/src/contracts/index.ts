@@ -1,6 +1,7 @@
 import { draftsContract } from './drafts.contract.ts'
 import { glossaryContract } from './glossary.contract.ts'
 import { healthContract } from './health.contract.ts'
+import { peopleContract } from './people.contract.ts'
 import { projectsContract } from './projects.contract.ts'
 import { reviewsContract } from './reviews.contract.ts'
 import { textsContract } from './texts.contract.ts'
@@ -12,4 +13,5 @@ export const contract = {
   drafts: draftsContract,
   reviews: reviewsContract,
   glossary: glossaryContract,
+  people: peopleContract,
 }
