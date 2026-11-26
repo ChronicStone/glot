@@ -37,7 +37,15 @@ export async function seedDemo(db: Database) {
     data: { id: 'user-anna', name: 'Anna', email: 'anna@glot.test', emailVerified: true },
   })
 
+  const marie = await db.user.create({
+    data: { id: 'user-marie', name: 'Marie', email: 'marie@glot.test', emailVerified: true },
+  })
+
   const workspace = await db.workspaces.create({ data: { name: 'Demo', slug: 'demo' } })
+
+  await db.workspaceMemberships.create({
+    data: { workspaceId: workspace.id, userId: marie.id, role: WORKSPACE_ROLES.OWNER },
+  })
 
   await db.workspaceMemberships.create({
     data: {
