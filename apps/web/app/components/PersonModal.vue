@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import type { Person } from '@glot/contract'
-import { WORKSPACE_ROLES } from '@glot/database/constants/workspaces'
+import type { Person, PersonInviteInput } from '@glot/contract'
 import { personInviteInputSchema } from '@glot/contract/validators'
+import { WORKSPACE_ROLES } from '@glot/database/constants/workspaces'
+import { useForm } from '@tanstack/vue-form'
 import { useMutation } from '@tanstack/vue-query'
 import { ROLE_LABELS } from '../constants/people.constants.ts'
 
@@ -16,56 +17,63 @@ const { $api, $queryClient } = useNuxtApp()
 const toast = useToast()
 const languages = useWorkspaceLanguages()
 
-const state = reactive({
-  email: person?.user.email ?? '',
-  name: person?.user.name ?? '',
-  role: person?.role ?? WORKSPACE_ROLES.WRITER,
-  allLanguages: person ? person.languages === null : false,
-  languages: person?.languages ?? [],
-  until: person?.expiresAt ? person.expiresAt.toISOString().slice(0, 10) : '',
-})
-
 const roles = Object.values(WORKSPACE_ROLES).map((role) => ({
   value: role,
   label: ROLE_LABELS[role],
   disabled: role === WORKSPACE_ROLES.OWNER,
 }))
 
-const changes = computed(() => ({
-  role: state.role,
-  languages: state.allLanguages ? null : state.languages,
-  expiresAt: state.until ? new Date(`${state.until}T23:59:59`) : null,
-}))
+async function saved(message: string) {
+  await $queryClient.invalidateQueries({ queryKey: $api.people.key() })
+  toast.add({ title: message, color: 'success', icon: 'i-lucide-check' })
+  open.value = false
+}
 
-const save = useMutation({
-  mutationFn: () =>
+const invite = useMutation(
+  $api.people.invite.mutationOptions({
+    onSuccess: (invited) => saved(`Sign-in link sent to ${invited.user.email}`),
+  }),
+)
+
+const update = useMutation(
+  $api.people.update.mutationOptions({ onSuccess: () => saved('Access changed') }),
+)
+
+const remove = useMutation(
+  $api.people.remove.mutationOptions({ onSuccess: () => saved('Removed from the workspace') }),
+)
+
+const defaultValues: PersonInviteInput = {
+  workspaceId,
+  email: person?.user.email ?? '',
+  role: person?.role ?? WORKSPACE_ROLES.WRITER,
+  languages: person ? person.languages : [],
+  expiresAt: person?.expiresAt ?? null,
+}
+
+const form = useForm({
+  defaultValues,
+  validators: { onSubmit: personInviteInputSchema },
+  onSubmit: ({ value }) =>
     person
-      ? $api.people.update.call({ membershipId: person.id, ...changes.value })
-      : $api.people.invite.call({
-          workspaceId,
-          email: state.email,
-          ...(state.name ? { name: state.name } : {}),
-          ...changes.value,
-        }),
-  onSuccess: async (saved) => {
-    await $queryClient.invalidateQueries({ queryKey: $api.people.key() })
-    toast.add({
-      title: person ? 'Access changed' : `Sign-in link sent to ${saved.user.email}`,
-      color: 'success',
-      icon: 'i-lucide-check',
-    })
-    open.value = false
-  },
-  onError: (error) => toast.add({ title: error.message, color: 'error' }),
+      ? update.mutateAsync({
+          membershipId: person.id,
+          role: value.role,
+          languages: value.languages,
+          expiresAt: value.expiresAt ?? null,
+        })
+      : invite.mutateAsync(value),
 })
 
-const remove = useMutation({
-  mutationFn: () => $api.people.remove.call({ membershipId: person?.id ?? '' }),
-  onSuccess: async () => {
-    await $queryClient.invalidateQueries({ queryKey: $api.people.key() })
-    open.value = false
-  },
-})
+const submitting = form.useSelector((state) => state.isSubmitting)
+
+function dateInput(value: Date | null) {
+  return value ? value.toISOString().slice(0, 10) : ''
+}
+
+function dateValue(input: string) {
+  return input ? new Date(`${input}T23:59:59Z`) : null
+}
 </script>
 
 <template>
@@ -75,41 +83,75 @@ const remove = useMutation({
     :description="person ? person.user.email : 'They get a sign-in link by email.'"
   >
     <template #body>
-      <UForm
-        id="person-form"
-        :schema="person ? undefined : personInviteInputSchema.pick({ email: true })"
-        :state="state"
-        class="flex flex-col gap-4"
-        @submit="save.mutate()"
-      >
+      <form id="person-form" class="flex flex-col gap-4" @submit.prevent.stop="form.handleSubmit()">
         <template v-if="!person">
-          <UFormField name="email" label="Email" required>
-            <UInput v-model="state.email" type="email" class="w-full" autofocus />
-          </UFormField>
-          <UFormField name="name" label="Name">
-            <UInput v-model="state.name" class="w-full" />
-          </UFormField>
+          <form.Field v-slot="{ field }" name="email">
+            <UFormField
+              label="Email"
+              required
+              :error="field.state.meta.errors[0]?.message ?? false"
+            >
+              <UInput
+                :model-value="field.state.value"
+                type="email"
+                class="w-full"
+                autofocus
+                @update:model-value="field.handleChange"
+                @blur="field.handleBlur"
+              />
+            </UFormField>
+          </form.Field>
+          <form.Field v-slot="{ field }" name="name">
+            <UFormField label="Name">
+              <UInput
+                :model-value="field.state.value ?? ''"
+                class="w-full"
+                @update:model-value="(name: string) => field.handleChange(name || undefined)"
+              />
+            </UFormField>
+          </form.Field>
         </template>
-        <UFormField name="role" label="Role">
-          <USelect v-model="state.role" :items="roles" class="w-full" />
-        </UFormField>
-        <UFormField name="languages" label="Languages they change">
-          <div class="flex flex-col gap-3">
-            <USwitch v-model="state.allLanguages" label="Every language" />
-            <UCheckboxGroup
-              v-if="!state.allLanguages"
-              v-model="state.languages"
-              :items="languages"
-              orientation="horizontal"
-              variant="card"
-              :ui="{ item: 'font-mono' }"
+        <form.Field v-slot="{ field }" name="role">
+          <UFormField label="Role">
+            <USelect
+              :model-value="field.state.value"
+              :items="roles"
+              class="w-full"
+              @update:model-value="field.handleChange"
             />
-          </div>
-        </UFormField>
-        <UFormField name="until" label="Access until" hint="Leave empty for ongoing access">
-          <UInput v-model="state.until" type="date" class="w-full" />
-        </UFormField>
-      </UForm>
+          </UFormField>
+        </form.Field>
+        <form.Field v-slot="{ field }" name="languages">
+          <UFormField label="Languages they change">
+            <div class="flex flex-col gap-3">
+              <USwitch
+                :model-value="field.state.value === null"
+                label="Every language"
+                @update:model-value="(every: boolean) => field.handleChange(every ? null : [])"
+              />
+              <UCheckboxGroup
+                v-if="field.state.value !== null"
+                :model-value="field.state.value"
+                :items="languages"
+                orientation="horizontal"
+                variant="card"
+                :ui="{ item: 'font-mono' }"
+                @update:model-value="field.handleChange"
+              />
+            </div>
+          </UFormField>
+        </form.Field>
+        <form.Field v-slot="{ field }" name="expiresAt">
+          <UFormField label="Access until" hint="Leave empty for ongoing access">
+            <UInput
+              :model-value="dateInput(field.state.value ?? null)"
+              type="date"
+              class="w-full"
+              @update:model-value="(input: string) => field.handleChange(dateValue(input))"
+            />
+          </UFormField>
+        </form.Field>
+      </form>
     </template>
     <template #footer>
       <UButton
@@ -118,7 +160,7 @@ const remove = useMutation({
         color="error"
         variant="ghost"
         :loading="remove.isPending.value"
-        @click="remove.mutate()"
+        @click="remove.mutate({ membershipId: person.id })"
       />
       <span class="flex-1" />
       <UButton label="Cancel" color="neutral" variant="ghost" @click="open = false" />
@@ -127,7 +169,7 @@ const remove = useMutation({
         form="person-form"
         color="neutral"
         :label="person ? 'Save' : 'Send invitation'"
-        :loading="save.isPending.value"
+        :loading="submitting"
       />
     </template>
   </UModal>
