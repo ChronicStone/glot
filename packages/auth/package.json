@@ -19,6 +19,7 @@
     "@glot/database": "workspace:*",
     "@glot/utils": "workspace:*",
     "better-auth": "catalog:",
+    "better-drizzle": "catalog:",
     "drizzle-orm": "catalog:",
     "nodemailer": "catalog:",
     "vue": "catalog:",

@@ -1,8 +1,8 @@
 import type { ProjectCreateInput, ProjectSyncInput, ProjectUpdateInput } from '@glot/contract'
+import { activeMembershipWhere } from '@glot/database/utils/membership'
 import { ORPCError } from '@orpc/server'
 import type { RequestContext } from '../../../types/context.types.ts'
 import { actorUserId } from '../../../utils/actor.utils.ts'
-import { activeMembershipWhere } from '../../../utils/membership.utils.ts'
 import { WorkspaceAccessService } from '../../people/services/workspace-access.service.ts'
 
 export class ProjectsService {
@@ -16,7 +16,11 @@ export class ProjectsService {
     return this.#context.db.projects.findMany({
       where: {
         workspace: {
-          is: { memberships: { some: activeMembershipWhere(actorUserId(this.#context.actor)) } },
+          is: {
+            memberships: {
+              some: activeMembershipWhere({ userId: actorUserId(this.#context.actor) }),
+            },
+          },
         },
       },
       include: { apps: true, sources: true },
@@ -29,7 +33,11 @@ export class ProjectsService {
       where: {
         id: projectId,
         workspace: {
-          is: { memberships: { some: activeMembershipWhere(actorUserId(this.#context.actor)) } },
+          is: {
+            memberships: {
+              some: activeMembershipWhere({ userId: actorUserId(this.#context.actor) }),
+            },
+          },
         },
       },
       include: { sources: true },

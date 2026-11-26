@@ -1,9 +1,11 @@
 import { apiKey } from '@better-auth/api-key'
 import { WORKSPACE_ROLES } from '@glot/database/constants/workspaces'
 import * as schema from '@glot/database/schemas'
+import { activeMembershipWhere } from '@glot/database/utils/membership'
 import { betterAuth, generateId } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { magicLink, organization } from 'better-auth/plugins'
+import { better } from 'better-drizzle'
 import {
   API_KEY_RATE_LIMIT,
   AUTH_COOKIE_PREFIX,
@@ -23,6 +25,8 @@ import { setupPlugin } from './plugins/setup.plugin.ts'
 import type { CreateAuthOptions } from './types/auth.types.ts'
 
 export function createGlotAuth(options: CreateAuthOptions) {
+  const db = better(options.database)
+
   return betterAuth({
     appName: 'Glot',
     baseURL: options.baseURL,
@@ -63,8 +67,11 @@ export function createGlotAuth(options: CreateAuthOptions) {
       organization({
         allowUserToCreateOrganization: async (user) =>
           Boolean(
-            await options.database.query.workspaceMemberships.findFirst({
-              where: { userId: user.id, role: WORKSPACE_ROLES.OWNER },
+            await db.workspaceMemberships.findFirst({
+              where: {
+                role: WORKSPACE_ROLES.OWNER,
+                ...activeMembershipWhere({ userId: user.id }),
+              },
             }),
           ),
         ac: workspaceAccessControl,

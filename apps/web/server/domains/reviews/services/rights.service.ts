@@ -1,4 +1,5 @@
 import { WORKSPACE_ROLES } from '@glot/database/constants/workspaces'
+import { activeMembershipWhere } from '@glot/database/utils/membership'
 import { ORPCError } from '@orpc/server'
 import type { RequestContext } from '../../../types/context.types.ts'
 import { actorUserId } from '../../../utils/actor.utils.ts'
@@ -16,10 +17,13 @@ export class RightsService {
     const project = await new ProjectsService(this.#context).findAccessible(projectId)
 
     const member = await this.#context.db.workspaceMemberships.findFirst({
-      where: { workspaceId: project.workspaceId, userId: actorUserId(this.#context.actor) },
+      where: {
+        workspaceId: project.workspaceId,
+        ...activeMembershipWhere({ userId: actorUserId(this.#context.actor) }),
+      },
     })
 
-    if (!member || (member.expiresAt && member.expiresAt <= new Date())) {
+    if (!member) {
       throw new ORPCError('NOT_FOUND')
     }
 
@@ -58,13 +62,13 @@ export class RightsService {
 
   async reviewerCount(options: { workspaceId: string; language: string }) {
     const members = await this.#context.db.workspaceMemberships.findMany({
-      where: { workspaceId: options.workspaceId, role: WORKSPACE_ROLES.REVIEWER },
+      where: {
+        workspaceId: options.workspaceId,
+        role: WORKSPACE_ROLES.REVIEWER,
+        ...activeMembershipWhere(),
+      },
     })
 
-    return members.filter(
-      (member) =>
-        member.languages?.includes(options.language) &&
-        (!member.expiresAt || member.expiresAt > new Date()),
-    ).length
+    return members.filter((member) => member.languages?.includes(options.language)).length
   }
 }

@@ -1,8 +1,8 @@
+import { activeMembershipWhere } from '@glot/database/utils/membership'
 import type { WorkspaceRole } from '@glot/database/types/workspaces'
 import { ORPCError } from '@orpc/server'
 import type { RequestContext } from '../../../types/context.types.ts'
 import { actorUserId } from '../../../utils/actor.utils.ts'
-import { activeMembershipWhere } from '../../../utils/membership.utils.ts'
 import { PEOPLE_MANAGER_ROLES, ROLE_RANKS } from '../constants/people.constants.ts'
 
 export class WorkspaceAccessService {
@@ -14,7 +14,10 @@ export class WorkspaceAccessService {
 
   async membershipOf(workspaceId: string) {
     const membership = await this.#context.db.workspaceMemberships.findFirst({
-      where: { workspaceId, ...activeMembershipWhere(actorUserId(this.#context.actor)) },
+      where: {
+        workspaceId,
+        ...activeMembershipWhere({ userId: actorUserId(this.#context.actor) }),
+      },
     })
 
     if (!membership) {

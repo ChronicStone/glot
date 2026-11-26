@@ -27,6 +27,7 @@
     "./types/database": "./src/types/database.types.ts",
     "./types/*": "./src/types/*.types.ts",
     "./constants/*": "./src/constants/*.constants.ts",
+    "./utils/*": "./src/utils/*.utils.ts",
     "./validators/workspaces": "./src/validators/workspaces.validator.ts",
     "./validators/texts": "./src/validators/texts.validator.ts",
     "./validators/glossary": "./src/validators/glossary.validator.ts",

@@ -115,6 +115,34 @@ test('a person whose access ended no longer sees the workspace', async () => {
   expect(people.map(({ user }) => user.email)).not.toContain('external@glot.test')
 })
 
+test('an owner whose access ended cannot create a workspace', async () => {
+  const owner = createGlotClient({ url: baseUrl, fetch: withCookie(ownerCookie) })
+
+  const ended = await owner.people.invite({
+    workspaceId,
+    email: 'ended-owner@glot.test',
+    role: 'owner',
+    languages: null,
+  })
+
+  const cookie = await signInByMagicLink('ended-owner@glot.test')
+
+  await owner.people.update({
+    membershipId: ended.id,
+    role: 'owner',
+    languages: null,
+    expiresAt: new Date(Date.now() - 1000),
+  })
+
+  await expect(
+    authCall({
+      cookie,
+      path: '/organization/create',
+      body: { name: 'After the end', slug: 'after-the-end' },
+    }),
+  ).resolves.toMatchObject({ status: 403 })
+})
+
 test('an admin cannot change their own access', async () => {
   const owner = createGlotClient({ url: baseUrl, fetch: withCookie(ownerCookie) })
   const people = await owner.people.list({ workspaceId })
