@@ -11,7 +11,6 @@ import type { CatalogService } from '../../catalogs/services/catalog.service.ts'
 import type {
   Catalog,
   CatalogProject,
-  GitPublished,
   GitReader,
   GitWriter,
 } from '../../catalogs/types/catalog.types.ts'
@@ -94,6 +93,16 @@ export class ReleaseRunnerService {
         return open
       }
 
+      const release = await this.#record({
+        tx,
+        open,
+        plan,
+        project,
+        catalog,
+        trigger: options.trigger,
+        startedById: options.startedById,
+      })
+
       const message = releaseMessage(plan)
 
       const published = await this.#git.publish({
@@ -105,16 +114,16 @@ export class ReleaseRunnerService {
         pullRequest: { title: message.title, body: message.body },
       })
 
-      return this.#record({
-        tx,
-        open,
-        published,
-        plan,
-        project,
-        catalog,
-        trigger: options.trigger,
-        startedById: options.startedById,
-      })
+      return tx.releases
+        .update({
+          where: { id: release.id },
+          data: {
+            commit: published.commit,
+            pullRequestNumber: published.pullRequest?.number ?? null,
+            pullRequestUrl: published.pullRequest?.url ?? null,
+          },
+        })
+        .throw()
     })
   }
 
@@ -138,23 +147,22 @@ export class ReleaseRunnerService {
   async #record(options: {
     tx: DatabaseTransaction
     open: Release | null
-    published: GitPublished
     plan: ReleasePlan
     project: CatalogProject
     catalog: Catalog
     trigger: ReleaseTrigger
     startedById: string | null
   }) {
-    const { tx, plan, published } = options
+    const { tx, plan } = options
 
     const data = {
       trigger: options.trigger,
       startedById: options.startedById,
       branch: RELEASE_BRANCH,
       baseCommit: options.catalog.commit,
-      commit: published.commit,
-      pullRequestNumber: published.pullRequest?.number ?? null,
-      pullRequestUrl: published.pullRequest?.url ?? null,
+      commit: options.catalog.commit,
+      pullRequestNumber: null,
+      pullRequestUrl: null,
       changeCount: plan.changes.length,
       approvalCount: plan.lines.length,
     }

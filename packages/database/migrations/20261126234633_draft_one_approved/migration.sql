@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "draft_approved_unique" ON "draft" ("projectId","textId","language") WHERE status = 'APPROVED';

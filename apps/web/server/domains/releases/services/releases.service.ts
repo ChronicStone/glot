@@ -307,16 +307,31 @@ export class ReleasesService {
       }
     }
 
-    const kept = await this.#context.db.drafts
-      .update({
-        where: { id: draft.id },
-        data: {
-          status: needsReview ? DRAFT_STATUSES.IN_REVIEW : DRAFT_STATUSES.APPROVED,
-          baseSourceHash: entry.sourceHash,
-          baseTargetHash: current.hash,
-        },
-      })
-      .throw()
+    const kept = await this.#context.db.transaction(async (tx) => {
+      if (!needsReview) {
+        await tx.drafts.updateMany({
+          where: {
+            projectId: project.id,
+            textId: draft.textId,
+            language: draft.language,
+            status: DRAFT_STATUSES.APPROVED,
+            id: { not: draft.id },
+          },
+          data: { status: DRAFT_STATUSES.WITHDRAWN },
+        })
+      }
+
+      return tx.drafts
+        .update({
+          where: { id: draft.id },
+          data: {
+            status: needsReview ? DRAFT_STATUSES.IN_REVIEW : DRAFT_STATUSES.APPROVED,
+            baseSourceHash: entry.sourceHash,
+            baseTargetHash: current.hash,
+          },
+        })
+        .throw()
+    })
 
     return this.#view({
       words: await new TextsService(this.#context).words(project.workspaceId),

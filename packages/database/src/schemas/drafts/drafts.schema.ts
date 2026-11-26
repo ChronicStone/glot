@@ -33,5 +33,8 @@ export const drafts = pgTable(
     uniqueIndex('draft_active_unique')
       .on(table.projectId, table.textId, table.language, table.authorId)
       .where(sql.raw(`status in ('${DRAFT_STATUSES.DRAFT}', '${DRAFT_STATUSES.IN_REVIEW}')`)),
+    uniqueIndex('draft_approved_unique')
+      .on(table.projectId, table.textId, table.language)
+      .where(sql.raw(`status = '${DRAFT_STATUSES.APPROVED}'`)),
   ],
 )

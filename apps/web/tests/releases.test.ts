@@ -41,6 +41,8 @@ let projectId = ''
 let repository = ''
 let formatProjectId = ''
 let formatRepository = ''
+let jamProjectId = ''
+let jamRepository = ''
 let seeded = { pl: '', fr: '', main: '' }
 let developerKey = ''
 
@@ -188,6 +190,11 @@ beforeAll(async () => {
     repository: 'glot/release-format',
   })
 
+  const jamProject = await seedDemoProject(connection.db, {
+    workspaceId: workspace.id,
+    repository: 'glot/release-jam',
+  })
+
   const auth = createGlotAuth({
     baseURL: baseUrl,
     database: connection.drizzle,
@@ -202,6 +209,7 @@ beforeAll(async () => {
   await connection.close()
   projectId = project.id
   formatProjectId = formatProject.id
+  jamProjectId = jamProject.id
 
   repository = (
     await seedDemoRepository({ root: inject('repositoriesRoot'), repository: 'glot/release-train' })
@@ -212,6 +220,10 @@ beforeAll(async () => {
       root: inject('repositoriesRoot'),
       repository: 'glot/release-format',
     })
+  ).directory
+
+  jamRepository = (
+    await seedDemoRepository({ root: inject('repositoriesRoot'), repository: 'glot/release-jam' })
   ).directory
 
   seeded = {
@@ -644,6 +656,43 @@ test('a text changed upstream in the same language is a conflict that can be lef
   const text = await textBySource({ name: 'Vic', project: projectId, source: 'Fin le {date}' })
 
   expect(translationOf({ text, language: 'pl' })).toMatchObject({ value: 'Kończy się {date}' })
+})
+
+test('keeping a conflict withdraws the other approved change to the same text, so the release goes through', async () => {
+  const projectId = jamProjectId
+  const { draft } = await approveDraft({ project: projectId, source: 'Supprimer', value: 'Usuń' })
+
+  await commitUpstream({
+    directory: jamRepository,
+    path: PL,
+    edit: (content) => content.replace('"USUWAĆ"', '"Kasuj"'),
+  })
+
+  await as('Dave').projects.sync({ projectId })
+
+  await expect(as('Dave').releases.next({ projectId })).resolves.toMatchObject({ conflicts: 1 })
+
+  const remove = await textBySource({ name: 'Lena', project: projectId, source: 'Supprimer' })
+
+  await as('Lena').reviews.editAndApprove({
+    projectId,
+    textId: remove.id,
+    language: 'pl',
+    value: 'Skasuj',
+  })
+
+  await expect(
+    as('Paul').releases.resolveConflict({ projectId, draftId: draft.id, resolution: 'KEEP' }),
+  ).resolves.toMatchObject({ id: draft.id, status: 'APPROVED' })
+
+  const release = await as('Dave').releases.run({ projectId })
+
+  expect(release).toMatchObject({ status: 'OPEN', changes: 1 })
+
+  const changes = await as('Dave').releases.changes({ projectId, releaseId: release.id })
+
+  expect(changes.items.map(({ value }) => value)).toEqual(['Usuń'])
+  expect(await show({ directory: jamRepository, path: PL, ref: 'glot/release' })).toContain('Usuń')
 })
 
 test('values are replaced and added in place in a file with its own formatting', async () => {
