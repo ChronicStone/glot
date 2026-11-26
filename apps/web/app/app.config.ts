@@ -148,6 +148,7 @@ export default defineAppConfig({
       },
     },
     modal: {
+      variants: { overlay: { true: { overlay: 'bg-scrim backdrop-blur-[2px]' } } },
       slots: {
         overlay: 'bg-scrim backdrop-blur-[2px]',
         content: 'rounded-panel bg-panel shadow-dialog ring-1 ring-line',
@@ -159,6 +160,7 @@ export default defineAppConfig({
       },
     },
     slideover: {
+      variants: { overlay: { true: { overlay: 'bg-scrim backdrop-blur-[2px]' } } },
       slots: {
         overlay: 'bg-scrim backdrop-blur-[2px]',
         content: 'm-3 rounded-panel bg-panel shadow-dialog ring-1 ring-line sm:max-w-[560px]',
