@@ -21,6 +21,7 @@ describe('backend structural ownership', () => {
       'apps/web/server/domains/example/constants/example.constants.ts',
       'apps/web/server/domains/example/utils/example.utils.ts',
       'apps/web/server/domains/example/routers/example.router.ts',
+      'apps/web/app/middleware/auth.global.ts',
       'packages/database/src/schemas/example/example.schema.ts',
       'packages/database/src/schemas/example/example.relations.ts',
       'packages/database/src/types/example.types.ts',

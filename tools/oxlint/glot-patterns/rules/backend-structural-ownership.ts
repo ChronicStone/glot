@@ -63,7 +63,7 @@ export const backendStructuralOwnershipRule = defineRule({
   },
   create(context) {
     const filename = normalizeFilename(context.filename)
-    if (!isBackendFile(filename)) return {}
+    if (!isBackendFile(filename) || isFrameworkEntrypoint(filename)) return {}
 
     const declarationFile = isDeclarationFile(filename)
     const typeOwner = isTypeOwnerFile(filename)

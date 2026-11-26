@@ -70,7 +70,7 @@ export function isDeclarationFile(filename: string) {
 export function backendPath(filename: string) {
   const normalized = normalizeFilename(filename)
   const match = normalized.match(
-    /(?:^|\/)(apps\/web\/server|packages\/(?:auth|contract|database|sdk|utils))(?:\/|$)/u,
+    /(?:^|\/)(apps\/web\/(?:server|app)|packages\/(?:auth|contract|database|nuxt|sdk|ui|utils)|tooling\/[^/]+)(?:\/|$)/u,
   )
   if (match === null || match.index === undefined) return normalized
   return normalized.slice(match.index + (normalized[match.index] === '/' ? 1 : 0))

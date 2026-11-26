@@ -1,5 +1,5 @@
 export const backendScopePattern =
-  /(?:^|\/)(?:apps\/web\/server|packages\/(?:auth|contract|database|sdk|utils))(?:\/|$)/u
+  /(?:^|\/)(?:apps\/web\/(?:server|app)|packages\/(?:auth|contract|database|nuxt|sdk|ui|utils)|tooling\/[^/]+)(?:\/|$)/u
 export const generatedPathPattern =
   /(?:^|\/)(?:node_modules|generated|migrations?|build|dist|\.nuxt|\.output|coverage)(?:\/|$)/u
 export const implementationPathPattern =
@@ -49,7 +49,7 @@ export const routersDirectoryPattern = /(?:^|\/)routers?(?:\/|$)/u
 export const contractsDirectoryPattern = /(?:^|\/)contracts?(?:\/|$)/u
 export const mailDirectoryPattern = /(?:^|\/)mails?(?:\/|$)/u
 export const frameworkEntrypointPattern =
-  /(?:^|\/)(?:(?:env|router|session|client|server|index|create-auth)\.(?:[cm]?tsx?)|apps\/web\/server\/routes\/.+\.ts|packages\/database\/drizzle\.config\.ts)$/u
+  /(?:^|\/)(?:(?:env|router|session|client|server|index|create-auth)\.(?:[cm]?tsx?)|apps\/web\/server\/routes\/.+\.ts|apps\/web\/app\/(?:middleware|plugins)\/.+\.ts|packages\/nuxt\/src\/(?:module|runtime\/plugins\/.+)\.ts|packages\/database\/drizzle\.config\.ts)$/u
 export const kebabSubjectPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u
 export const upperSnakeIdentifierPattern = /^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*$/u
 export const camelCaseIdentifierPattern = /^[a-z][A-Za-z0-9]*$/u
