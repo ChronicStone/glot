@@ -1,4 +1,3 @@
-import type { GlossaryTerm } from '@glot/contract'
 import { CATALOG_CACHE } from '../constants/catalog.constants.ts'
 import type {
   Catalog,
@@ -10,13 +9,11 @@ import { buildEntries, catalogPaths, parseReleased } from '../utils/catalog.util
 
 export class CatalogService {
   readonly #reader: GitReader
-  readonly #glossary: Record<string, GlossaryTerm[]>
   readonly #heads = new Map<string, { commit: string; readAt: number }>()
   readonly #catalogs = new Map<string, Promise<Catalog>>()
 
   constructor(options: CatalogServiceOptions) {
     this.#reader = options.reader
-    this.#glossary = options.glossary
   }
 
   read(project: CatalogProject) {
@@ -36,10 +33,6 @@ export class CatalogService {
       baseTargetHash:
         entry?.translations.find(({ language }) => language === options.language)?.hash ?? null,
     }
-  }
-
-  glossary(repository: string) {
-    return this.#glossary[repository] ?? []
   }
 
   async #load(options: { project: CatalogProject; fresh: boolean }) {
@@ -98,7 +91,7 @@ export class CatalogService {
 
     return {
       commit,
-      entries: buildEntries({ project, files, glossary: this.glossary(project.repository) }),
+      entries: buildEntries({ project, files }),
       released,
       releasedSelfApproved: selfApproved,
     }

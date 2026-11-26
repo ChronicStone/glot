@@ -40,7 +40,7 @@ export class ReviewsService {
     const texts = new TextsService(this.#context)
     const userId = actorUserId(this.#context.actor)
 
-    const [all, drafts, changeRequests, approvals, reviewers] = await Promise.all([
+    const [all, drafts, changeRequests, approvals, reviewers, words] = await Promise.all([
       texts.all(input.projectId),
       this.#context.db.drafts.findMany({
         where: {
@@ -65,6 +65,7 @@ export class ReviewsService {
         workspaceId: project.workspaceId,
         language: input.language,
       }),
+      texts.words(project.workspaceId),
     ])
 
     const items = queueItems({
@@ -90,7 +91,7 @@ export class ReviewsService {
               draft,
               authorName: draft.author.name,
               failures: texts.failures({
-                repository: project.repository,
+                words,
                 language: input.language,
                 source: text.source.value,
                 target: draft.value,
@@ -306,14 +307,16 @@ export class ReviewsService {
   }
 
   async #guard(options: {
-    project: { workspaceId: string; repository: string }
+    project: { workspaceId: string }
     text: Text
     language: string
     value: string
     authorId: string | null
   }) {
-    const failures = new TextsService(this.#context).failures({
-      repository: options.project.repository,
+    const texts = new TextsService(this.#context)
+
+    const failures = texts.failures({
+      words: await texts.words(options.project.workspaceId),
       language: options.language,
       source: options.text.source.value,
       target: options.value,

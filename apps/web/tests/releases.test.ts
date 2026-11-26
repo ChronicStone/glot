@@ -774,7 +774,7 @@ test('the twice-a-day clock releases once per slot and a second tick changes not
 
     const { directory } = await seedDemoRepository({ root, repository: 'glot/clock' })
     const reader = new LocalGitReader({ root })
-    const catalog = new CatalogService({ reader, glossary: {} })
+    const catalog = new CatalogService({ reader })
     const sources = await db.projectSources.findMany({ where: { projectId: project.id } })
     const full = { ...project, sources }
     const { entries } = await catalog.read(full)

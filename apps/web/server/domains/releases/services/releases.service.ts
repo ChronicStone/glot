@@ -17,6 +17,7 @@ import { draftView } from '../../drafts/utils/draft-view.utils.ts'
 import { ProjectsService } from '../../projects/services/projects.service.ts'
 import { WorkspaceAccessService } from '../../people/services/workspace-access.service.ts'
 import { RightsService } from '../../reviews/services/rights.service.ts'
+import type { GlossaryWords } from '../../glossary/types/glossary.types.ts'
 import { TextsService } from '../../texts/services/texts.service.ts'
 import { RELEASE_ROLES } from '../constants/releases.constants.ts'
 import { approvedKeys, draftConflict } from '../utils/release-conflict.utils.ts'
@@ -135,6 +136,7 @@ export class ReleasesService {
     })
 
     const names = new Map(authors.map(({ id, name }) => [id, name]))
+    const words = await new TextsService(this.#context).words(project.workspaceId)
 
     return {
       items: page.map(({ draft, reason }) => {
@@ -143,7 +145,7 @@ export class ReleasesService {
         return {
           reason,
           draft: this.#view({
-            repository: project.repository,
+            words,
             draft,
             authorName: names.get(draft.authorId) ?? '',
             entry,
@@ -274,7 +276,7 @@ export class ReleasesService {
         .throw()
 
       return this.#view({
-        repository: project.repository,
+        words: await new TextsService(this.#context).words(project.workspaceId),
         draft: withdrawn,
         authorName: draft.author.name,
         entry,
@@ -317,7 +319,7 @@ export class ReleasesService {
       .throw()
 
     return this.#view({
-      repository: project.repository,
+      words: await new TextsService(this.#context).words(project.workspaceId),
       draft: kept,
       authorName: draft.author.name,
       entry,
@@ -325,7 +327,7 @@ export class ReleasesService {
   }
 
   #view(options: {
-    repository: string
+    words: GlossaryWords
     draft: Draft
     authorName: string
     entry: CatalogEntry | undefined
@@ -337,7 +339,7 @@ export class ReleasesService {
       authorName: options.authorName,
       failures: entry
         ? new TextsService(this.#context).failures({
-            repository: options.repository,
+            words: options.words,
             language: draft.language,
             source: entry.sourceValue,
             target: draft.value,

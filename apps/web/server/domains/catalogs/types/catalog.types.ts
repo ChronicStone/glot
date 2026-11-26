@@ -1,5 +1,5 @@
 import type { CheckFailure } from '@glot/checks'
-import type { GlossaryTerm, KeyRef } from '@glot/contract'
+import type { KeyRef } from '@glot/contract'
 import type { Project, ProjectSource } from '@glot/database'
 import type * as z from 'zod'
 import type { reviewLineSchema } from '../validators/review-line.validator.ts'
@@ -68,5 +68,4 @@ export interface Catalog {
 
 export interface CatalogServiceOptions {
   reader: GitReader
-  glossary: Record<string, GlossaryTerm[]>
 }

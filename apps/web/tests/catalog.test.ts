@@ -323,7 +323,7 @@ test('the GitHub adapter reads the branch head and the files at that commit', as
 
   const reader = new GithubGitReader({ token: 'ghp_recorded', fetch: replay })
 
-  const catalog = new CatalogService({ reader, glossary: {} })
+  const catalog = new CatalogService({ reader })
 
   const result = await catalog.read({
     id: 'project',

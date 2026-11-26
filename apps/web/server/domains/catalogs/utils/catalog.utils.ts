@@ -1,5 +1,4 @@
 import { checkText, flattenMessages, parseJsonFile } from '@glot/checks'
-import type { GlossaryTerm } from '@glot/contract'
 import type { ProjectSource } from '@glot/database'
 import { SOURCE_LOCALE_TOKEN } from '@glot/database/constants/projects'
 import { hashText } from '@glot/utils/hash'
@@ -29,10 +28,6 @@ export function catalogPaths(project: CatalogProject) {
   return [...new Set([...sources, ...targetLanguages(project).map(reviewsPath)])]
 }
 
-export function avoidWords(options: { glossary: GlossaryTerm[]; language: string }) {
-  return options.glossary.flatMap((term) => term.terms[options.language]?.avoid ?? [])
-}
-
 function readMessages(options: {
   source: ProjectSource
   files: Map<string, string>
@@ -46,19 +41,8 @@ function readMessages(options: {
     : flattenMessages(parseJsonFile({ path, content })).filter(({ value }) => value.trim())
 }
 
-export function buildEntries(options: {
-  project: CatalogProject
-  files: Map<string, string>
-  glossary: GlossaryTerm[]
-}) {
+export function buildEntries(options: { project: CatalogProject; files: Map<string, string> }) {
   const entries: CatalogEntry[] = []
-
-  const avoid = new Map(
-    options.project.languages.map((language) => [
-      language,
-      avoidWords({ glossary: options.glossary, language }),
-    ]),
-  )
 
   for (const source of options.project.sources.toSorted((a, b) => a.name.localeCompare(b.name))) {
     const targets = source.languages
@@ -96,11 +80,7 @@ export function buildEntries(options: {
             failures:
               translated === null
                 ? []
-                : checkText({
-                    source: value,
-                    target: translated,
-                    avoid: avoid.get(target.language) ?? [],
-                  }),
+                : checkText({ source: value, target: translated, avoid: [] }),
           }
         }),
       })

@@ -1,4 +1,4 @@
-import { checkText } from '@glot/checks'
+import { checkText, checkWords } from '@glot/checks'
 import type { Text, TextRefInput, TextSearchInput } from '@glot/contract'
 import type { Draft, User } from '@glot/database'
 import { DRAFT_STATUSES } from '@glot/database/constants/drafts'
@@ -9,8 +9,9 @@ import type { RequestContext } from '../../../types/context.types.ts'
 import { actorUserId } from '../../../utils/actor.utils.ts'
 import type { CatalogEntry, CatalogTranslation } from '../../catalogs/types/catalog.types.ts'
 import { approvalKey } from '../../catalogs/utils/approval-key.utils.ts'
-import { avoidWords } from '../../catalogs/utils/catalog.utils.ts'
 import { draftView } from '../../drafts/utils/draft-view.utils.ts'
+import { GlossaryService } from '../../glossary/services/glossary.service.ts'
+import type { GlossaryWords } from '../../glossary/types/glossary.types.ts'
 import { ProjectsService } from '../../projects/services/projects.service.ts'
 import { pairKey } from '../utils/texts.utils.ts'
 
@@ -61,14 +62,16 @@ export class TextsService {
     return text
   }
 
-  failures(options: { repository: string; language: string; source: string; target: string }) {
+  words(workspaceId: string) {
+    return new GlossaryService(this.#context).wordsToCheck(workspaceId)
+  }
+
+  failures(options: { words: GlossaryWords; language: string; source: string; target: string }) {
     return checkText({
       source: options.source,
       target: options.target,
-      avoid: avoidWords({
-        glossary: this.#context.catalog.glossary(options.repository),
-        language: options.language,
-      }),
+      avoid: options.words.avoid[options.language] ?? [],
+      keep: options.words.keep,
     })
   }
 
@@ -76,7 +79,7 @@ export class TextsService {
     const project = await new ProjectsService(this.#context).findAccessible(projectId)
     const userId = actorUserId(this.#context.actor)
 
-    const [catalog, pending, appSources, drafts] = await Promise.all([
+    const [catalog, pending, appSources, drafts, words] = await Promise.all([
       this.#context.catalog.read(project),
       this.#context.db.approvals.findMany({ where: { projectId } }),
       this.#context.db.projectAppSources.findMany({
@@ -94,6 +97,7 @@ export class TextsService {
         include: { author: true },
         orderBy: { updatedAt: 'asc' },
       }),
+      this.words(project.workspaceId),
     ])
 
     const approvedBy = new Map(catalog.released)
@@ -125,8 +129,6 @@ export class TextsService {
       shownIn.set(source.name, [...(shownIn.get(source.name) ?? []), app.name])
     }
 
-    const glossary = this.#context.catalog.glossary(project.repository)
-
     return catalog.entries.map((entry) => ({
       id: entry.id,
       key: entry.key,
@@ -140,7 +142,7 @@ export class TextsService {
           approvedBy,
           selfApproved,
           drafts: draftsByPair.get(pairKey({ textId: entry.id, language: translation.language })),
-          avoid: avoidWords({ glossary, language: translation.language }),
+          words,
         }),
       ),
     }))
@@ -152,16 +154,16 @@ export class TextsService {
     approvedBy: Map<string, string>
     selfApproved: Set<string>
     drafts: Array<Draft & { author: User }> | undefined
-    avoid: string[]
+    words: GlossaryWords
   }) {
-    const { entry, avoid } = options
+    const { entry, words } = options
     const drafts = options.drafts ?? []
 
     const approvedDraft = drafts.findLast((draft) => draft.status === DRAFT_STATUSES.APPROVED)
 
     const translation = approvedDraft
-      ? this.#approved({ entry, draft: approvedDraft, avoid })
-      : options.translation
+      ? this.#approved({ entry, draft: approvedDraft, words })
+      : this.#withWords({ entry, translation: options.translation, words })
 
     const key =
       translation.hash === null
@@ -195,24 +197,60 @@ export class TextsService {
         ? draftView({
             draft: shown,
             authorName: shown.author.name,
-            failures: checkText({ source: entry.sourceValue, target: shown.value, avoid }),
+            failures: this.failures({
+              words,
+              language: shown.language,
+              source: entry.sourceValue,
+              target: shown.value,
+            }),
           })
         : null,
     }
   }
 
-  #approved(options: { entry: CatalogEntry; draft: Draft; avoid: string[] }): CatalogTranslation {
+  #approved(options: {
+    entry: CatalogEntry
+    draft: Draft
+    words: GlossaryWords
+  }): CatalogTranslation {
     const { draft } = options
 
     return {
       language: draft.language,
       value: draft.value,
       hash: hashText(draft.value),
-      failures: checkText({
+      failures: this.failures({
+        words: options.words,
+        language: draft.language,
         source: options.entry.sourceValue,
         target: draft.value,
-        avoid: options.avoid,
       }),
+    }
+  }
+
+  #withWords(options: {
+    entry: CatalogEntry
+    translation: CatalogTranslation
+    words: GlossaryWords
+  }): CatalogTranslation {
+    const { translation, words } = options
+    const avoid = words.avoid[translation.language] ?? []
+
+    if (translation.value === null || (avoid.length === 0 && words.keep.length === 0)) {
+      return translation
+    }
+
+    return {
+      ...translation,
+      failures: [
+        ...translation.failures,
+        ...checkWords({
+          source: options.entry.sourceValue,
+          target: translation.value,
+          avoid,
+          keep: words.keep,
+        }),
+      ],
     }
   }
 
