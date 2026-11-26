@@ -17,6 +17,7 @@ import {
   workspaceRoles,
   workspaceSchemaMapping,
 } from './config/auth.config.ts'
+import { setupPlugin } from './plugins/setup.plugin.ts'
 import type { CreateAuthOptions } from './types/auth.types.ts'
 
 export function createGlotAuth(options: CreateAuthOptions) {
@@ -27,6 +28,7 @@ export function createGlotAuth(options: CreateAuthOptions) {
     trustedOrigins: options.trustedOrigins,
     database: drizzleAdapter(options.database, {
       provider: 'pg',
+      transaction: true,
       schema: {
         user: schema.user,
         session: schema.session,
@@ -73,6 +75,7 @@ export function createGlotAuth(options: CreateAuthOptions) {
         },
       }),
       apiKey({ enableSessionForAPIKeys: false }),
+      setupPlugin({ appUrl: options.baseURL }),
     ],
   })
 }
