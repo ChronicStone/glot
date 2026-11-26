@@ -15,6 +15,7 @@ export const env = z
     MAIL_FROM: z.string().optional(),
     GLOT_GIT_ROOT: z.string().optional(),
     GITHUB_TOKEN: z.string().optional(),
+    MIGRATIONS_FOLDER: z.string().optional(),
     GLOT_VERSION: z.string().default('0.0.0'),
   })
   .refine(({ SMTP_URL, MAIL_FROM }) => !SMTP_URL || Boolean(MAIL_FROM), {
