@@ -115,6 +115,11 @@ export class TextsService {
       }
     }
 
+    const reviewers = await this.#context.db.user.findMany({
+      where: { id: { in: [...new Set(approvedBy.values())] } },
+    })
+
+    const reviewerNames = new Map(reviewers.map((reviewer) => [reviewer.id, reviewer.name]))
     const draftsByPair = new Map<string, Array<Draft & { author: User }>>()
 
     for (const draft of drafts) {
@@ -142,6 +147,7 @@ export class TextsService {
           entry,
           translation,
           approvedBy,
+          reviewerNames,
           selfApproved,
           drafts: draftsByPair.get(pairKey({ textId: entry.id, language: translation.language })),
           words,
@@ -154,6 +160,7 @@ export class TextsService {
     entry: CatalogEntry
     translation: CatalogTranslation
     approvedBy: Map<string, string>
+    reviewerNames: Map<string, string>
     selfApproved: Set<string>
     drafts: Array<Draft & { author: User }> | undefined
     words: GlossaryWords
@@ -193,6 +200,7 @@ export class TextsService {
       state: this.#state({ translation, reviewedBy }),
       failures: translation.failures,
       reviewedBy,
+      reviewerName: reviewedBy === null ? null : (options.reviewerNames.get(reviewedBy) ?? null),
       selfApproved: reviewedBy !== null && key !== null && options.selfApproved.has(key),
       aiWritten: false,
       draft: shown

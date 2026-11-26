@@ -48,6 +48,7 @@ test('an agent key cannot approve, a signed-in person can', async () => {
   expect(text.translations.find((t) => t.language === 'de')).toMatchObject({
     state: 'REVIEWED',
     reviewedBy: 'user-anna',
+    reviewerName: 'Anna',
   })
 })
 

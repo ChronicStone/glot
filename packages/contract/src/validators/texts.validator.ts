@@ -1,6 +1,7 @@
 import { checkFailureSchema } from '@glot/checks/validators'
 import { draftSelectSchema } from '@glot/database/validators/drafts'
 import { textStateSchema } from '@glot/database/validators/texts'
+import { userSelectSchema } from '@glot/database/validators/users'
 import * as z from 'zod'
 import { draftSchema } from './drafts.validator.ts'
 import { languageCodeSchema } from './languages.validator.ts'
@@ -23,6 +24,9 @@ export const translationSchema = z.object({
     .array(checkFailureSchema)
     .describe('The checks this text fails, each with a code and a reason. Empty when none fails.'),
   reviewedBy: z.string().nullable(),
+  reviewerName: userSelectSchema.shape.name
+    .nullable()
+    .describe('The name of the person who approved the text, when Glot knows them.'),
   selfApproved: z
     .boolean()
     .describe('True when the person who approved the text is the one who wrote it.'),
