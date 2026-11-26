@@ -1,6 +1,7 @@
 import { glossaryTermStatusSchema } from '@glot/database/validators/glossary'
 import * as z from 'zod'
 import { languageCodeSchema } from './languages.validator.ts'
+import { textRefInputSchema } from './texts.validator.ts'
 
 export const glossaryTermSchema = z.object({
   id: z.string(),
@@ -14,7 +15,7 @@ export const glossaryTermSchema = z.object({
   ),
 })
 
-export const glossaryListInputSchema = z.object({
+export const glossaryListInputSchema = textRefInputSchema.pick({ projectId: true }).extend({
   language: languageCodeSchema.optional(),
   status: glossaryTermStatusSchema.optional(),
 })

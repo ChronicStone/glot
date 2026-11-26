@@ -8,11 +8,11 @@ export const glossaryContract = {
     .meta(
       openapi({
         method: 'GET',
-        path: '/glossary',
+        path: '/projects/{projectId}/glossary',
         operationId: 'listGlossary',
         summary: 'List glossary terms',
         description:
-          'The workspace glossary. Services such as a CMS pull it to check and translate content.',
+          'The glossary of a project. Services such as a CMS pull it to check and translate content.',
         tags: ['glossary'],
       }),
     )

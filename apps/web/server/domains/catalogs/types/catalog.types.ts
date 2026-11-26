@@ -4,5 +4,5 @@ export type CatalogText = Text & { readers: number }
 
 export interface CatalogSource {
   texts: Record<string, CatalogText[]>
-  glossary: GlossaryTerm[]
+  glossary: Record<string, GlossaryTerm[]>
 }

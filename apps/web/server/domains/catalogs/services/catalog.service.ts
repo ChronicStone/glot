@@ -11,7 +11,7 @@ export class CatalogService {
     return this.#source.texts[repository] ?? []
   }
 
-  glossary() {
-    return this.#source.glossary
+  glossary(repository: string) {
+    return this.#source.glossary[repository] ?? []
   }
 }
