@@ -22,22 +22,20 @@ const filters = [
   })),
 ]
 
-const texts = useInfiniteQuery(
-  computed(() => ({
-    ...$api.texts.search.infiniteOptions({
-      input: (cursor: string | undefined) => ({
-        projectId: project.value?.id ?? '',
-        q: query.value || undefined,
-        state: state.value,
-        cursor,
-      }),
-      initialPageParam: undefined,
-      getNextPageParam: (page) => page.nextCursor ?? undefined,
+const texts = useInfiniteQuery(() => ({
+  ...$api.texts.search.infiniteOptions({
+    input: (cursor: string | undefined) => ({
+      projectId: project.value?.id ?? '',
+      q: query.value || undefined,
+      state: state.value,
+      cursor,
     }),
-    enabled: Boolean(project.value),
-    placeholderData: keepPreviousData,
-  })),
-)
+    initialPageParam: undefined,
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
+  }),
+  enabled: Boolean(project.value),
+  placeholderData: keepPreviousData,
+}))
 
 const items = computed(() => texts.data.value?.pages.flatMap((page) => page.items) ?? [])
 const total = computed(() => texts.data.value?.pages[0]?.total ?? 0)

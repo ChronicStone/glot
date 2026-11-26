@@ -23,25 +23,21 @@ const focusId = ref<string | undefined>(
   typeof route.query.text === 'string' ? route.query.text : undefined,
 )
 
-const queue = useQuery(
-  computed(() => ({
-    ...$api.reviews.queue.queryOptions({
-      input: {
-        projectId: projectId.value,
-        language: language.value,
-        limit: REVIEW_SESSION_PAGE_SIZE,
-      },
-    }),
-    enabled: Boolean(project.value),
-  })),
-)
+const queue = useQuery(() => ({
+  ...$api.reviews.queue.queryOptions({
+    input: {
+      projectId: projectId.value,
+      language: language.value,
+      limit: REVIEW_SESSION_PAGE_SIZE,
+    },
+  }),
+  enabled: Boolean(project.value),
+}))
 
-const glossary = useQuery(
-  computed(() => ({
-    ...$api.glossary.list.queryOptions({ input: { projectId: projectId.value } }),
-    enabled: Boolean(project.value),
-  })),
-)
+const glossary = useQuery(() => ({
+  ...$api.glossary.list.queryOptions({ input: { projectId: projectId.value } }),
+  enabled: Boolean(project.value),
+}))
 
 type Item = NonNullable<typeof queue.data.value>['items'][number]
 
@@ -60,18 +56,16 @@ const current = computed(
   () => waiting.value.find((item) => item.text.id === focusId.value) ?? waiting.value[0],
 )
 
-const comments = useQuery(
-  computed(() => ({
-    ...$api.reviews.comments.queryOptions({
-      input: {
-        projectId: projectId.value,
-        textId: current.value?.text.id ?? '',
-        language: language.value,
-      },
-    }),
-    enabled: Boolean(current.value),
-  })),
-)
+const comments = useQuery(() => ({
+  ...$api.reviews.comments.queryOptions({
+    input: {
+      projectId: projectId.value,
+      textId: current.value?.text.id ?? '',
+      language: language.value,
+    },
+  }),
+  enabled: Boolean(current.value),
+}))
 
 const live = computed(
   () =>

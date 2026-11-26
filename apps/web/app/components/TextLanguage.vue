@@ -47,12 +47,10 @@ const draftLabel = computed(() => {
   return own.value ? 'Sent for review' : `Sent for review by ${draft.value.authorName}`
 })
 
-const comments = useQuery(
-  computed(() => ({
-    ...$api.reviews.comments.queryOptions({ input: target.value }),
-    enabled: Boolean(project.value),
-  })),
-)
+const comments = useQuery(() => ({
+  ...$api.reviews.comments.queryOptions({ input: target.value }),
+  enabled: Boolean(project.value),
+}))
 
 const recent = computed(() => (comments.data.value ?? []).slice(-3))
 

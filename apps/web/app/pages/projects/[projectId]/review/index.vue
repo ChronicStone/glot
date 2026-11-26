@@ -15,21 +15,19 @@ const language = computed(() => {
   return asked && approve.value.includes(asked) ? asked : approve.value[0]
 })
 
-const queue = useInfiniteQuery(
-  computed(() => ({
-    ...$api.reviews.queue.infiniteOptions({
-      input: (cursor: string | undefined) => ({
-        projectId: project.value?.id ?? '',
-        language: language.value ?? '',
-        cursor,
-      }),
-      initialPageParam: undefined,
-      getNextPageParam: (page) => page.nextCursor ?? undefined,
+const queue = useInfiniteQuery(() => ({
+  ...$api.reviews.queue.infiniteOptions({
+    input: (cursor: string | undefined) => ({
+      projectId: project.value?.id ?? '',
+      language: language.value ?? '',
+      cursor,
     }),
-    enabled: Boolean(project.value && language.value),
-    placeholderData: keepPreviousData,
-  })),
-)
+    initialPageParam: undefined,
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
+  }),
+  enabled: Boolean(project.value && language.value),
+  placeholderData: keepPreviousData,
+}))
 
 const items = computed(() => queue.data.value?.pages.flatMap((page) => page.items) ?? [])
 const total = computed(() => queue.data.value?.pages[0]?.total ?? 0)

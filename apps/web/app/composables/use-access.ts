@@ -5,12 +5,10 @@ export function useAccess() {
   const { $api } = useNuxtApp()
   const { workspace } = useCurrentWorkspace()
 
-  const access = useQuery(
-    computed(() => ({
-      ...$api.people.me.queryOptions({ input: { workspaceId: workspace.value?.id ?? '' } }),
-      enabled: Boolean(workspace.value),
-    })),
-  )
+  const access = useQuery(() => ({
+    ...$api.people.me.queryOptions({ input: { workspaceId: workspace.value?.id ?? '' } }),
+    enabled: Boolean(workspace.value),
+  }))
 
   const managesPeople = computed(() =>
     [WORKSPACE_ROLES.OWNER, WORKSPACE_ROLES.ADMIN].some((role) => role === access.data.value?.role),
