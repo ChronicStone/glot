@@ -66,14 +66,14 @@ test('projects list with their apps through the public REST API and an agent key
 test('an agent key cannot approve, a signed-in person can', async () => {
   const agent = createGlotClient({ url: baseUrl, token: agentKey })
   await expect(
-    agent.reviews.approve({ projectId, textId: 'marketplace.itemCard.outbid', language: 'de' }),
+    agent.reviews.approve({ projectId, textId: 'lotCard.outbid', language: 'de' }),
   ).rejects.toMatchObject({ code: 'PEOPLE_ONLY' })
 
   const anna = createGlotClient({ url: baseUrl, fetch: withCookie(sessionCookie) })
 
   const text = await anna.reviews.approve({
     projectId,
-    textId: 'marketplace.itemCard.outbid',
+    textId: 'lotCard.outbid',
     language: 'de',
   })
 
@@ -81,6 +81,37 @@ test('an agent key cannot approve, a signed-in person can', async () => {
     state: 'REVIEWED',
     reviewedBy: 'user-anna',
   })
+})
+
+test('approving through the public REST API with a key is refused with 403', async () => {
+  const response = await fetch(`${baseUrl}/api/v1/projects/${projectId}/reviews`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${agentKey}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ textId: 'lotCard.outbid', language: 'nl' }),
+  })
+
+  expect(response.status).toBe(403)
+})
+
+test('a person creates a workspace and invites a writer through better-auth', async () => {
+  const headers = { cookie: sessionCookie, origin: baseUrl, 'content-type': 'application/json' }
+
+  const created = await fetch(`${baseUrl}/api/auth/organization/create`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ name: 'Second workspace', slug: 'second-workspace' }),
+  }).then((response) => response.json())
+
+  expect(created.id).toMatch(/^[0-9a-f-]{36}$/u)
+
+  const invited = await fetch(`${baseUrl}/api/auth/organization/invite-member`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ email: 'writer@glot.test', role: 'writer', organizationId: created.id }),
+  })
+
+  expect(invited.status).toBe(200)
+  await expect(invited.json()).resolves.toMatchObject({ role: 'writer', status: 'pending' })
 })
 
 test('a draft is saved for its author', async () => {
