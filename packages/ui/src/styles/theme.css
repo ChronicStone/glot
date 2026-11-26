@@ -3,56 +3,45 @@
 @import '@ui-sdk/core/web.css' layer(components);
 
 :root {
-  --glot-bg: #f5f5f3;
-  --glot-surface: #ffffff;
-  --glot-sunken: #f3f3f1;
-  --glot-line: #ecebe8;
-  --glot-line-strong: #e0dfdb;
-  --glot-ink: #1d1c1a;
-  --glot-ink-2: #55534e;
-  --glot-ink-3: #73716b;
-  --glot-ink-4: #c4c2bd;
-  --glot-accent: #3f70d1;
-  --glot-accent-soft: #eaf1fd;
-  --glot-accent-line: #b9cef4;
-  --glot-ok: #3e7650;
-  --glot-ok-soft: #e9f2ec;
-  --glot-warn: #86601c;
-  --glot-warn-soft: #f7efdd;
-  --glot-bad: #a3473d;
-  --glot-bad-soft: #f8e8e5;
-  --glot-button: #262421;
-  --glot-button-ink: #ffffff;
+  color-scheme: light dark;
+  --glot-bg: light-dark(#f5f5f3, #0e0e0e);
+  --glot-surface: light-dark(#ffffff, #171717);
+  --glot-sunken: light-dark(#f3f3f1, #131313);
+  --glot-line: light-dark(#ecebe8, #242424);
+  --glot-line-strong: light-dark(#e0dfdb, #333331);
+  --glot-ink: light-dark(#1d1c1a, #ededea);
+  --glot-ink-2: light-dark(#55534e, #b3b2ae);
+  --glot-ink-3: light-dark(#73716b, #95948f);
+  --glot-ink-4: light-dark(#c4c2bd, #55544f);
+  --glot-accent: light-dark(#3f70d1, #8db0f4);
+  --glot-accent-soft: light-dark(#eaf1fd, #1a2233);
+  --glot-accent-line: light-dark(#b9cef4, #3a5584);
+  --glot-ok: light-dark(#3e7650, #8fc6a0);
+  --glot-ok-soft: light-dark(#e9f2ec, #17241b);
+  --glot-warn: light-dark(#86601c, #ddb872);
+  --glot-warn-soft: light-dark(#f7efdd, #2a2316);
+  --glot-bad: light-dark(#a3473d, #e79c91);
+  --glot-bad-soft: light-dark(#f8e8e5, #2c1a17);
+  --glot-button: light-dark(#262421, #f1f1ee);
+  --glot-button-ink: light-dark(#ffffff, #121212);
   --glot-shadow-card: 0 1px 2px rgb(20 18 15 / 4%), 0 8px 24px rgb(20 18 15 / 4%);
   --glot-shadow-pop: 0 2px 6px rgb(20 18 15 / 6%), 0 18px 48px rgb(20 18 15 / 12%);
+}
+
+:root[data-theme='light'] {
   color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --glot-shadow-card: 0 0 0 1px rgb(255 255 255 / 2.5%), 0 8px 24px rgb(0 0 0 / 35%);
+  --glot-shadow-pop: 0 0 0 1px rgb(255 255 255 / 5%), 0 18px 48px rgb(0 0 0 / 60%);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --glot-bg: #0e0e0e;
-    --glot-surface: #171717;
-    --glot-sunken: #131313;
-    --glot-line: #242424;
-    --glot-line-strong: #333331;
-    --glot-ink: #ededea;
-    --glot-ink-2: #b3b2ae;
-    --glot-ink-3: #95948f;
-    --glot-ink-4: #55544f;
-    --glot-accent: #8db0f4;
-    --glot-accent-soft: #1a2233;
-    --glot-accent-line: #3a5584;
-    --glot-ok: #8fc6a0;
-    --glot-ok-soft: #17241b;
-    --glot-warn: #ddb872;
-    --glot-warn-soft: #2a2316;
-    --glot-bad: #e79c91;
-    --glot-bad-soft: #2c1a17;
-    --glot-button: #f1f1ee;
-    --glot-button-ink: #121212;
     --glot-shadow-card: 0 0 0 1px rgb(255 255 255 / 2.5%), 0 8px 24px rgb(0 0 0 / 35%);
     --glot-shadow-pop: 0 0 0 1px rgb(255 255 255 / 5%), 0 18px 48px rgb(0 0 0 / 60%);
-    color-scheme: dark;
   }
 }
 
