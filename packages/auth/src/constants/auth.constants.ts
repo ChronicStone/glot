@@ -12,6 +12,11 @@ export const DATABASE_ID_MODELS = {
   INVITATION: 'invitation',
 } as const
 
+export const API_KEY_RATE_LIMIT = {
+  WINDOW_MILLISECONDS: 60_000,
+  MAX_REQUESTS: 600,
+} as const
+
 export const ACTOR_KINDS = {
   PERSON: 'person',
   KEY: 'key',

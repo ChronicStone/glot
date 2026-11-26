@@ -5,6 +5,7 @@ import { betterAuth, generateId } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { magicLink, organization } from 'better-auth/plugins'
 import {
+  API_KEY_RATE_LIMIT,
   AUTH_COOKIE_PREFIX,
   DATABASE_ID_MODELS,
   MAGIC_LINK_EXPIRES_IN_SECONDS,
@@ -83,7 +84,14 @@ export function createGlotAuth(options: CreateAuthOptions) {
           await options.sendMagicLinkEmail({ to: email, targetUrl: url })
         },
       }),
-      apiKey({ enableSessionForAPIKeys: false }),
+      apiKey({
+        enableSessionForAPIKeys: false,
+        rateLimit: {
+          enabled: true,
+          timeWindow: API_KEY_RATE_LIMIT.WINDOW_MILLISECONDS,
+          maxRequests: API_KEY_RATE_LIMIT.MAX_REQUESTS,
+        },
+      }),
       setupPlugin({ appUrl: options.baseURL }),
     ],
   })
