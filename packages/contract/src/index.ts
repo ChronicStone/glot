@@ -8,6 +8,7 @@ export {
   MEMBERSHIP_ERRORS,
   PEOPLE_ONLY_ERRORS,
   PEOPLE_ONLY_PROCEDURES,
+  PROJECT_ERRORS,
   REVIEW_REASONS,
 } from './constants/contract.constants.ts'
 

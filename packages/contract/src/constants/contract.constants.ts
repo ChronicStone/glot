@@ -24,6 +24,8 @@ export const LANGUAGE_RIGHTS_ERRORS = {
 
 export const ADMIN_ONLY_ERRORS = { FORBIDDEN: { message: 'Only an admin can do this' } }
 
+export const PROJECT_ERRORS = { CONFLICT: { message: 'This repository is already a project' } }
+
 export const MEMBERSHIP_ERRORS = {
   CONFLICT: { message: 'This person is already in the workspace' },
 }
