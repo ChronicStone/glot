@@ -15,6 +15,10 @@ ENV NODE_ENV=production \
     HOST=0.0.0.0 \
     PORT=3000 \
     MIGRATIONS_FOLDER=/app/migrations
+RUN apt-get update \
+ && apt-get install --yes --no-install-recommends git \
+ && git config --system --add safe.directory '*' \
+ && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=build --chown=node:node /repo/apps/web/.output ./
 COPY --from=build --chown=node:node /repo/packages/database/migrations ./migrations
