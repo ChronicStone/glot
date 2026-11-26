@@ -53,7 +53,7 @@ Open it, enter the workspace name, your name and your email. Glot creates the ad
 | `GLOT_REPOSITORIES`                        | no       | Host folder compose mounts read-only at `/repositories`. Default `./repositories`.                                                                                           |
 | `GLOT_PORT`                                | no       | Port published by compose. Default `3100`.                                                                                                                                   |
 
-Sign-in links reach people by SMTP. Without `SMTP_URL` a production server cannot send them, so only the administrator created at setup (already signed in) and Google sign-in work.
+Sign-in links reach people by SMTP. Without `SMTP_URL` a production server cannot send them: invitations fail, and everyone, the setup administrator included once their session ends after 14 days, can sign in only with Google. Set SMTP or Google before inviting anyone. Google sign-in never creates an account: a person must be invited first.
 
 ## Reading your repositories
 
