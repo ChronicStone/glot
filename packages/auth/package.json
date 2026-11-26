@@ -5,14 +5,17 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./client": "./src/client.ts"
+    "./client": "./src/client.ts",
+    "./constants": "./src/constants/auth.constants.ts"
   },
   "scripts": {
     "typecheck": "tsrs --noEmit"
   },
   "dependencies": {
     "@better-auth/api-key": "catalog:",
+    "@glot/contract": "workspace:*",
     "@glot/database": "workspace:*",
+    "@glot/utils": "workspace:*",
     "better-auth": "catalog:",
     "drizzle-orm": "catalog:",
     "vue": "catalog:"

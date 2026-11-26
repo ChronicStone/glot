@@ -57,7 +57,9 @@
       "version": "0.0.0",
       "dependencies": {
         "@better-auth/api-key": "catalog:",
+        "@glot/contract": "workspace:*",
         "@glot/database": "workspace:*",
+        "@glot/utils": "workspace:*",
         "better-auth": "catalog:",
         "drizzle-orm": "catalog:",
         "vue": "catalog:",
@@ -134,6 +136,7 @@
       "dependencies": {
         "@glot/contract": "workspace:*",
         "@glot/database": "workspace:*",
+        "@glot/utils": "workspace:*",
         "@ui-sdk/core": "catalog:",
         "@ui-sdk/vue": "catalog:",
         "vue": "catalog:",
