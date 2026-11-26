@@ -1,14 +1,13 @@
 {
   "name": "@glot/ui",
   "version": "0.0.0",
-  "description": "Glot's look: light and dark tokens, a Tailwind theme, and components built on ui-sdk.",
+  "description": "Glot's look: light and dark tokens that feed Nuxt UI, and Glot's own components.",
   "license": "MIT",
   "type": "module",
   "exports": {
     "./theme.css": "./src/styles/theme.css",
     "./components/*": "./src/components/*",
-    "./constants": "./src/constants/ui.constants.ts",
-    "./types": "./src/types/ui.types.ts"
+    "./constants": "./src/constants/ui.constants.ts"
   },
   "scripts": {
     "typecheck": "tsrs -p tsconfig.typecheck.json --noEmit --runExternalCode"
@@ -18,9 +17,6 @@
     "@glot/contract": "workspace:*",
     "@glot/database": "workspace:*",
     "@glot/utils": "workspace:*",
-    "@lucide/vue": "catalog:",
-    "@ui-sdk/core": "catalog:",
-    "@ui-sdk/vue": "catalog:",
     "vue": "catalog:"
   },
   "peerDependencies": {
