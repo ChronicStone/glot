@@ -1,0 +1,4 @@
+{
+  "actions": { "save": "Ratować", "delete": "USUWAĆ" },
+  "marketplace": { "itemCard": { "outbid": "Oferta przebita", "endedOn": "Koniec {date}" } }
+}

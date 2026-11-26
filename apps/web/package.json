@@ -1,0 +1,45 @@
+{
+  "name": "@glot/web",
+  "version": "0.0.0",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev --dotenv ../../.env",
+    "build": "nuxt build",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "typecheck": "tsrs -p tsconfig.typecheck.json --noEmit --runExternalCode",
+    "test": "vp test run"
+  },
+  "dependencies": {
+    "@glot/auth": "workspace:*",
+    "@glot/contract": "workspace:*",
+    "@glot/database": "workspace:*",
+    "@glot/sdk": "workspace:*",
+    "@glot/ui": "workspace:*",
+    "@modelcontextprotocol/server": "catalog:",
+    "@orpc/client": "catalog:",
+    "@orpc/mcp": "catalog:",
+    "@orpc/openapi": "catalog:",
+    "@orpc/server": "catalog:",
+    "@orpc/tanstack-query": "catalog:",
+    "@orpc/zod": "catalog:",
+    "@tailwindcss/vite": "catalog:",
+    "@tanstack/vue-query": "catalog:",
+    "@ui-sdk/core": "catalog:",
+    "@ui-sdk/vue": "catalog:",
+    "drizzle-orm": "catalog:",
+    "nuxt": "catalog:",
+    "tailwindcss": "catalog:",
+    "vue": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@glot/seed": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/pg": "catalog:",
+    "pg": "catalog:",
+    "vite-plus": "catalog:"
+  }
+}

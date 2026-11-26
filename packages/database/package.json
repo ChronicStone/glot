@@ -1,0 +1,46 @@
+{
+  "name": "@glot/database",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./relations": "./src/schemas/database.relations.ts",
+    "./server": "./src/server/index.ts",
+    "./schemas": "./src/schemas/index.ts",
+    "./schemas/users": "./src/schemas/users/index.ts",
+    "./schemas/auth": "./src/schemas/auth/index.ts",
+    "./schemas/workspaces": "./src/schemas/workspaces/index.ts",
+    "./schemas/projects": "./src/schemas/projects/index.ts",
+    "./schemas/drafts": "./src/schemas/drafts/index.ts",
+    "./schemas/approvals": "./src/schemas/approvals/index.ts",
+    "./validators": "./src/validators/index.ts",
+    "./validators/projects": "./src/validators/projects.validator.ts",
+    "./validators/drafts": "./src/validators/drafts.validator.ts",
+    "./validators/approvals": "./src/validators/approvals.validator.ts",
+    "./types/database": "./src/types/database.types.ts",
+    "./types/*": "./src/types/*.types.ts",
+    "./constants/*": "./src/constants/*.constants.ts",
+    "./validators/workspaces": "./src/validators/workspaces.validator.ts",
+    "./validators/texts": "./src/validators/texts.validator.ts",
+    "./validators/glossary": "./src/validators/glossary.validator.ts"
+  },
+  "scripts": {
+    "typecheck": "tsrs --noEmit",
+    "db:check": "drizzle-kit check",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "@glot/utils": "workspace:*",
+    "better-drizzle": "catalog:",
+    "drizzle-kit": "catalog:",
+    "drizzle-orm": "catalog:",
+    "pg": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/pg": "catalog:"
+  }
+}

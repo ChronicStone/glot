@@ -1,0 +1,19 @@
+{
+  "name": "@glot/sdk",
+  "version": "0.0.0",
+  "description": "Typed clients for Glot's API, over RPC or REST, built from the contract alone.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsrs --noEmit"
+  },
+  "dependencies": {
+    "@glot/contract": "workspace:*",
+    "@orpc/client": "catalog:",
+    "@orpc/contract": "catalog:",
+    "@orpc/openapi": "catalog:"
+  }
+}

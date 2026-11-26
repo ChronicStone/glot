@@ -1,0 +1,6 @@
+export const TEXT_STATES = {
+  REVIEWED: 'REVIEWED',
+  TO_CHECK: 'TO_CHECK',
+  NEEDS_FIX: 'NEEDS_FIX',
+  MISSING: 'MISSING',
+} as const

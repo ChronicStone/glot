@@ -1,0 +1,68 @@
+{
+  "skill": "glot-skill-maintenance",
+  "version": 1,
+  "runs_per_query": 3,
+  "trigger_threshold": 0.5,
+  "queries": [
+    {
+      "id": "t01",
+      "query": "Update AGENTS.md routing after adding a frontend skill.",
+      "should_trigger": true
+    },
+    {
+      "id": "t02",
+      "query": "The agent-context checker fails on a broken link in the docs.",
+      "should_trigger": true
+    },
+    {
+      "id": "t03",
+      "query": "Move a rule from a skill into the lint plugin.",
+      "should_trigger": true
+    },
+    {
+      "id": "t04",
+      "query": "Two skills give conflicting advice about utilities; fix the guidance.",
+      "should_trigger": true
+    },
+    {
+      "id": "t05",
+      "query": "Add a routing eval suite for a new skill.",
+      "should_trigger": true
+    },
+    {
+      "id": "t06",
+      "query": "Trim AGENTS.md back under its word budget.",
+      "should_trigger": true
+    },
+    {
+      "id": "n01",
+      "query": "Add a texts.search filter for apps.",
+      "should_trigger": false
+    },
+    {
+      "id": "n02",
+      "query": "Fix the magic-link sign-in redirect.",
+      "should_trigger": false
+    },
+    {
+      "id": "n03",
+      "query": "Seed a second demo project.",
+      "should_trigger": false
+    },
+    {
+      "id": "n04",
+      "query": "Generate the OpenAPI document.",
+      "should_trigger": false
+    },
+    {
+      "id": "n05",
+      "query": "Change the widget pill colour.",
+      "should_trigger": false
+    },
+    {
+      "id": "n06",
+      "query": "Run the end-to-end suite.",
+      "should_trigger": false
+    }
+  ]
+}

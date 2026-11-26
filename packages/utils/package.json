@@ -1,0 +1,12 @@
+{
+  "name": "@glot/utils",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./types": "./src/types/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsrs --noEmit"
+  }
+}

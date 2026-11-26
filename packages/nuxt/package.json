@@ -1,0 +1,29 @@
+{
+  "name": "@glot/nuxt",
+  "version": "0.0.0",
+  "description": "Glot's Nuxt module: edit texts in the running app, for workspace members.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/module.ts"
+  },
+  "scripts": {
+    "typecheck": "tsrs -p tsconfig.typecheck.json --noEmit --runExternalCode"
+  },
+  "dependencies": {
+    "@glot/ui": "workspace:*",
+    "@nuxt/kit": "catalog:",
+    "@tailwindcss/node": "catalog:",
+    "@tailwindcss/oxide": "catalog:",
+    "tailwindcss": "catalog:",
+    "vue": "catalog:"
+  },
+  "devDependencies": {
+    "nuxt": "catalog:",
+    "vue-i18n": "catalog:"
+  },
+  "peerDependencies": {
+    "nuxt": "^4.0.0",
+    "vue-i18n": ">=11.4.0"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "@glot/seed",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/seed.ts"
+  },
+  "scripts": {
+    "db:seed": "bun src/run.ts",
+    "typecheck": "tsrs --noEmit"
+  },
+  "dependencies": {
+    "@glot/database": "workspace:*",
+    "drizzle-orm": "catalog:"
+  }
+}

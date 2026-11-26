@@ -1,0 +1,87 @@
+@layer ui-sdk;
+
+@import '@ui-sdk/core/web.css' layer(components);
+
+:root {
+  --glot-bg: #f5f5f3;
+  --glot-surface: #ffffff;
+  --glot-sunken: #f3f3f1;
+  --glot-line: #ecebe8;
+  --glot-line-strong: #e0dfdb;
+  --glot-ink: #1d1c1a;
+  --glot-ink-2: #55534e;
+  --glot-ink-3: #73716b;
+  --glot-ink-4: #c4c2bd;
+  --glot-accent: #3f70d1;
+  --glot-accent-soft: #eaf1fd;
+  --glot-accent-line: #b9cef4;
+  --glot-ok: #3e7650;
+  --glot-ok-soft: #e9f2ec;
+  --glot-warn: #86601c;
+  --glot-warn-soft: #f7efdd;
+  --glot-bad: #a3473d;
+  --glot-bad-soft: #f8e8e5;
+  --glot-button: #262421;
+  --glot-button-ink: #ffffff;
+  --glot-shadow-card: 0 1px 2px rgb(20 18 15 / 4%), 0 8px 24px rgb(20 18 15 / 4%);
+  --glot-shadow-pop: 0 2px 6px rgb(20 18 15 / 6%), 0 18px 48px rgb(20 18 15 / 12%);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --glot-bg: #0e0e0e;
+    --glot-surface: #171717;
+    --glot-sunken: #131313;
+    --glot-line: #242424;
+    --glot-line-strong: #333331;
+    --glot-ink: #ededea;
+    --glot-ink-2: #b3b2ae;
+    --glot-ink-3: #95948f;
+    --glot-ink-4: #55544f;
+    --glot-accent: #8db0f4;
+    --glot-accent-soft: #1a2233;
+    --glot-accent-line: #3a5584;
+    --glot-ok: #8fc6a0;
+    --glot-ok-soft: #17241b;
+    --glot-warn: #ddb872;
+    --glot-warn-soft: #2a2316;
+    --glot-bad: #e79c91;
+    --glot-bad-soft: #2c1a17;
+    --glot-button: #f1f1ee;
+    --glot-button-ink: #121212;
+    --glot-shadow-card: 0 0 0 1px rgb(255 255 255 / 2.5%), 0 8px 24px rgb(0 0 0 / 35%);
+    --glot-shadow-pop: 0 0 0 1px rgb(255 255 255 / 5%), 0 18px 48px rgb(0 0 0 / 60%);
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+  --color-bg: var(--glot-bg);
+  --color-surface: var(--glot-surface);
+  --color-sunken: var(--glot-sunken);
+  --color-line: var(--glot-line);
+  --color-line-strong: var(--glot-line-strong);
+  --color-ink: var(--glot-ink);
+  --color-ink-2: var(--glot-ink-2);
+  --color-ink-3: var(--glot-ink-3);
+  --color-ink-4: var(--glot-ink-4);
+  --color-accent: var(--glot-accent);
+  --color-accent-soft: var(--glot-accent-soft);
+  --color-accent-line: var(--glot-accent-line);
+  --color-ok: var(--glot-ok);
+  --color-ok-soft: var(--glot-ok-soft);
+  --color-warn: var(--glot-warn);
+  --color-warn-soft: var(--glot-warn-soft);
+  --color-bad: var(--glot-bad);
+  --color-bad-soft: var(--glot-bad-soft);
+  --color-button: var(--glot-button);
+  --color-button-ink: var(--glot-button-ink);
+  --shadow-card: var(--glot-shadow-card);
+  --shadow-pop: var(--glot-shadow-pop);
+  --radius-panel: 20px;
+  --radius-card: 16px;
+  --radius-control: 11px;
+}

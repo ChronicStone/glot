@@ -1,0 +1,9 @@
+@import 'tailwindcss';
+@import '@glot/ui/theme.css';
+
+:host {
+  all: initial;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}

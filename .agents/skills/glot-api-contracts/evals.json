@@ -1,0 +1,68 @@
+{
+  "skill": "glot-api-contracts",
+  "version": 1,
+  "runs_per_query": 3,
+  "trigger_threshold": 0.5,
+  "queries": [
+    {
+      "id": "t01",
+      "query": "Add a procedure to list drafts for a project, served over RPC, REST and MCP.",
+      "should_trigger": true
+    },
+    {
+      "id": "t02",
+      "query": "Add a column to the drafts table and expose it through the API.",
+      "should_trigger": true
+    },
+    {
+      "id": "t03",
+      "query": "Make sure API keys cannot approve texts.",
+      "should_trigger": true
+    },
+    {
+      "id": "t04",
+      "query": "Scope this query to the caller's workspace memberships.",
+      "should_trigger": true
+    },
+    {
+      "id": "t05",
+      "query": "Wire Google sign-in through better-auth for self-hosters.",
+      "should_trigger": true
+    },
+    {
+      "id": "t06",
+      "query": "Write an end-to-end test for approving a text through the SDK.",
+      "should_trigger": true
+    },
+    {
+      "id": "n01",
+      "query": "Change the colour of the selected row in the texts list.",
+      "should_trigger": false
+    },
+    {
+      "id": "n02",
+      "query": "Rename the Glot logo file.",
+      "should_trigger": false
+    },
+    {
+      "id": "n03",
+      "query": "Write the README introduction paragraph.",
+      "should_trigger": false
+    },
+    {
+      "id": "n04",
+      "query": "Explain how vue-i18n plural rules work in general.",
+      "should_trigger": false
+    },
+    {
+      "id": "n05",
+      "query": "Adjust the spacing of the review card on mobile.",
+      "should_trigger": false
+    },
+    {
+      "id": "n06",
+      "query": "Proofread the CONTEXT glossary wording.",
+      "should_trigger": false
+    }
+  ]
+}

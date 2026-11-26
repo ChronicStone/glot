@@ -1,0 +1,15 @@
+{
+  "name": "@glot/nuxt-playground",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev --port 3200",
+    "build": "nuxt build"
+  },
+  "dependencies": {
+    "@glot/nuxt": "workspace:*",
+    "@nuxtjs/i18n": "10.7.0",
+    "nuxt": "catalog:",
+    "vue": "catalog:"
+  }
+}

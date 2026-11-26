@@ -1,0 +1,56 @@
+export const backendScopePattern =
+  /(?:^|\/)(?:apps\/web\/server|packages\/(?:auth|contract|database|sdk|utils))(?:\/|$)/u
+export const generatedPathPattern =
+  /(?:^|\/)(?:node_modules|generated|migrations?|build|dist|\.nuxt|\.output|coverage)(?:\/|$)/u
+export const implementationPathPattern =
+  /(?:^|\/)(?:controllers|services|policies|jobs|middleware)(?:\/|$)/u
+export const typesDirectoryPattern = /(?:^|\/)types(?:\/|$)/u
+export const configFilenamePattern = /(?:^|[._-])config$/u
+export const constantsFilenamePattern = /(?:^|[._-])constants$/u
+export const fixturesFilenamePattern = /(?:^|[._-])fixtures?$/u
+export const resourcesFilenamePattern = /(?:^|[._-])resources?$/u
+export const schemasFilenamePattern = /(?:^|[._-])schemas?$/u
+export const relationsFilenamePattern = /(?:^|[._-])relations?$/u
+export const validatorsFilenamePattern = /(?:^|[._-])validators?$/u
+export const validationFilenamePattern = /(?:^|[._-])validation$/u
+export const typesFilenamePattern = /(?:^|[._-])types$/u
+export const utilsFilenamePattern = /(?:^|[._-])utils$/u
+export const controllersFilenamePattern = /(?:^|[._-])controllers?$/u
+export const servicesFilenamePattern = /(?:^|[._-])services?$/u
+export const policiesFilenamePattern = /(?:^|[._-])policies?$/u
+export const jobsFilenamePattern = /(?:^|[._-])jobs?$/u
+export const handlersFilenamePattern = /(?:^|[._-])handlers?$/u
+export const middlewareFilenamePattern = /(?:^|[._-])middleware$/u
+export const repositoriesFilenamePattern = /(?:^|[._-])repositories?$/u
+export const serializersFilenamePattern = /(?:^|[._-])serializers?$/u
+export const reportsFilenamePattern = /(?:^|[._-])reports?$/u
+export const routersFilenamePattern = /(?:^|[._-])routers?$/u
+export const contractsFilenamePattern = /(?:^|[._-])contracts?$/u
+export const mailFilenamePattern = /(?:^|[._-])mails?$/u
+export const configDirectoryPattern = /(?:^|\/)config(?:\/|$)/u
+export const constantsDirectoryPattern = /(?:^|\/)constants(?:\/|$)/u
+export const fixturesDirectoryPattern = /(?:^|\/)fixtures?(?:\/|$)/u
+export const resourcesDirectoryPattern = /(?:^|\/)resources?(?:\/|$)/u
+export const schemasDirectoryPattern = /(?:^|\/)schemas?(?:\/|$)/u
+export const relationsDirectoryPattern = /(?:^|\/)relations?(?:\/|$)/u
+export const validationDirectoryPattern = /(?:^|\/)validation(?:\/|$)/u
+export const validatorsDirectoryPattern = /(?:^|\/)validators?(?:\/|$)/u
+export const utilsDirectoryPattern = /(?:^|\/)utils(?:\/|$)/u
+export const controllersDirectoryPattern = /(?:^|\/)controllers?(?:\/|$)/u
+export const servicesDirectoryPattern = /(?:^|\/)services?(?:\/|$)/u
+export const policiesDirectoryPattern = /(?:^|\/)policies?(?:\/|$)/u
+export const jobsDirectoryPattern = /(?:^|\/)jobs?(?:\/|$)/u
+export const handlersDirectoryPattern = /(?:^|\/)handlers?(?:\/|$)/u
+export const middlewareDirectoryPattern = /(?:^|\/)middleware(?:\/|$)/u
+export const repositoriesDirectoryPattern = /(?:^|\/)repositories?(?:\/|$)/u
+export const serializersDirectoryPattern = /(?:^|\/)serializers?(?:\/|$)/u
+export const reportsDirectoryPattern = /(?:^|\/)reports?(?:\/|$)/u
+export const routersDirectoryPattern = /(?:^|\/)routers?(?:\/|$)/u
+export const contractsDirectoryPattern = /(?:^|\/)contracts?(?:\/|$)/u
+export const mailDirectoryPattern = /(?:^|\/)mails?(?:\/|$)/u
+export const frameworkEntrypointPattern =
+  /(?:^|\/)(?:(?:env|router|session|client|server|index|create-auth)\.(?:[cm]?tsx?)|apps\/web\/server\/routes\/.+\.ts|packages\/database\/drizzle\.config\.ts)$/u
+export const kebabSubjectPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u
+export const upperSnakeIdentifierPattern = /^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*$/u
+export const camelCaseIdentifierPattern = /^[a-z][A-Za-z0-9]*$/u
+export const widenedArrayNamePattern = /(?:^|_)(?:VALUES|OPTIONS|LIST|ARRAY)$/u

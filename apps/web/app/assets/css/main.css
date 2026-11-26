@@ -1,0 +1,13 @@
+@import 'tailwindcss';
+@import '@glot/ui/theme.css';
+
+@source '../../../../../packages/ui/src';
+
+html,
+body {
+  background: var(--glot-bg);
+  color: var(--glot-ink);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}

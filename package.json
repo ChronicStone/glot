@@ -1,0 +1,101 @@
+{
+  "name": "glot",
+  "version": "0.0.0",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "packages/nuxt/playground",
+    "tooling/*"
+  ],
+  "type": "module",
+  "scripts": {
+    "dev": "vp run @glot/web#dev",
+    "build": "vp run -r build",
+    "check": "vp check && bun run typecheck && bun run lint:anti-slop && bun run check:agent-context",
+    "check:fix": "vp check --fix",
+    "check:agent-context": "bun tools/agent-context/check.ts",
+    "lint:anti-slop": "oxlint -c oxlint.anti-slop.ts --type-aware .",
+    "lint:rules:test": "node --test 'tools/oxlint/glot-patterns/tests/*.test.ts'",
+    "typecheck": "vp run -r typecheck",
+    "test": "vp run -r test",
+    "infra:up": "docker compose -p glot up -d --wait",
+    "infra:down": "docker compose -p glot down",
+    "db:generate": "bun run --cwd packages/database db:generate",
+    "db:migrate": "bun --env-file=.env run --cwd packages/database db:migrate",
+    "db:studio": "bun --env-file=.env run --cwd packages/database db:studio",
+    "ready": "bun run check && bun run test && vp run -r build",
+    "db:seed": "bun --env-file=.env tooling/seed/src/run.ts"
+  },
+  "devDependencies": {
+    "@oxlint/plugins": "catalog:",
+    "@types/node": "catalog:",
+    "@vue/content-mapper": "catalog:",
+    "oxlint": "catalog:",
+    "oxlint-tsgolint": "catalog:",
+    "tsrs": "catalog:",
+    "typescript": "catalog:",
+    "ultracite": "catalog:",
+    "varlock": "catalog:",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "overrides": {
+    "vite": "catalog:"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "bun",
+      "version": "1.4.4",
+      "onFail": "download"
+    }
+  },
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "packageManager": "bun@1.4.4",
+  "catalog": {
+    "@better-auth/api-key": "1.7.28",
+    "@better-auth/cli": "1.4.21",
+    "@modelcontextprotocol/server": "2.4.0",
+    "@nuxt/kit": "4.7.0",
+    "@orpc/client": "2.0.0-beta.53",
+    "@orpc/contract": "2.0.0-beta.53",
+    "@orpc/json-schema": "2.0.0-beta.53",
+    "@orpc/mcp": "2.0.0-beta.53",
+    "@orpc/openapi": "2.0.0-beta.53",
+    "@orpc/server": "2.0.0-beta.53",
+    "@orpc/tanstack-query": "2.0.0-beta.53",
+    "@orpc/zod": "2.0.0-beta.53",
+    "@oxlint/plugins": "1.95.0",
+    "@tailwindcss/node": "4.3.5",
+    "@tailwindcss/oxide": "4.3.5",
+    "@tailwindcss/vite": "4.3.5",
+    "@tanstack/vue-query": "5.108.4",
+    "@types/node": "26.6.5",
+    "@types/pg": "8.23.1",
+    "@ui-sdk/core": "0.1.0-beta.17",
+    "@ui-sdk/vue": "0.1.0-beta.17",
+    "@vue/content-mapper": "4.0.0-alpha.3",
+    "better-auth": "1.7.28",
+    "better-drizzle": "0.3.0",
+    "drizzle-kit": "1.0.0-rc.4",
+    "drizzle-orm": "1.0.0-rc.4",
+    "jsonc-parser": "3.3.1",
+    "nuxt": "4.7.0",
+    "oxlint": "1.95.0",
+    "oxlint-tsgolint": "7.0.2009",
+    "pg": "8.23.1",
+    "tailwindcss": "4.3.5",
+    "tsrs": "7.1.0-beta.tsrs5",
+    "typescript": "7.1.0-beta",
+    "ultracite": "8.3.1",
+    "varlock": "1.25.0",
+    "vite": "npm:@voidzero-dev/vite-plus-core@8.3.8001",
+    "vite-plus": "1.8.0",
+    "vue": "3.5.46",
+    "vue-i18n": "11.4.24",
+    "zod": "4.6.7"
+  }
+}

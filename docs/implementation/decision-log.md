@@ -1,0 +1,15 @@
+# Decision log
+
+| ID    | Decision                                                                                                                                               | Why                                                               |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
+| D-001 | Monorepo on Vite+ with bun; TypeScript 7 checked by tsrs, `.vue` files through the Vue content mapper.                                                 | One toolchain for format, lint, type checks and tasks.            |
+| D-002 | One oRPC contract served by Nuxt as RPC, REST and MCP ([ADR 0002](../adr/0002-orpc-served-by-nuxt.md)).                                                | One typed surface for the app, the public API and agents.         |
+| D-003 | PostgreSQL 18 with Drizzle 1.0 and the better-drizzle client; domain ids are UUIDv7 ([ADR 0003](../adr/0003-postgresql-uuidv7-domain-identifiers.md)). | Typed delegates without hiding Drizzle.                           |
+| D-004 | better-auth with its Drizzle adapter; switch to better-drizzle's adapter when it is released.                                                          | Auth writes then go through the same client and plugins.          |
+| D-005 | Types have one owner: database constants, tables, derived validators, contract schemas, inferred types. One role per file, enforced by lint.           | No drift between layers.                                          |
+| D-006 | No tautological tests; the end-to-end suite runs against PostgreSQL and the real server.                                                               | Evidence over restated types.                                     |
+| D-007 | AI translations ship marked "to check"; Glot never blocks a deploy on review.                                                                          | Languages without a reviewer still get texts; states stay honest. |
+| D-008 | Pending approvals are stored in PostgreSQL and released to `.glot/reviews/<language>.jsonl` with each release.                                         | Visible in pull requests, readable without Glot, no app rebuild.  |
+| D-009 | Releases about twice a day plus an urgent fix by admins and developers; the merge queue and required checks stay.                                      | Bounded CI cost, no bypass.                                       |
+| D-010 | Server under AGPL-3.0; contract, SDK, UI kit, Nuxt module and utilities under MIT.                                                                     | Host apps embed MIT parts freely; the hosted server stays open.   |
+| D-011 | Template texts per brand with override layers; English defaults to en-GB; daily email digest with optional Slack.                                      | Owner's picks from the grill, to revisit.                         |

@@ -1,0 +1,68 @@
+{
+  "skill": "glot-code-patterns",
+  "version": 1,
+  "runs_per_query": 3,
+  "trigger_threshold": 0.5,
+  "queries": [
+    {
+      "id": "t01",
+      "query": "Add a new feature to Glot without creating unnecessary wrappers.",
+      "should_trigger": true
+    },
+    {
+      "id": "t02",
+      "query": "Review this refactor for module ownership and accidental complexity.",
+      "should_trigger": true
+    },
+    {
+      "id": "t03",
+      "query": "Should this helper stay inline or become a shared utility?",
+      "should_trigger": true
+    },
+    {
+      "id": "t04",
+      "query": "Where should this new type live so it has a single source of truth?",
+      "should_trigger": true
+    },
+    {
+      "id": "t05",
+      "query": "Write meaningful tests for this change without mirroring the implementation.",
+      "should_trigger": true
+    },
+    {
+      "id": "t06",
+      "query": "This file mixes a type, a helper and a constant; split it the right way.",
+      "should_trigger": true
+    },
+    {
+      "id": "n01",
+      "query": "Explain what UUIDv7 is without changing the repository.",
+      "should_trigger": false
+    },
+    {
+      "id": "n02",
+      "query": "Translate this French sentence into Polish.",
+      "should_trigger": false
+    },
+    {
+      "id": "n03",
+      "query": "What does the Glot product do for marketing teams?",
+      "should_trigger": false
+    },
+    {
+      "id": "n04",
+      "query": "Summarize the last council review in two sentences.",
+      "should_trigger": false
+    },
+    {
+      "id": "n05",
+      "query": "Draw a logo idea for the Glot brand.",
+      "should_trigger": false
+    },
+    {
+      "id": "n06",
+      "query": "List the languages supported by the demo project.",
+      "should_trigger": false
+    }
+  ]
+}
