@@ -30,6 +30,16 @@ bun run dev                 # http://localhost:3100
 
 Sign in with `anna@glot.test`: in development the sign-in link is printed in the server output.
 
+## Self-host
+
+```sh
+cp .env.example .env        # set AUTH_SECRET and APP_URL
+docker compose --profile app up -d --build --wait
+docker compose logs glot | grep "first administrator"   # open the link
+```
+
+Requirements, environment variables, upgrades and backups: [docs/self-hosting.md](docs/self-hosting.md).
+
 ## Use the API
 
 ```ts
