@@ -73,21 +73,10 @@ textarea {
 .page-scroll {
   overflow: auto;
 }
-.m-only {
-  display: none;
-}
-@media (max-width: 760px) {
-  .m-only {
-    display: inline-flex;
-  }
-  .page {
-    padding: 12px 0 0;
-  }
+.page.tx-head {
+  display: contents;
 }
 .side-drawer .side {
   display: flex;
   height: 100%;
-}
-.key-src {
-  color: var(--glot-ink-3);
 }

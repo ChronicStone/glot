@@ -19,6 +19,10 @@ watch(
 provide('openMenu', () => {
   menuOpen.value = true
 })
+
+provide('openPalette', () => {
+  paletteOpen.value = true
+})
 </script>
 
 <template>

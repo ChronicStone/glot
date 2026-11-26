@@ -139,7 +139,7 @@ defineShortcuts({
 </script>
 
 <template>
-  <AppPage title="Texts">
+  <AppPage title="Texts" class="tx-head" :context="project?.name">
     <template #pill>
       <span v-if="texts.isError.value" class="pill warn pill-lg"
         ><UIcon name="i-lucide-cloud-off" />Repository unreachable</span
@@ -300,7 +300,7 @@ defineShortcuts({
       </aside>
     </div>
 
-    <UDrawer v-model:open="sheetOpen" :ui="{ content: 'insp sheet h-[88dvh]' }">
+    <UDrawer v-model:open="sheetOpen" :ui="{ content: 'panel insp h-[88dvh]' }">
       <template #content>
         <TextPanel
           v-if="selected"
