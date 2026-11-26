@@ -4,9 +4,9 @@ const { t, setLocale, locale } = useI18n()
 
 <template>
   <main style="font-family: system-ui; padding: 32px; max-width: 520px">
-    <h1>Lot #4821 · Renault Master L2H2</h1>
-    <p>{{ t('marketplace.itemCard.outbid') }}</p>
-    <p>{{ t('marketplace.itemCard.endedOn', { date: '28/11' }) }}</p>
+    <h1>Lot #4821 · Art deco armchair</h1>
+    <p>{{ t('lotCard.outbid') }}</p>
+    <p>{{ t('lotCard.endedOn', { date: '28/11' }) }}</p>
     <button>{{ t('actions.save') }}</button>
     <button>{{ t('actions.delete') }}</button>
     <p>

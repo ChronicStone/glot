@@ -92,7 +92,7 @@ export const DEMO_CATALOG: CatalogSource = {
         ],
       },
       {
-        id: 'marketplace.itemCard.outbid',
+        id: 'lotCard.outbid',
         key: {
           source: 'shared-base',
           path: ['marketplace', 'itemCard', 'outbid'],
@@ -136,7 +136,7 @@ export const DEMO_CATALOG: CatalogSource = {
         ],
       },
       {
-        id: 'marketplace.itemCard.endedOn',
+        id: 'lotCard.endedOn',
         key: {
           source: 'shared-base',
           path: ['marketplace', 'itemCard', 'endedOn'],
@@ -180,14 +180,14 @@ export const DEMO_CATALOG: CatalogSource = {
         ],
       },
       {
-        id: 'apiErrorMessages.WALLET_ID_MISSING',
+        id: 'errors.paymentMethodMissing',
         key: {
           source: 'shared-base',
           path: ['apiErrorMessages', 'WALLET_ID_MISSING'],
         },
         source: {
           language: 'fr',
-          value: 'Il manque l’identifiant du wallet.',
+          value: 'Il manque le moyen de paiement.',
         },
         where: 'Error message · Admin',
         shownIn: ['Admin'],
@@ -195,14 +195,14 @@ export const DEMO_CATALOG: CatalogSource = {
         translations: [
           {
             language: 'en',
-            value: 'The wallet ID is missing.',
+            value: 'The payment method is missing.',
             state: 'TO_CHECK',
             reviewedBy: null,
             aiWritten: true,
           },
           {
             language: 'de',
-            value: 'Die Wallet-ID fehlt.',
+            value: 'Die Zahlungsmethode fehlt.',
             state: 'TO_CHECK',
             reviewedBy: null,
             aiWritten: true,
@@ -216,7 +216,7 @@ export const DEMO_CATALOG: CatalogSource = {
           },
           {
             language: 'nl',
-            value: 'De wallet-ID ontbreekt.',
+            value: 'De betaalmethode ontbreekt.',
             state: 'TO_CHECK',
             reviewedBy: null,
             aiWritten: true,
@@ -225,35 +225,37 @@ export const DEMO_CATALOG: CatalogSource = {
       },
     ],
   },
-  glossary: [
-    {
-      id: 'lot',
-      name: 'lot',
-      definition: 'An item sold at auction, never a plot of land.',
-      status: 'VALIDATED',
-      neverTranslate: false,
-      terms: {
-        en: {
-          term: 'lot',
-          plural: 'lots',
-          avoid: [],
-        },
-        de: {
-          term: 'Los',
-          plural: 'Lose',
-          avoid: ['Grundstück', 'Charge'],
-        },
-        pl: {
-          term: 'partia',
-          plural: 'partie',
-          avoid: ['działka'],
-        },
-        nl: {
-          term: 'kavel',
-          plural: 'kavels',
-          avoid: ['perceel'],
+  glossary: {
+    'glot/demo': [
+      {
+        id: 'lot',
+        name: 'lot',
+        definition: 'An item sold at auction, never a plot of land.',
+        status: 'VALIDATED',
+        neverTranslate: false,
+        terms: {
+          en: {
+            term: 'lot',
+            plural: 'lots',
+            avoid: [],
+          },
+          de: {
+            term: 'Los',
+            plural: 'Lose',
+            avoid: ['Grundstück', 'Charge'],
+          },
+          pl: {
+            term: 'partia',
+            plural: 'partie',
+            avoid: ['działka'],
+          },
+          nl: {
+            term: 'kavel',
+            plural: 'kavels',
+            avoid: ['perceel'],
+          },
         },
       },
-    },
-  ],
+    ],
+  },
 }

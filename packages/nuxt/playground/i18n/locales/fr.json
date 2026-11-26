@@ -1,4 +1,4 @@
 {
   "actions": { "save": "Enregistrer", "delete": "Supprimer" },
-  "marketplace": { "itemCard": { "outbid": "Enchère dépassée", "endedOn": "Fin le {date}" } }
+  "lotCard": { "outbid": "Enchère dépassée", "endedOn": "Fin le {date}" }
 }
