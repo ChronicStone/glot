@@ -17,7 +17,7 @@ export const textsContract = {
         operationId: 'searchTexts',
         summary: 'Search texts',
         description:
-          'Find texts by words in any language. Filter by state in one language. Most seen first.',
+          'Find texts by words in any language. Filter by state in one language. Texts come in the order of the project sources and their files.',
         tags: ['texts'],
       }),
     )

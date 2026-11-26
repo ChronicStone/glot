@@ -13,6 +13,7 @@
     "typecheck": "tsrs --noEmit"
   },
   "dependencies": {
+    "@glot/checks": "workspace:*",
     "@glot/database": "workspace:*",
     "@glot/utils": "workspace:*",
     "@orpc/contract": "catalog:",

@@ -1,3 +1,4 @@
+import { checkFailureSchema } from '@glot/checks/validators'
 import { draftSelectSchema } from '@glot/database/validators/drafts'
 import { textStateSchema } from '@glot/database/validators/texts'
 import * as z from 'zod'
@@ -17,6 +18,9 @@ export const translationSchema = z.object({
   language: languageCodeSchema,
   value: z.string().nullable(),
   state: textStateSchema,
+  failures: z
+    .array(checkFailureSchema)
+    .describe('The checks this text fails, each with a code and a reason. Empty when none fails.'),
   reviewedBy: z.string().nullable(),
   aiWritten: z.boolean(),
 })
@@ -25,7 +29,7 @@ export const textSchema = z.object({
   id: z.string(),
   key: keyRefSchema,
   source: z.object({ language: languageCodeSchema, value: z.string() }),
-  where: z.string().describe("Where readers see it, in words: 'Save button · 266 pages'."),
+  where: z.string().describe('Where readers see it, in words: the source that holds the text.'),
   shownIn: z.array(z.string()).describe('The apps that show this text.'),
   translations: z.array(translationSchema),
 })
