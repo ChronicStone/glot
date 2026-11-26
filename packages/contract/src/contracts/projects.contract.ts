@@ -4,6 +4,7 @@ import * as z from 'zod'
 import {
   ADMIN_ONLY_ERRORS,
   NOT_FOUND_ERRORS,
+  PEOPLE_ONLY_ERRORS,
   PROJECT_ERRORS,
 } from '../constants/contract.constants.ts'
 import {
@@ -50,13 +51,19 @@ export const projectsContract = {
         path: '/workspaces/{workspaceId}/projects',
         operationId: 'createProject',
         summary: 'Add a repository as a project',
-        description: 'Its sources say where the language files are. Admins only.',
+        description:
+          'Its sources say where the language files are. A repository belongs to one workspace. Admins only, signed in.',
         tags: ['projects'],
       }),
     )
     .input(projectCreateInputSchema)
     .output(projectSchema)
-    .errors({ ...NOT_FOUND_ERRORS, ...ADMIN_ONLY_ERRORS, ...PROJECT_ERRORS }),
+    .errors({
+      ...NOT_FOUND_ERRORS,
+      ...ADMIN_ONLY_ERRORS,
+      ...PROJECT_ERRORS,
+      ...PEOPLE_ONLY_ERRORS,
+    }),
   update: oc
     .meta(
       openapi({
@@ -69,5 +76,5 @@ export const projectsContract = {
     )
     .input(projectUpdateInputSchema)
     .output(projectSchema)
-    .errors({ ...NOT_FOUND_ERRORS, ...ADMIN_ONLY_ERRORS }),
+    .errors({ ...NOT_FOUND_ERRORS, ...ADMIN_ONLY_ERRORS, ...PEOPLE_ONLY_ERRORS }),
 }

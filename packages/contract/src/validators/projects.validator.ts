@@ -30,13 +30,21 @@ export const projectSyncSchema = z.object({
   texts: z.number().int().describe('How many texts the project holds at that commit.'),
 })
 
+const relativePathSchema = z
+  .string()
+  .min(1)
+  .regex(/^(?!\/)(?!.*\\)(?!.*\.\.)/u, 'Must be a path inside the repository, without ..')
+
 const languagesInputSchema = z.array(languageCodeSchema).min(1)
 
 export const projectSourceInputSchema = projectSourceSchema.extend({
   name: projectSourceSchema.shape.name.min(1),
-  pathPattern: projectSourceSchema.shape.pathPattern
-    .min(1)
-    .describe('Where the files are, with {locale} for the language: locales/{locale}.json.'),
+  pathPattern: relativePathSchema
+    .regex(/\{locale\}/u, 'Must contain {locale}')
+    .regex(/\.json$/u, 'Must end in .json')
+    .describe(
+      'Where the files are inside the repository, with {locale} for the language: locales/{locale}.json.',
+    ),
   sourceLanguage: languageCodeSchema,
   languages: languagesInputSchema,
 })
@@ -48,7 +56,7 @@ export const projectCreateInputSchema = projectInsertSchema
     repository: projectSelectSchema.shape.repository
       .regex(/^(?!\.)[\w.-]+\/(?!\.)[\w.-]+$/u)
       .describe('owner/name on GitHub, or the same two folders under the local git root.'),
-    defaultBranch: projectSelectSchema.shape.defaultBranch.min(1),
+    defaultBranch: relativePathSchema,
     sourceLanguage: languageCodeSchema,
     languages: languagesInputSchema,
     sources: z.array(projectSourceInputSchema).min(1),

@@ -33,7 +33,7 @@ export const projects = pgTable(
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    uniqueIndex('project_workspace_repository_unique').on(table.workspaceId, table.repository),
+    uniqueIndex('project_repository_unique').on(sql`lower(${table.repository})`),
     index('project_workspace_idx').on(table.workspaceId),
   ],
 )

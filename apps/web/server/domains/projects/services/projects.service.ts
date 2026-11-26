@@ -68,7 +68,7 @@ export class ProjectsService {
     })
 
     const taken = await this.#context.db.projects.exists({
-      where: { workspaceId: input.workspaceId, repository: input.repository },
+      where: { repository: { equals: input.repository, mode: 'insensitive' } },
     })
 
     if (taken) {

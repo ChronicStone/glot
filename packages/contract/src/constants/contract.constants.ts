@@ -9,6 +9,8 @@ export const PEOPLE_ONLY_PROCEDURES = {
   UPDATE_GLOSSARY_CONCEPT: 'glossary.updateConcept',
   SET_GLOSSARY_STATUS: 'glossary.setConceptStatus',
   REMOVE_GLOSSARY_CONCEPT: 'glossary.removeConcept',
+  CREATE_PROJECT: 'projects.create',
+  UPDATE_PROJECT: 'projects.update',
   INVITE_PERSON: 'people.invite',
   UPDATE_PERSON: 'people.update',
   REMOVE_PERSON: 'people.remove',

@@ -1,15 +1,18 @@
-import { DEMO_REPOSITORY, DEMO_SOURCE } from '@glot/seed/fixtures'
 import { createGlotClient } from '@glot/sdk'
+import { DEMO_REPOSITORY, DEMO_SOURCE } from '@glot/seed/fixtures'
+import { seedDemoRepository } from '@glot/seed/repository'
 import { beforeAll, expect, inject, test } from 'vite-plus/test'
 import { signInByMagicLink, withCookie } from './support/session.ts'
 
 const baseUrl = inject('baseUrl')
+const agentKey = inject('agentKey')
+const REPOSITORY = 'glot/projects'
 let ownerCookie = ''
 let workspaceId = ''
 
 const project = {
   name: 'Demo again',
-  repository: DEMO_REPOSITORY,
+  repository: REPOSITORY,
   defaultBranch: 'main',
   sourceLanguage: DEMO_SOURCE.sourceLanguage,
   languages: DEMO_SOURCE.languages,
@@ -17,6 +20,7 @@ const project = {
 }
 
 beforeAll(async () => {
+  await seedDemoRepository({ root: inject('repositoriesRoot'), repository: REPOSITORY })
   ownerCookie = await signInByMagicLink('marie@glot.test')
 
   const created = await fetch(`${baseUrl}/api/auth/organization/create`, {
@@ -82,6 +86,84 @@ test('a repository must be owner/name, never a path', async () => {
   for (const repository of ['../../etc', 'glot', 'glot/demo/extra', 'glot/..']) {
     await expect(
       owner.projects.create({ workspaceId, ...project, repository }),
+    ).rejects.toMatchObject({ code: 'BAD_REQUEST' })
+  }
+})
+
+test('a repository already used by another workspace is refused', async () => {
+  const owner = createGlotClient({ url: baseUrl, fetch: withCookie(ownerCookie) })
+
+  for (const repository of [DEMO_REPOSITORY, DEMO_REPOSITORY.toUpperCase()]) {
+    await expect(
+      owner.projects.create({ workspaceId, ...project, repository }),
+    ).rejects.toMatchObject({ code: 'CONFLICT' })
+  }
+})
+
+test('an agent key cannot add or change a project, and MCP does not offer it', async () => {
+  const agent = createGlotClient({ url: baseUrl, token: agentKey })
+  const owner = createGlotClient({ url: baseUrl, fetch: withCookie(ownerCookie) })
+  const [existing] = await owner.projects.list()
+
+  await expect(agent.projects.create({ workspaceId, ...project })).rejects.toMatchObject({
+    code: 'PEOPLE_ONLY',
+  })
+
+  await expect(
+    agent.projects.update({
+      projectId: existing?.id ?? '',
+      name: 'x',
+      defaultBranch: 'main',
+      sourceLanguage: 'fr',
+      languages: ['fr'],
+      sources: [{ ...project.sources[0], languages: ['fr'] }],
+    }),
+  ).rejects.toMatchObject({ code: 'PEOPLE_ONLY' })
+
+  const response = await fetch(`${baseUrl}/mcp`, {
+    method: 'POST',
+    headers: {
+      authorization: `Bearer ${agentKey}`,
+      'content-type': 'application/json',
+      accept: 'application/json, text/event-stream',
+      'mcp-protocol-version': '2025-06-18',
+    },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} }),
+  })
+
+  const names: string[] = (await response.json()).result.tools.map(
+    (tool: { name: string }) => tool.name,
+  )
+
+  expect(names).toContain('listProjects')
+  expect(names).not.toContain('createProject')
+  expect(names).not.toContain('updateProject')
+})
+
+test('a source path stays inside the repository and names a JSON file per language', async () => {
+  const owner = createGlotClient({ url: baseUrl, fetch: withCookie(ownerCookie) })
+
+  for (const pathPattern of [
+    '../secrets/{locale}.json',
+    'config/../{locale}.json',
+    '/etc/{locale}.json',
+    'locales\\{locale}.json',
+    'config/secrets.json',
+    'locales/{locale}.yml',
+  ]) {
+    await expect(
+      owner.projects.create({
+        workspaceId,
+        ...project,
+        repository: 'glot/other',
+        sources: [{ ...project.sources[0], pathPattern }],
+      }),
+    ).rejects.toMatchObject({ code: 'BAD_REQUEST' })
+  }
+
+  for (const defaultBranch of ['../main', '/main', 'a\\b', 'feature/../main']) {
+    await expect(
+      owner.projects.create({ workspaceId, ...project, repository: 'glot/other', defaultBranch }),
     ).rejects.toMatchObject({ code: 'BAD_REQUEST' })
   }
 })
