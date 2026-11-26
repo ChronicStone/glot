@@ -14,3 +14,13 @@ export const SETTINGS_LINKS = {
   PROJECTS: { label: 'Projects', to: '/settings/projects', icon: 'i-lucide-folder-git-2' },
   KEYS: { label: 'API keys', to: '/settings/keys', icon: 'i-lucide-key-round' },
 } as const
+
+export const AVATAR_COLORS = {
+  BLUE: '#5b7fd6',
+  CLAY: '#c0794b',
+  SAGE: '#4f9a82',
+  VIOLET: '#8c6bd0',
+  ROSE: '#d06b93',
+  SKY: '#5e94b8',
+  SLATE: '#8a94a6',
+} as const

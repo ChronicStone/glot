@@ -42,7 +42,7 @@ function openModal(person: Person | undefined) {
 </script>
 
 <template>
-  <AppPage id="settings-people" title="Settings">
+  <AppPage title="Settings">
     <template #actions>
       <UButton
         v-if="managesPeople"

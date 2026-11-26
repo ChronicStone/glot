@@ -19,7 +19,7 @@ const table = useAppTable({ columns, data, getRowId: (key) => key.id })
 </script>
 
 <template>
-  <AppPage id="settings-keys" title="Settings">
+  <AppPage title="Settings">
     <template #actions>
       <UButton icon="i-lucide-plus" label="New key" color="neutral" @click="modalOpen = true" />
     </template>

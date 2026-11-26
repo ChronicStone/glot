@@ -9,11 +9,7 @@ const segments = computed(() => messageSegments(value))
 <template>
   <span>
     <template v-for="(segment, index) in segments" :key="index">
-      <span
-        v-if="segment.placeholder"
-        class="mx-px inline-block rounded-md bg-sel px-1.5 py-px align-baseline text-[0.92em] text-sel-ink"
-        >{{ segment.value }}</span
-      >
+      <span v-if="segment.placeholder" class="ph">{{ segment.value }}</span>
       <template v-else>{{ segment.value }}</template>
     </template>
   </span>

@@ -67,7 +67,7 @@ function currentValue(item: (typeof items.value)[number]) {
 </script>
 
 <template>
-  <AppPage id="review" title="Review">
+  <AppPage title="Review">
     <template #actions>
       <UButton
         v-if="identical > 0"

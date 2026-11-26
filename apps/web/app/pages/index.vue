@@ -3,7 +3,7 @@ const { projects } = useCurrentProject()
 </script>
 
 <template>
-  <AppPage id="home" title="Home">
+  <AppPage title="Home">
     <ul class="-mx-4 border-t border-default sm:-mx-6">
       <li v-for="project in projects" :key="project.id" class="border-b border-default">
         <ULink

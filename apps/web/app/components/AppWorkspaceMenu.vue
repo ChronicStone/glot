@@ -20,20 +20,15 @@ const items = computed<DropdownMenuItem[][]>(() => [
 </script>
 
 <template>
-  <UDropdownMenu :items="items" :content="{ align: 'start' }" :ui="{ content: 'w-[248px]' }">
-    <button
-      type="button"
-      class="flex h-11 w-full items-center gap-2.5 rounded-xl px-2 text-left transition-colors hover:bg-hover-page"
-    >
-      <span
-        class="grid size-7 shrink-0 place-items-center rounded-[9px] text-on-primary shadow-primary [background:var(--glot-primary-fill)]"
-      >
-        <GlotMark class="size-4" />
-      </span>
-      <span class="min-w-0 flex-1 truncate font-semibold tracking-[-0.012em] text-ink">{{
-        workspace?.name ?? 'Glot'
-      }}</span>
-      <UIcon name="i-lucide-chevrons-up-down" class="size-[15px] shrink-0 text-ink-4" />
+  <UDropdownMenu
+    :items="items"
+    :content="{ align: 'start', sideOffset: 4 }"
+    :ui="{ content: 'pop menu w-[248px]' }"
+  >
+    <button type="button" class="ws">
+      <span class="mark"><GlotMark /></span>
+      <span><div class="name">{{ workspace?.name ?? 'Glot' }}</div></span>
+      <UIcon name="i-lucide-chevrons-up-down" />
     </button>
   </UDropdownMenu>
 </template>

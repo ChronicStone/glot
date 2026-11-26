@@ -6,8 +6,6 @@ import { refDebounced } from '@vueuse/core'
 import { SETTINGS_LINKS } from '../constants/people.constants.ts'
 import {
   APPEARANCES,
-  APPEARANCE_ICONS,
-  APPEARANCE_LABELS,
   PROJECT_SECTIONS,
   PROJECT_SECTION_ICONS,
   PROJECT_SECTION_LABELS,
@@ -50,6 +48,8 @@ const groups = computed<
     }[]
   }[]
 >(() => {
+  const dark = colorMode.value === 'dark'
+
   const pages = [
     { id: 'home', label: 'Home', icon: 'i-lucide-house', to: '/' },
     { id: 'glossary', label: 'Glossary', icon: 'i-lucide-book-open-text', to: '/glossary' },
@@ -65,14 +65,17 @@ const groups = computed<
     ...Object.values(SETTINGS_LINKS).map((link) => ({ id: link.to, ...link })),
   ]
 
-  const appearances = Object.values(APPEARANCES).map((appearance) => ({
-    id: appearance,
-    label: `${APPEARANCE_LABELS[appearance]} appearance`,
-    icon: APPEARANCE_ICONS[appearance],
-    run: () => {
-      colorMode.preference = appearance
+  const actions = [
+    {
+      id: 'appearance',
+      label: dark ? 'Switch to light' : 'Switch to dark',
+      icon: dark ? 'i-lucide-sun' : 'i-lucide-moon',
+      run: () => {
+        colorMode.preference = dark ? APPEARANCES.LIGHT : APPEARANCES.DARK
+      },
     },
-  }))
+    { id: 'invite', label: 'Invite someone', icon: 'i-lucide-user-plus', to: '/settings/people' },
+  ]
 
   return [
     {
@@ -80,14 +83,17 @@ const groups = computed<
       items: (texts.data.value?.items ?? []).map((text) => ({
         id: text.id,
         label: text.source.value,
-        sub: text.where,
+        sub: text.key.path.join('.'),
         icon: 'i-lucide-text',
         to: `/projects/${project.value?.id}/texts?text=${text.id}`,
         translations: text.translations,
       })),
     },
-    { label: 'Go to', items: pages.filter(({ label }) => matches(label)) },
-    { label: 'Appearance', items: appearances.filter(({ label }) => matches(label)) },
+    {
+      label: 'Go to',
+      items: pages.filter((page) => matches(page.label) || Boolean(term.value && 'count' in page)),
+    },
+    { label: 'Actions', items: actions },
   ].filter(({ items }) => items.length > 0)
 })
 
@@ -124,9 +130,8 @@ function move(offset: number) {
 
   if (count > 0) {
     active.value = (active.value + offset + count) % count
-    nextTick(() =>
-      list.value?.querySelector('[data-active="true"]')?.scrollIntoView({ block: 'nearest' }),
-    )
+
+    nextTick(() => list.value?.querySelector('.cmdk-i.on')?.scrollIntoView({ block: 'nearest' }))
   }
 }
 
@@ -145,80 +150,65 @@ watch(open, (value) => {
 <template>
   <UModal
     v-model:open="open"
-    :ui="{
-      overlay: 'bg-scrim backdrop-blur-[2px]',
-      content:
-        'top-[13vh] w-[min(660px,calc(100vw-32px))] max-w-none translate-y-0 divide-y-0 overflow-hidden rounded-[22px] bg-panel shadow-dialog ring-1 ring-line sm:max-w-none dark:bg-[#18181a] dark:ring-[#2c2c2f]',
-    }"
+    fullscreen
+    :overlay="false"
+    :ui="{ content: 'bg-transparent ring-0 shadow-none divide-y-0' }"
     title="Search"
     description="Search texts or jump to a page"
   >
     <template #content>
-      <div class="flex h-[58px] items-center gap-3 border-b border-line px-[18px]">
-        <UIcon name="i-lucide-search" class="size-[19px] shrink-0 text-ink-3" />
-        <input
-          v-model="term"
-          autofocus
-          class="min-w-0 flex-1 bg-transparent text-[17px] text-ink outline-none placeholder:text-ink-4"
-          placeholder="Search texts in any language, or jump to…"
-          aria-label="Search"
-          @keydown.down.prevent="move(1)"
-          @keydown.up.prevent="move(-1)"
-          @keydown.enter.prevent="run(flat[active])"
-        />
-        <span
-          v-if="project"
-          class="inline-flex h-[22px] items-center rounded-[7px] bg-sunken px-1.5 font-mono text-xs text-ink-2 ring-1 ring-line ring-inset"
-          >{{ project.name }}</span
-        >
-      </div>
-      <div ref="list" class="max-h-[440px] overflow-auto p-2">
-        <template v-for="group in groups" :key="group.label">
-          <div class="px-2.5 pt-2.5 pb-1.5 text-xs font-medium text-ink-3">{{ group.label }}</div>
-          <button
-            v-for="item in group.items"
-            :key="item.id"
-            type="button"
-            :data-active="flat.indexOf(item) === active"
-            class="group flex h-11 w-full items-center gap-3 rounded-[11px] px-2.5 text-left text-sm text-ink-2 data-[active=true]:bg-sel data-[active=true]:text-ink data-[active=true]:ring-1 data-[active=true]:ring-sel-ring data-[active=true]:ring-inset"
-            @mousemove="active = flat.indexOf(item)"
-            @click="run(item)"
-          >
-            <UIcon
-              :name="item.icon"
-              class="size-4 shrink-0 text-ink-3 group-data-[active=true]:text-sel-ink"
-            />
-            <span class="min-w-0 truncate"
-              >{{ parts(item.label).before
-              }}<b class="font-semibold text-ink">{{ parts(item.label).match }}</b
-              >{{ parts(item.label).after }}</span
+      <div class="scrim" style="z-index: 60" @click="open = false" />
+      <div class="cmdk">
+        <div class="cmdk-in">
+          <UIcon name="i-lucide-search" /><input
+            v-model="term"
+            autofocus
+            placeholder="Search texts in any language, keys, or jump to…"
+            aria-label="Search"
+            @keydown.down.prevent="move(1)"
+            @keydown.up.prevent="move(-1)"
+            @keydown.enter.prevent="run(flat[active])"
+          /><span v-if="project" class="lc plain scope">{{ project.name }}</span>
+        </div>
+        <div ref="list" class="cmdk-list">
+          <template v-for="group in groups" :key="group.label">
+            <div class="cmdk-g">{{ group.label }}</div>
+            <div
+              v-for="item in group.items"
+              :key="item.id"
+              :class="{ on: flat.indexOf(item) === active }"
+              class="cmdk-i"
+              role="option"
+              :aria-selected="flat.indexOf(item) === active"
+              @mousemove="active = flat.indexOf(item)"
+              @click="run(item)"
             >
-            <span v-if="item.sub" class="shrink-0 text-xs text-ink-3">{{ item.sub }}</span>
-            <span class="ml-auto flex shrink-0 items-center gap-1.5 text-xs text-ink-3">
-              <span
-                v-if="item.translations"
-                class="rounded-[10px] bg-sunken p-[3px] ring-1 ring-line ring-inset"
+              <UIcon :name="item.icon" /><span
+                >{{ parts(item.label).before }}<mark>{{ parts(item.label).match }}</mark
+                >{{ parts(item.label).after }}</span
+              ><span v-if="item.sub" class="muted key" style="font-size: 12px">{{ item.sub }}</span>
+              <span v-if="item.translations || item.count" class="right"
+                ><GlotStateStrip v-if="item.translations" :translations="item.translations" /><span
+                  v-if="item.count"
+                  class="badge-n"
+                  >{{ item.count }}</span
+                ></span
               >
-                <GlotStateStrip :translations="item.translations" />
-              </span>
-              <span
-                v-if="item.count"
-                class="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-check-bg px-1.5 text-[11.5px] font-semibold text-check tabular-nums"
-                >{{ item.count }}</span
-              >
-            </span>
-          </button>
-        </template>
-        <p v-if="flat.length === 0" class="px-2.5 py-8 text-center text-[13px] text-ink-3">
-          {{ texts.isFetching.value ? 'Searching…' : `Nothing matches “${term}”.` }}
-        </p>
-      </div>
-      <div
-        class="flex h-[42px] items-center gap-4 border-t border-line bg-panel-2 px-4 text-xs text-ink-3 dark:bg-[#151517]"
-      >
-        <span class="flex items-center gap-1.5"><UKbd value="↑" /><UKbd value="↓" />move</span>
-        <span class="flex items-center gap-1.5"><UKbd value="↵" />open</span>
-        <span class="ml-auto flex items-center gap-1.5"><UKbd value="esc" />close</span>
+            </div>
+          </template>
+          <div
+            v-if="flat.length === 0"
+            class="cmdk-g"
+            style="padding: 24px 10px; text-align: center"
+          >
+            {{ texts.isFetching.value ? 'Searching…' : `Nothing matches “${term}”.` }}
+          </div>
+        </div>
+        <div class="cmdk-f">
+          <span><span class="kbd">↑</span><span class="kbd">↓</span>move</span>
+          <span><span class="kbd">↵</span>open</span>
+          <span style="margin-left: auto"><span class="kbd">esc</span>close</span>
+        </div>
       </div>
     </template>
   </UModal>

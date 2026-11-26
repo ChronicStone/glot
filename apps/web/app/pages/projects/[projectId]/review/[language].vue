@@ -235,7 +235,7 @@ defineShortcuts({
 </script>
 
 <template>
-  <AppPage id="review-session" :title="`Review · ${languageName(language)}`">
+  <AppPage :title="`Review · ${languageName(language)}`">
     <template #actions>
       <UButton
         label="End session"

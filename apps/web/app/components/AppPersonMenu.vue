@@ -12,11 +12,7 @@ const scope = computed(() => {
   const role = access.data.value?.role
   const languages = access.data.value?.languages
 
-  if (!role) {
-    return ''
-  }
-
-  return `${ROLE_LABELS[role]} · ${languages ? languages.join(', ') : 'all languages'}`
+  return role ? `${ROLE_LABELS[role]} · ${languages ? languages.join(', ') : 'all languages'}` : ''
 })
 
 async function signOut() {
@@ -46,25 +42,16 @@ const items = computed<DropdownMenuItem[][]>(() => [
   <UDropdownMenu
     v-if="session.data"
     :items="items"
-    :content="{ side: 'top', align: 'start' }"
-    :ui="{ content: 'w-[236px]' }"
+    :content="{ side: 'top', align: 'start', sideOffset: 4 }"
+    :ui="{ content: 'pop menu w-[236px]' }"
   >
-    <button
-      type="button"
-      class="flex w-full items-center gap-2.5 rounded-xl p-2 text-left transition-colors hover:bg-hover-page"
-    >
-      <UAvatar
-        :alt="session.data.user.name"
-        size="md"
-        :ui="{ root: 'bg-d-blue', fallback: 'font-semibold text-white' }"
-      />
-      <span class="min-w-0 flex-1">
-        <span class="block truncate text-[13px] leading-4 font-medium text-ink">{{
-          session.data.user.name
-        }}</span>
-        <span class="block truncate text-xs leading-[15px] text-ink-3">{{ scope }}</span>
+    <button type="button" class="me">
+      <AppAvatar :name="session.data.user.name" size="md" />
+      <span>
+        <div class="t">{{ session.data.user.name }}</div>
+        <div class="s">{{ scope }}</div>
       </span>
-      <UIcon name="i-lucide-ellipsis" class="size-[15px] shrink-0 text-ink-4" />
+      <UIcon name="i-lucide-ellipsis" />
     </button>
   </UDropdownMenu>
 </template>

@@ -1,20 +1,24 @@
 <script setup lang="ts">
 import type { Translation } from '@glot/contract'
-import { TEXT_STATE_LABELS, TEXT_STATE_TONES } from '../constants/ui.constants.ts'
+import { TEXT_STATES } from '@glot/database/constants/texts'
+import { TEXT_STATE_CLASSES, TEXT_STATE_LABELS } from '../constants/ui.constants.ts'
 
 defineProps<{ translations: Translation[] }>()
 </script>
 
 <template>
-  <ul class="flex gap-[3px]">
-    <li
+  <span class="lstrip">
+    <span
       v-for="translation in translations"
       :key="translation.language"
-      :title="`${translation.language} · ${TEXT_STATE_LABELS[translation.state]}`"
-      :class="TEXT_STATE_TONES[translation.state]"
-      class="grid h-5 w-6 place-items-center rounded-md font-mono text-[10px] font-semibold"
+      :data-language="translation.language"
+      :aria-label="`${translation.language} · ${TEXT_STATE_LABELS[translation.state]}`"
+      :class="[
+        TEXT_STATE_CLASSES[translation.state],
+        { 'is-ai': translation.aiWritten && translation.state !== TEXT_STATES.REVIEWED },
+      ]"
+      class="lc"
+      >{{ translation.language }}</span
     >
-      {{ translation.language }}
-    </li>
-  </ul>
+  </span>
 </template>

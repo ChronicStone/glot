@@ -1,5 +1,5 @@
 <template>
-  <AppPage id="settings-projects" title="Settings">
+  <AppPage title="Settings">
     <template #toolbar>
       <SettingsTabs />
     </template>

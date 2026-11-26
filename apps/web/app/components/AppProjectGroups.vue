@@ -8,79 +8,55 @@ import {
 const route = useRoute()
 const { projects, project } = useCurrentProject()
 const reviewTotal = useReviewTotal()
-const closed = useLocalStorage<string[]>('glot-closed-projects', [])
+const toggled = useLocalStorage<string[]>('glot-toggled-projects', [])
 
 function toggle(projectId: string) {
-  closed.value = closed.value.includes(projectId)
-    ? closed.value.filter((id) => id !== projectId)
-    : [...closed.value, projectId]
-}
-
-function current(options: { projectId: string; section: string }) {
-  return route.path.startsWith(`/projects/${options.projectId}/${options.section}`)
+  toggled.value = toggled.value.includes(projectId)
+    ? toggled.value.filter((id) => id !== projectId)
+    : [...toggled.value, projectId]
 }
 
 function isOpen(projectId: string) {
-  return !closed.value.includes(projectId)
+  return toggled.value.includes(projectId) !== (projectId === project.value?.id)
 }
 </script>
 
 <template>
-  <div class="mt-[18px] flex flex-col">
-    <div class="flex h-7 items-center px-2.5 text-xs font-medium text-ink-3">Projects</div>
-    <div v-for="item in projects" :key="item.id" class="mb-0.5 flex flex-col">
-      <button
-        type="button"
-        :aria-expanded="isOpen(item.id)"
-        :class="isOpen(item.id) ? 'font-medium text-ink' : 'font-[450] text-ink-2'"
-        class="flex h-[34px] w-full items-center gap-2 rounded-[10px] pr-2.5 pl-1 text-left text-sm transition-colors hover:bg-hover-page"
-        @click="toggle(item.id)"
-      >
-        <UIcon
-          :name="isOpen(item.id) ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'"
-          class="size-3.5 shrink-0 text-ink-4"
-        />
-        <span
-          :class="item.id === project?.id ? 'bg-check-bg text-check' : 'bg-tile text-ink-3'"
-          class="grid size-5 shrink-0 place-items-center rounded-md"
-        >
-          <UIcon name="i-lucide-layers" class="size-3" />
-        </span>
-        <span class="min-w-0 flex-1 truncate">{{ item.name }}</span>
-        <span
-          v-if="!isOpen(item.id) && item.id === project?.id && reviewTotal > 0"
-          class="text-xs font-medium text-check tabular-nums"
+  <div class="side-sec">
+    <span>Projects</span>
+    <NuxtLink to="/settings/projects" class="btn btn-ghost btn-xs btn-icon" title="New project"
+      ><UIcon name="i-lucide-plus"
+    /></NuxtLink>
+  </div>
+  <div v-for="item in projects" :key="item.id" :class="{ open: isOpen(item.id) }" class="pgroup">
+    <button type="button" class="phead" :aria-expanded="isOpen(item.id)" @click="toggle(item.id)">
+      <UIcon
+        :name="isOpen(item.id) ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'"
+        class="tw"
+      />
+      <span :class="item.id === project?.id ? 'check' : 'plain'" class="pg"
+        ><UIcon name="i-lucide-layers"
+      /></span>
+      <span class="pn">{{ item.name }}</span>
+      <span v-if="!isOpen(item.id) && item.id === project?.id && reviewTotal" class="n">{{
+        reviewTotal
+      }}</span>
+    </button>
+    <nav v-if="isOpen(item.id)" class="nav sub">
+      <NuxtLink
+        v-for="section in Object.values(PROJECT_SECTIONS)"
+        :key="section"
+        :to="`/projects/${item.id}/${section}`"
+        :class="{ on: route.path.startsWith(`/projects/${item.id}/${section}`) }"
+        ><UIcon :name="PROJECT_SECTION_ICONS[section]" /><span class="lbl">{{
+          PROJECT_SECTION_LABELS[section]
+        }}</span
+        ><span
+          v-if="section === PROJECT_SECTIONS.REVIEW && item.id === project?.id && reviewTotal"
+          class="n hot"
           >{{ reviewTotal }}</span
-        >
-      </button>
-      <nav
-        v-if="isOpen(item.id)"
-        class="relative mt-px mb-1 flex flex-col gap-px pl-[22px] before:absolute before:top-1 before:bottom-1 before:left-[14px] before:w-px before:bg-line-2"
+        ></NuxtLink
       >
-        <NuxtLink
-          v-for="section in Object.values(PROJECT_SECTIONS)"
-          :key="section"
-          :to="`/projects/${item.id}/${section}`"
-          :class="
-            current({ projectId: item.id, section })
-              ? 'bg-active-page font-medium text-ink'
-              : 'font-[450] text-ink-2 hover:bg-hover-page hover:text-ink'
-          "
-          class="flex h-8 items-center gap-2.5 rounded-[10px] px-2.5 text-sm transition-colors"
-        >
-          <UIcon
-            :name="PROJECT_SECTION_ICONS[section]"
-            :class="current({ projectId: item.id, section }) ? 'text-ink' : 'text-ink-3'"
-            class="size-[15px] shrink-0"
-          />
-          <span class="min-w-0 flex-1 truncate">{{ PROJECT_SECTION_LABELS[section] }}</span>
-          <span
-            v-if="section === PROJECT_SECTIONS.REVIEW && item.id === project?.id && reviewTotal > 0"
-            class="text-xs font-medium text-check tabular-nums"
-            >{{ reviewTotal }}</span
-          >
-        </NuxtLink>
-      </nav>
-    </div>
+    </nav>
   </div>
 </template>

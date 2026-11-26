@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from '@nuxt/ui'
-
-const route = useRoute()
 const paletteOpen = ref<boolean>(false)
+const menuOpen = ref<boolean>(false)
+const route = useRoute()
 
 defineShortcuts({
   meta_k: () => {
@@ -10,49 +9,34 @@ defineShortcuts({
   },
 })
 
-const workspaceLinks: NavigationMenuItem[] = [
-  { label: 'Home', icon: 'i-lucide-house', to: '/' },
-  { label: 'Glossary', icon: 'i-lucide-book-open-text', to: '/glossary' },
-]
-
-const settingsLinks = computed<NavigationMenuItem[]>(() => [
-  {
-    label: 'Settings',
-    icon: 'i-lucide-settings-2',
-    to: '/settings',
-    active: route.path.startsWith('/settings'),
+watch(
+  () => route.fullPath,
+  () => {
+    menuOpen.value = false
   },
-])
+)
+
+provide('openMenu', () => {
+  menuOpen.value = true
+})
 </script>
 
 <template>
-  <UDashboardGroup unit="px">
-    <UDashboardSidebar :default-size="248" :resizable="false">
-      <template #header>
-        <div class="flex w-full flex-col gap-1.5">
-          <AppWorkspaceMenu />
-          <button
-            type="button"
-            class="mb-2.5 flex h-[34px] w-full items-center gap-2.5 rounded-[10px] bg-panel/55 pr-2 pl-2.5 text-[13px] text-ink-3 ring-1 ring-line-2 transition-colors ring-inset hover:bg-panel hover:ring-line-3"
-            @click="paletteOpen = true"
-          >
-            <UIcon name="i-lucide-search" class="size-3.5" />
-            Search or jump to…
-            <UKbd value="⌘K" class="ml-auto" />
-          </button>
-        </div>
+  <div class="app">
+    <AppSidebar @search="paletteOpen = true" />
+    <main class="main">
+      <slot />
+    </main>
+    <USlideover
+      v-model:open="menuOpen"
+      side="left"
+      title="Menu"
+      :ui="{ content: 'side-drawer w-[272px] max-w-[85vw] bg-page' }"
+    >
+      <template #content>
+        <AppSidebar @search="paletteOpen = true" />
       </template>
-
-      <UNavigationMenu :items="workspaceLinks" orientation="vertical" />
-      <AppProjectGroups />
-
-      <template #footer>
-        <UNavigationMenu :items="settingsLinks" orientation="vertical" />
-        <AppPersonMenu />
-      </template>
-    </UDashboardSidebar>
-
-    <slot />
+    </USlideover>
     <AppCommandPalette v-model:open="paletteOpen" />
-  </UDashboardGroup>
+  </div>
 </template>

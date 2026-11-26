@@ -1,3 +1,3 @@
 <template>
-  <AppPage id="glossary" title="Glossary" />
+  <AppPage title="Glossary" />
 </template>
