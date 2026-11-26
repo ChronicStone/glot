@@ -1,0 +1,32 @@
+diff --git a/lib/mapper/contentMapper.js b/lib/mapper/contentMapper.js
+index 9481268e87b6ff8dbb5c78a1e4c45d47bd1764fe..5d5f087df4149099f43c5071717d9d1a04d342d3 100644
+--- a/lib/mapper/contentMapper.js
++++ b/lib/mapper/contentMapper.js
+@@ -74,11 +74,27 @@ function createContentMapper(frontend) {
+     function closeProject(projectHandle) {
+         projects.delete(projectHandle);
+     }
++    function shippedDeclaration(fileName) {
++        if (!fileName.includes('/node_modules/')) {
++            return undefined;
++        }
++        const fs = require('node:fs');
++        for (const candidate of [fileName.replace(/\.vue$/, '.d.vue.ts'), `${fileName}.d.ts`]) {
++            if (fs.existsSync(candidate)) {
++                return fs.readFileSync(candidate, 'utf8');
++            }
++        }
++        return undefined;
++    }
+     function transform(params) {
+         const state = projects.get(params.projectHandle);
+         if (!state) {
+             throw new Error(`Unknown ${frontend.name} project handle: ${params.projectHandle}`);
+         }
++        const shipped = shippedDeclaration(params.fileName);
++        if (shipped !== undefined) {
++            return { text: `// @ts-nocheck\n${shipped}`, extension: '.ts', mappings: [] };
++        }
+         const configuration = getConfiguration(state);
+         const snapshot = {
+             getText: (start, end) => params.content.slice(start, end),
