@@ -37,7 +37,8 @@ Nothing restates a type owned upstream.
 | Data                                                | Owner                                                      |
 | --------------------------------------------------- | ---------------------------------------------------------- |
 | Texts in every language                             | The project's repository, read through the catalog service |
-| Released approvals, glossary                        | The project's repository (`.glot/`)                        |
+| Released approvals                                  | The project's repository (`.glot/`)                        |
+| Glossary                                            | PostgreSQL, per workspace (D-042)                          |
 | People, workspaces, memberships, sessions, API keys | PostgreSQL through better-auth                             |
 | Drafts, pending approvals                           | PostgreSQL                                                 |
 

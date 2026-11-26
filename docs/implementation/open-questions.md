@@ -13,4 +13,3 @@ Do not answer these questions by inference. Ask the owner.
 | What does Live mean in the release steps (Approved, Being checked, Merged, Live): a deploy signal Glot cannot see?      | The server reports open and merged only.                     |
 | When does the clock release: 08:00 and 14:00 UTC, or the team's local times?                                            | 08:00 and 14:00 UTC (D-038).                                 |
 | Should undo remove a text that had no text before its release?                                                          | Refused: undo restores a previous text only.                 |
-| Does the glossary also live in git as `.glot/glossary.yml` (ADR 0001, pre-spec §11)?                                    | PostgreSQL only (D-042).                                     |
