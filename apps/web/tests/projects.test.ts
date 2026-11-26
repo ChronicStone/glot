@@ -75,3 +75,13 @@ test('a reviewer cannot add a project', async () => {
     anna.projects.create({ ...project, workspaceId: demo?.workspaceId ?? '' }),
   ).rejects.toMatchObject({ code: 'FORBIDDEN' })
 })
+
+test('a repository must be owner/name, never a path', async () => {
+  const owner = createGlotClient({ url: baseUrl, fetch: withCookie(ownerCookie) })
+
+  for (const repository of ['../../etc', 'glot', 'glot/demo/extra', 'glot/..']) {
+    await expect(
+      owner.projects.create({ workspaceId, ...project, repository }),
+    ).rejects.toMatchObject({ code: 'BAD_REQUEST' })
+  }
+})

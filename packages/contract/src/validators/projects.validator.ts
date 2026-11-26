@@ -46,8 +46,8 @@ export const projectCreateInputSchema = projectInsertSchema
   .extend({
     name: projectSelectSchema.shape.name.min(1),
     repository: projectSelectSchema.shape.repository
-      .min(1)
-      .describe('owner/name on GitHub, or the folder name under the local git root.'),
+      .regex(/^(?!\.)[\w.-]+\/(?!\.)[\w.-]+$/u)
+      .describe('owner/name on GitHub, or the same two folders under the local git root.'),
     defaultBranch: projectSelectSchema.shape.defaultBranch.min(1),
     sourceLanguage: languageCodeSchema,
     languages: languagesInputSchema,
