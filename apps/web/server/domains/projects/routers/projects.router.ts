@@ -6,4 +6,10 @@ export const projectsRouter = {
   sync: procedures.projects.sync.handler(({ input, context }) =>
     new ProjectsService(context).sync(input),
   ),
+  create: procedures.projects.create.handler(({ input, context }) =>
+    new ProjectsService(context).create(input),
+  ),
+  update: procedures.projects.update.handler(({ input, context }) =>
+    new ProjectsService(context).update(input),
+  ),
 }

@@ -4,50 +4,23 @@ import type {
   PersonUpdateInput,
   WorkspaceRefInput,
 } from '@glot/contract'
-import { WORKSPACE_ROLES } from '@glot/database/constants/workspaces'
 import type { WorkspaceRole } from '@glot/database/types/workspaces'
 import { ORPCError } from '@orpc/server'
 import type { RequestContext } from '../../../types/context.types.ts'
-import { actorUserId } from '../../../utils/actor.utils.ts'
-import { activeMembershipWhere } from '../../../utils/membership.utils.ts'
 import {
   INVITATION_CALLBACK_PATH,
   INVITATION_PROVISIONING_SOURCE,
-  PEOPLE_MANAGER_ROLES,
 } from '../constants/people.constants.ts'
 import { toPerson } from '../utils/people.utils.ts'
+import { WorkspaceAccessService } from './workspace-access.service.ts'
 
 export class PeopleService {
   readonly #context: RequestContext
+  readonly #access: WorkspaceAccessService
 
   constructor(context: RequestContext) {
     this.#context = context
-  }
-
-  async #membershipOf(workspaceId: string) {
-    const membership = await this.#context.db.workspaceMemberships.findFirst({
-      where: { workspaceId, ...activeMembershipWhere(actorUserId(this.#context.actor)) },
-    })
-
-    if (!membership) {
-      throw new ORPCError('NOT_FOUND')
-    }
-
-    return membership
-  }
-
-  async #requireManager(input: { workspaceId: string; grantedRole?: WorkspaceRole }) {
-    const membership = await this.#membershipOf(input.workspaceId)
-    const grantsOwnership = input.grantedRole === WORKSPACE_ROLES.OWNER
-
-    if (
-      !Object.values<string>(PEOPLE_MANAGER_ROLES).includes(membership.role) ||
-      (grantsOwnership && membership.role !== WORKSPACE_ROLES.OWNER)
-    ) {
-      throw new ORPCError('FORBIDDEN')
-    }
-
-    return membership
+    this.#access = new WorkspaceAccessService(context)
   }
 
   async #managedMembership(input: { membershipId: string; grantedRole?: WorkspaceRole }) {
@@ -60,7 +33,7 @@ export class PeopleService {
       throw new ORPCError('NOT_FOUND')
     }
 
-    const manager = await this.#requireManager({
+    const manager = await this.#access.requireManager({
       workspaceId: membership.workspaceId,
       ...(input.grantedRole ? { grantedRole: input.grantedRole } : {}),
     })
@@ -97,7 +70,7 @@ export class PeopleService {
   }
 
   async list(input: WorkspaceRefInput) {
-    await this.#membershipOf(input.workspaceId)
+    await this.#access.membershipOf(input.workspaceId)
 
     const memberships = await this.#context.db.workspaceMemberships.findMany({
       where: { workspaceId: input.workspaceId },
@@ -109,13 +82,13 @@ export class PeopleService {
   }
 
   async me(input: WorkspaceRefInput) {
-    const { role, languages, expiresAt } = await this.#membershipOf(input.workspaceId)
+    const { role, languages, expiresAt } = await this.#access.membershipOf(input.workspaceId)
 
     return { role, languages, expiresAt }
   }
 
   async invite(input: PersonInviteInput) {
-    await this.#requireManager({ workspaceId: input.workspaceId, grantedRole: input.role })
+    await this.#access.requireManager({ workspaceId: input.workspaceId, grantedRole: input.role })
 
     const user = await this.#userFor(input)
 
