@@ -13,3 +13,5 @@ export * from './texts.validator.ts'
 export * from './glossary.validator.ts'
 
 export * from './users.validator.ts'
+
+export * from './releases.validator.ts'

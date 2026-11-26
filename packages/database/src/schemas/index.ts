@@ -11,3 +11,7 @@ export * from './drafts/index.ts'
 export * from './approvals/index.ts'
 
 export * from './comments/index.ts'
+
+export * from './releases/index.ts'
+
+export * from './jobs/index.ts'

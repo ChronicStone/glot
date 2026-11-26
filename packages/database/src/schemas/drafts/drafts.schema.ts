@@ -18,6 +18,7 @@ export const drafts = pgTable(
     textId: text().notNull(),
     language: text().notNull(),
     value: text().notNull(),
+    baseHash: text(),
     authorId: text()
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
