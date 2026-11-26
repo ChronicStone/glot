@@ -14,10 +14,13 @@
   },
   "dependencies": {
     "@glot/auth": "workspace:*",
+    "@glot/checks": "workspace:*",
     "@glot/contract": "workspace:*",
     "@glot/database": "workspace:*",
     "@glot/sdk": "workspace:*",
     "@glot/ui": "workspace:*",
+    "@glot/utils": "workspace:*",
+    "@lucide/vue": "catalog:",
     "@modelcontextprotocol/server": "catalog:",
     "@orpc/client": "catalog:",
     "@orpc/mcp": "catalog:",

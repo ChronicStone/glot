@@ -1,3 +1,4 @@
+import type { ProjectSyncInput } from '@glot/contract'
 import { ORPCError } from '@orpc/server'
 import type { RequestContext } from '../../../types/context.types.ts'
 import { actorUserId } from '../../../utils/actor.utils.ts'
@@ -14,7 +15,7 @@ export class ProjectsService {
       where: {
         workspace: { is: { memberships: { some: { userId: actorUserId(this.#context.actor) } } } },
       },
-      include: { apps: true },
+      include: { apps: true, sources: true },
       orderBy: { name: 'asc' },
     })
   }
@@ -25,6 +26,7 @@ export class ProjectsService {
         id: projectId,
         workspace: { is: { memberships: { some: { userId: actorUserId(this.#context.actor) } } } },
       },
+      include: { sources: true },
     })
 
     if (!project) {
@@ -32,5 +34,12 @@ export class ProjectsService {
     }
 
     return project
+  }
+
+  async sync(input: ProjectSyncInput) {
+    const project = await this.findAccessible(input.projectId)
+    const catalog = await this.#context.catalog.sync(project)
+
+    return { commit: catalog.commit, texts: catalog.entries.length }
   }
 }
