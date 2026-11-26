@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { Button } from '@ui-sdk/vue/button'
 import type { ButtonHTMLAttributes } from 'vue'
+import { BUTTON_TONES } from '../constants/ui.constants.ts'
 import type { ButtonTone } from '../types/ui.types.ts'
 
-const { tone = 'outline', type = 'button' } = defineProps<{
+const { tone = BUTTON_TONES.OUTLINE, type = 'button' } = defineProps<{
   tone?: ButtonTone
   type?: ButtonHTMLAttributes['type']
 }>()

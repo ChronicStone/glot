@@ -16,6 +16,7 @@
   "dependencies": {
     "@glot/contract": "workspace:*",
     "@glot/database": "workspace:*",
+    "@glot/utils": "workspace:*",
     "@ui-sdk/core": "catalog:",
     "@ui-sdk/vue": "catalog:",
     "vue": "catalog:"

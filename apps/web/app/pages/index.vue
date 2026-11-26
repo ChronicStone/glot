@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { TEXT_STATES } from '@glot/database/constants/texts'
+import { TEXT_STATE_LABELS } from '@glot/ui/constants'
 import type { TextState } from '@glot/database/types/texts'
 import GlotStateLegend from '@glot/ui/components/GlotStateLegend.vue'
 import GlotStateStrip from '@glot/ui/components/GlotStateStrip.vue'
@@ -19,10 +21,10 @@ const texts = useQuery(
   })),
 )
 
-const filters: { label: string; value: TextState | undefined }[] = [
+const filters = [
   { label: 'All', value: undefined },
-  { label: 'Needs a fix', value: 'NEEDS_FIX' },
-  { label: 'To check', value: 'TO_CHECK' },
+  { label: TEXT_STATE_LABELS.NEEDS_FIX, value: TEXT_STATES.NEEDS_FIX },
+  { label: TEXT_STATE_LABELS.TO_CHECK, value: TEXT_STATES.TO_CHECK },
 ]
 </script>
 
