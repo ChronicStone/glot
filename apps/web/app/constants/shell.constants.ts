@@ -5,9 +5,15 @@ export const APPEARANCES = {
 } as const
 
 export const APPEARANCE_LABELS = {
-  [APPEARANCES.SYSTEM]: 'Match the system',
+  [APPEARANCES.SYSTEM]: 'System',
   [APPEARANCES.LIGHT]: 'Light',
   [APPEARANCES.DARK]: 'Dark',
+} as const
+
+export const APPEARANCE_ICONS = {
+  [APPEARANCES.SYSTEM]: 'i-lucide-monitor',
+  [APPEARANCES.LIGHT]: 'i-lucide-sun',
+  [APPEARANCES.DARK]: 'i-lucide-moon',
 } as const
 
 export const PROJECT_SECTIONS = {
@@ -25,7 +31,7 @@ export const PROJECT_SECTION_LABELS = {
 } as const
 
 export const PROJECT_SECTION_ICONS = {
-  [PROJECT_SECTIONS.TEXTS]: 'i-lucide-file-text',
+  [PROJECT_SECTIONS.TEXTS]: 'i-lucide-text',
   [PROJECT_SECTIONS.REVIEW]: 'i-lucide-list-checks',
   [PROJECT_SECTIONS.EMAILS]: 'i-lucide-mail',
   [PROJECT_SECTIONS.RELEASES]: 'i-lucide-rocket',

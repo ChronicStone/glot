@@ -195,7 +195,7 @@ export default defineAppConfig({
       slots: {
         input: '[&_input]:h-[58px] [&_input]:text-[17px]',
         label: 'px-2.5 pt-2.5 pb-1.5 text-xs font-medium text-ink-3',
-        item: 'h-11 gap-3 rounded-[11px] px-2.5 text-ink-2 data-highlighted:text-ink data-highlighted:before:bg-sel data-highlighted:before:ring-1 data-highlighted:before:ring-sel-ring data-highlighted:before:ring-inset',
+        item: 'h-11 items-center gap-3 rounded-[11px] px-2.5 text-ink-2 data-highlighted:text-ink data-highlighted:before:bg-sel data-highlighted:before:ring-1 data-highlighted:before:ring-sel-ring data-highlighted:before:ring-inset',
         itemLeadingIcon: 'size-4 text-ink-3',
         footer: 'border-t border-line bg-panel-2',
       },
@@ -227,10 +227,11 @@ export default defineAppConfig({
       slots: {
         link: 'h-[34px] gap-2.5 rounded-[10px] px-2.5 text-sm font-[450] text-ink-2 before:rounded-[10px] hover:text-ink hover:before:bg-hover-page data-active:font-medium data-active:text-ink data-active:before:bg-active-page',
         linkLeadingIcon: 'size-4 text-ink-3 group-data-active:text-ink',
-        linkTrailingBadge: 'font-medium tabular-nums',
+        linkTrailingBadge: 'bg-transparent px-0 text-xs font-medium text-check tabular-nums ring-0',
       },
     },
     dashboardSidebar: {
+      variants: { side: { left: { root: 'border-e-0' } } },
       slots: {
         root: 'border-e-0 bg-transparent',
         header: 'h-auto px-3 pt-3.5',

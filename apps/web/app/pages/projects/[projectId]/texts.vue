@@ -69,7 +69,7 @@ defineShortcuts({ '/': () => search.value?.inputRef?.focus() })
 </script>
 
 <template>
-  <AppPage id="texts" title="Texts" :detail="project ? `${total} in ${project.name}` : undefined">
+  <AppPage id="texts" title="Texts">
     <template #actions>
       <UInput
         ref="search"

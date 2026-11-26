@@ -67,11 +67,7 @@ function currentValue(item: (typeof items.value)[number]) {
 </script>
 
 <template>
-  <AppPage
-    id="review"
-    title="Review"
-    :detail="language ? `${total} in ${languageName(language)}` : undefined"
-  >
+  <AppPage id="review" title="Review">
     <template #actions>
       <UButton
         v-if="identical > 0"
