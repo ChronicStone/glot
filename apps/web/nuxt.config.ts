@@ -8,4 +8,5 @@ export default defineNuxtConfig({
   devServer: { port: 3100 },
   icon: { serverBundle: { collections: ['lucide'] } },
   app: { head: { title: 'Glot' } },
+  vite: { optimizeDeps: { exclude: ['@tanstack/vue-table'] } },
 })
