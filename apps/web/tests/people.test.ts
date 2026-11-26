@@ -145,3 +145,23 @@ test('a revoked API key is refused', async () => {
   expect(revoked.status).toBe(200)
   await expect(agent.projects.list()).rejects.toMatchObject({ response: { status: 401 } })
 })
+
+test('an admin cannot make someone an owner', async () => {
+  const owner = createGlotClient({ url: baseUrl, fetch: withCookie(ownerCookie) })
+
+  await owner.people.invite({
+    workspaceId,
+    email: 'lead@glot.test',
+    role: 'admin',
+    languages: null,
+  })
+
+  const admin = createGlotClient({
+    url: baseUrl,
+    fetch: withCookie(await signInByMagicLink('lead@glot.test')),
+  })
+
+  await expect(
+    admin.people.invite({ workspaceId, email: 'boss@glot.test', role: 'owner', languages: null }),
+  ).rejects.toMatchObject({ code: 'FORBIDDEN' })
+})

@@ -4,6 +4,8 @@ import type {
   PersonUpdateInput,
   WorkspaceRefInput,
 } from '@glot/contract'
+import { WORKSPACE_ROLES } from '@glot/database/constants/workspaces'
+import type { WorkspaceRole } from '@glot/database/types/workspaces'
 import { ORPCError } from '@orpc/server'
 import type { RequestContext } from '../../../types/context.types.ts'
 import { actorUserId } from '../../../utils/actor.utils.ts'
@@ -34,19 +36,23 @@ export class PeopleService {
     return membership
   }
 
-  async #requireManager(workspaceId: string) {
-    const membership = await this.#membershipOf(workspaceId)
+  async #requireManager(input: { workspaceId: string; grantedRole?: WorkspaceRole }) {
+    const membership = await this.#membershipOf(input.workspaceId)
+    const grantsOwnership = input.grantedRole === WORKSPACE_ROLES.OWNER
 
-    if (!Object.values<string>(PEOPLE_MANAGER_ROLES).includes(membership.role)) {
+    if (
+      !Object.values<string>(PEOPLE_MANAGER_ROLES).includes(membership.role) ||
+      (grantsOwnership && membership.role !== WORKSPACE_ROLES.OWNER)
+    ) {
       throw new ORPCError('FORBIDDEN')
     }
 
     return membership
   }
 
-  async #managedMembership(membershipId: string) {
+  async #managedMembership(input: { membershipId: string; grantedRole?: WorkspaceRole }) {
     const membership = await this.#context.db.workspaceMemberships.findFirst({
-      where: { id: membershipId },
+      where: { id: input.membershipId },
       include: { user: true },
     })
 
@@ -54,7 +60,10 @@ export class PeopleService {
       throw new ORPCError('NOT_FOUND')
     }
 
-    const manager = await this.#requireManager(membership.workspaceId)
+    const manager = await this.#requireManager({
+      workspaceId: membership.workspaceId,
+      ...(input.grantedRole ? { grantedRole: input.grantedRole } : {}),
+    })
 
     if (manager.id === membership.id) {
       throw new ORPCError('FORBIDDEN')
@@ -106,7 +115,7 @@ export class PeopleService {
   }
 
   async invite(input: PersonInviteInput) {
-    await this.#requireManager(input.workspaceId)
+    await this.#requireManager({ workspaceId: input.workspaceId, grantedRole: input.role })
 
     const user = await this.#userFor(input)
 
@@ -137,7 +146,10 @@ export class PeopleService {
   }
 
   async update(input: PersonUpdateInput) {
-    const { user } = await this.#managedMembership(input.membershipId)
+    const { user } = await this.#managedMembership({
+      membershipId: input.membershipId,
+      grantedRole: input.role,
+    })
 
     const changes = {
       role: input.role,
@@ -158,7 +170,7 @@ export class PeopleService {
   }
 
   async remove(input: MembershipRefInput) {
-    await this.#managedMembership(input.membershipId)
+    await this.#managedMembership({ membershipId: input.membershipId })
     await this.#context.db.workspaceMemberships.delete({ where: { id: input.membershipId } })
 
     return { removed: true as const }
