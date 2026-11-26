@@ -26,6 +26,12 @@ export class DraftsService {
 
     const authorId = actorUserId(this.#context.actor)
 
+    const base = await this.#context.catalog.base({
+      project,
+      textId: input.textId,
+      language: input.language,
+    })
+
     const active = await this.#context.db.drafts.findFirst({
       where: {
         projectId: input.projectId,
@@ -40,7 +46,7 @@ export class DraftsService {
       ? await this.#context.db.drafts
           .update({
             where: { id: active.id },
-            data: { value: input.value, status: DRAFT_STATUSES.DRAFT },
+            data: { value: input.value, status: DRAFT_STATUSES.DRAFT, ...base },
           })
           .throw()
       : await this.#context.db.drafts.create({
@@ -50,6 +56,7 @@ export class DraftsService {
             language: input.language,
             value: input.value,
             authorId,
+            ...base,
           },
         })
 

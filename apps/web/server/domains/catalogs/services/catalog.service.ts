@@ -27,6 +27,17 @@ export class CatalogService {
     return this.#load({ project, fresh: true })
   }
 
+  async base(options: { project: CatalogProject; textId: string; language: string }) {
+    const { entries } = await this.read(options.project)
+    const entry = entries.find(({ id }) => id === options.textId)
+
+    return {
+      baseSourceHash: entry?.sourceHash ?? null,
+      baseTargetHash:
+        entry?.translations.find(({ language }) => language === options.language)?.hash ?? null,
+    }
+  }
+
   glossary(repository: string) {
     return this.#glossary[repository] ?? []
   }

@@ -160,7 +160,16 @@ export class ReviewsService {
       text,
       value: input.value,
       selfApproved,
-      change: edited ? { value: input.value } : null,
+      change: edited
+        ? {
+            value: input.value,
+            base: await this.#context.catalog.base({
+              project,
+              textId: input.textId,
+              language: input.language,
+            }),
+          }
+        : null,
     })
 
     return texts.get(input)
@@ -337,7 +346,10 @@ export class ReviewsService {
     text: Text
     value: string
     selfApproved: boolean
-    change: { draft: Draft } | { value: string } | null
+    change:
+      | { draft: Draft }
+      | { value: string; base: { baseSourceHash: string | null; baseTargetHash: string | null } }
+      | null
   }) {
     const { input, change } = options
     const reviewerId = actorUserId(this.#context.actor)
@@ -393,7 +405,7 @@ export class ReviewsService {
       if (mine) {
         await tx.drafts.update({
           where: { id: mine.id },
-          data: { value: change.value, status: DRAFT_STATUSES.APPROVED },
+          data: { value: change.value, status: DRAFT_STATUSES.APPROVED, ...change.base },
         })
 
         return
@@ -407,6 +419,7 @@ export class ReviewsService {
           value: change.value,
           authorId: reviewerId,
           status: DRAFT_STATUSES.APPROVED,
+          ...change.base,
         },
       })
     })
