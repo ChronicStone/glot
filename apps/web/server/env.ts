@@ -14,6 +14,7 @@ export const env = z
       .optional(),
     MAIL_FROM: z.string().optional(),
     GLOT_GIT_ROOT: z.string().optional(),
+    GLOT_CLOCK: z.enum(['on', 'off']).optional(),
     GITHUB_TOKEN: z.string().optional(),
     MIGRATIONS_FOLDER: z.string().optional(),
     GLOT_VERSION: z.string().default('0.0.0'),
