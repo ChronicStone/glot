@@ -47,7 +47,7 @@ function startSmtp(port: number) {
   smtp = new SMTPServer({
     authOptional: true,
     disabledCommands: ['STARTTLS', 'AUTH'],
-    onData(stream, _session, done) {
+    onData(...[stream, , done]) {
       const chunks: Buffer[] = []
       stream.on('data', (chunk: Buffer) => chunks.push(chunk))
 
@@ -93,17 +93,19 @@ async function waitForServer() {
 async function readSetupLink() {
   for (let attempt = 0; attempt < 50; attempt += 1) {
     const link = (await readFile(logFile, 'utf8')).match(LINK_PATTERN)?.[1]
+
     if (link) return new URL(link)
+
     await new Promise((resolve) => setTimeout(resolve, 100))
   }
 
   throw new Error('No setup link was printed')
 }
 
-function post(path: string, body: unknown, headers: Record<string, string> = {}) {
+function post(path: string, body: unknown) {
   return fetch(`${baseUrl}${path}`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', origin: baseUrl, ...headers },
+    headers: { 'content-type': 'application/json', origin: baseUrl },
     body: JSON.stringify(body),
   })
 }
