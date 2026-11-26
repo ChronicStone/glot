@@ -1,5 +1,9 @@
-import { createSelectSchema } from 'drizzle-orm/zod'
-import { workspaceRoleEnum, workspaces } from '../schemas/workspaces/workspaces.schema.ts'
+import { createInsertSchema, createSelectSchema } from 'drizzle-orm/zod'
+import * as z from 'zod'
+import { WORKSPACE_ROLES } from '../constants/workspaces.constants.ts'
+import { workspaceMemberships, workspaces } from '../schemas/workspaces/workspaces.schema.ts'
 
 export const workspaceSelectSchema = createSelectSchema(workspaces)
-export const workspaceRoleSchema = createSelectSchema(workspaceRoleEnum)
+export const workspaceRoleSchema = z.enum(WORKSPACE_ROLES)
+export const workspaceMembershipSelectSchema = createSelectSchema(workspaceMemberships)
+export const workspaceMembershipInsertSchema = createInsertSchema(workspaceMemberships)

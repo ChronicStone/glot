@@ -14,16 +14,19 @@
     "./schemas/projects": "./src/schemas/projects/index.ts",
     "./schemas/drafts": "./src/schemas/drafts/index.ts",
     "./schemas/approvals": "./src/schemas/approvals/index.ts",
+    "./schemas/comments": "./src/schemas/comments/index.ts",
     "./validators": "./src/validators/index.ts",
     "./validators/projects": "./src/validators/projects.validator.ts",
     "./validators/drafts": "./src/validators/drafts.validator.ts",
     "./validators/approvals": "./src/validators/approvals.validator.ts",
+    "./validators/comments": "./src/validators/comments.validator.ts",
     "./types/database": "./src/types/database.types.ts",
     "./types/*": "./src/types/*.types.ts",
     "./constants/*": "./src/constants/*.constants.ts",
     "./validators/workspaces": "./src/validators/workspaces.validator.ts",
     "./validators/texts": "./src/validators/texts.validator.ts",
-    "./validators/glossary": "./src/validators/glossary.validator.ts"
+    "./validators/glossary": "./src/validators/glossary.validator.ts",
+    "./validators/users": "./src/validators/users.validator.ts"
   },
   "scripts": {
     "typecheck": "tsrs --noEmit",

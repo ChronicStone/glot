@@ -12,6 +12,8 @@ export type * from './drafts.types.ts'
 
 export type * from './approvals.types.ts'
 
+export type * from './comments.types.ts'
+
 export type * from './texts.types.ts'
 
 export type * from './glossary.types.ts'

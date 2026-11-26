@@ -1,0 +1,4 @@
+export const COMMENT_KINDS = {
+  COMMENT: 'COMMENT',
+  CHANGE_REQUEST: 'CHANGE_REQUEST',
+} as const

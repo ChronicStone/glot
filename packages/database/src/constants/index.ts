@@ -8,4 +8,6 @@ export * from './texts.constants.ts'
 
 export * from './drafts.constants.ts'
 
+export * from './comments.constants.ts'
+
 export * from './glossary.constants.ts'

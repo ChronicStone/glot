@@ -9,3 +9,5 @@ export * from './projects/index.ts'
 export * from './drafts/index.ts'
 
 export * from './approvals/index.ts'
+
+export * from './comments/index.ts'
