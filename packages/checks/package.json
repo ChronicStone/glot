@@ -1,0 +1,25 @@
+{
+  "name": "@glot/checks",
+  "version": "0.0.0",
+  "description": "Pure checks for vue-i18n messages: syntax, placeholders, plural forms, HTML tags and words to avoid.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./constants": "./src/constants/checks.constants.ts",
+    "./validators": "./src/validators/checks.validator.ts",
+    "./types": "./src/types/checks.types.ts"
+  },
+  "scripts": {
+    "typecheck": "tsrs --noEmit",
+    "test": "vp test run"
+  },
+  "dependencies": {
+    "@glot/utils": "workspace:*",
+    "@intlify/message-compiler": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "vite-plus": "catalog:"
+  }
+}

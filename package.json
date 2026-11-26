@@ -58,6 +58,7 @@
   "catalog": {
     "@better-auth/api-key": "1.7.28",
     "@better-auth/cli": "1.4.21",
+    "@intlify/message-compiler": "11.4.24",
     "@modelcontextprotocol/server": "2.4.0",
     "@nuxt/kit": "4.7.0",
     "@orpc/client": "2.0.0-beta.53",

@@ -67,6 +67,18 @@
     },
     "packages/contract": {
       "name": "@glot/contract",
+    "packages/checks": {
+      "name": "@glot/checks",
+      "version": "0.0.0",
+      "dependencies": {
+        "@glot/utils": "workspace:*",
+        "@intlify/message-compiler": "catalog:",
+        "zod": "catalog:",
+      },
+      "devDependencies": {
+        "vite-plus": "catalog:",
+      },
+    },
       "version": "0.0.0",
       "dependencies": {
         "@glot/database": "workspace:*",
@@ -167,6 +179,8 @@
     "@modelcontextprotocol/server": "2.4.0",
     "@nuxt/kit": "4.7.0",
     "@orpc/client": "2.0.0-beta.53",
+    "@intlify/message-compiler": "11.4.24",
+    "@lucide/vue": "1.71.0",
     "@orpc/contract": "2.0.0-beta.53",
     "@orpc/json-schema": "2.0.0-beta.53",
     "@orpc/mcp": "2.0.0-beta.53",
@@ -362,6 +376,8 @@
     "@glot/contract": ["@glot/contract@workspace:packages/contract"],
 
     "@glot/database": ["@glot/database@workspace:packages/database"],
+
+    "@glot/checks": ["@glot/checks@workspace:packages/checks"],
 
     "@glot/nuxt": ["@glot/nuxt@workspace:packages/nuxt"],
 
