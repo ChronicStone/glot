@@ -17,7 +17,7 @@ const project = {
 }
 
 beforeAll(async () => {
-  ownerCookie = await signInByMagicLink('anna@glot.test')
+  ownerCookie = await signInByMagicLink('marie@glot.test')
 
   const created = await fetch(`${baseUrl}/api/auth/organization/create`, {
     method: 'POST',
@@ -64,7 +64,11 @@ test('the same repository cannot be added twice to a workspace', async () => {
 })
 
 test('a reviewer cannot add a project', async () => {
-  const anna = createGlotClient({ url: baseUrl, fetch: withCookie(ownerCookie) })
+  const anna = createGlotClient({
+    url: baseUrl,
+    fetch: withCookie(await signInByMagicLink('anna@glot.test')),
+  })
+
   const demo = (await anna.projects.list()).find(({ name }) => name === 'Demo apps')
 
   await expect(

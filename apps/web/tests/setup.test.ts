@@ -188,13 +188,11 @@ test('the setup link creates the first administrator and their workspace, and si
 
   expect(session.user).toMatchObject({ email: ADMIN.email, name: ADMIN.name, emailVerified: true })
 
-  const workspace = await fetch(`${baseUrl}/api/auth/organization/get-full-organization`, {
+  const [workspace] = await fetch(`${baseUrl}/api/auth/organization/list`, {
     headers: { cookie },
   }).then((result) => result.json())
 
   expect(workspace).toMatchObject({ name: ADMIN.workspaceName, slug: 'acme-words' })
-
-  expect(workspace.members).toMatchObject([{ role: 'owner', user: { email: ADMIN.email } }])
 
   const glot = createGlotClient({
     url: baseUrl,
@@ -207,6 +205,9 @@ test('the setup link creates the first administrator and their workspace, and si
   })
 
   await expect(glot.projects.list()).resolves.toEqual([])
+  await expect(glot.people.list({ workspaceId: workspace.id })).resolves.toMatchObject([
+    { role: 'owner', user: { email: ADMIN.email } },
+  ])
 })
 
 test('the link stops working once used and setup closes', async () => {

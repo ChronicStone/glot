@@ -17,7 +17,7 @@ async function authCall(options: { cookie: string; path: string; body: unknown }
 }
 
 beforeAll(async () => {
-  ownerCookie = await signInByMagicLink('anna@glot.test')
+  ownerCookie = await signInByMagicLink('marie@glot.test')
 
   const created = await authCall({
     cookie: ownerCookie,
@@ -60,7 +60,7 @@ test('an admin invites a Polish reviewer who signs in through the link and chang
   const people = await owner.people.list({ workspaceId })
 
   expect(people.map(({ user, role, signedIn }) => [user.email, role, signedIn])).toEqual([
-    ['anna@glot.test', 'owner', true],
+    ['marie@glot.test', 'owner', true],
     ['jan@glot.test', 'reviewer', true],
   ])
 
@@ -78,7 +78,7 @@ test('inviting someone already in the workspace is refused', async () => {
   const owner = createGlotClient({ url: baseUrl, fetch: withCookie(ownerCookie) })
 
   await expect(
-    owner.people.invite({ workspaceId, email: 'anna@glot.test', role: 'writer', languages: null }),
+    owner.people.invite({ workspaceId, email: 'marie@glot.test', role: 'writer', languages: null }),
   ).rejects.toMatchObject({ code: 'CONFLICT' })
 })
 
@@ -118,7 +118,7 @@ test('a person whose access ended no longer sees the workspace', async () => {
 test('an admin cannot change their own access', async () => {
   const owner = createGlotClient({ url: baseUrl, fetch: withCookie(ownerCookie) })
   const people = await owner.people.list({ workspaceId })
-  const self = people.find(({ user }) => user.email === 'anna@glot.test')
+  const self = people.find(({ user }) => user.email === 'marie@glot.test')
 
   await expect(owner.people.remove({ membershipId: self?.id ?? '' })).rejects.toMatchObject({
     code: 'FORBIDDEN',

@@ -64,25 +64,40 @@ test('approving through the public REST API with a key is refused with 403', asy
   expect(response.status).toBe(403)
 })
 
-test('a person creates a workspace and invites a writer through better-auth', async () => {
-  const headers = { cookie: sessionCookie, origin: baseUrl, 'content-type': 'application/json' }
+test('only an owner creates a workspace, and better-auth member endpoints are closed', async () => {
+  const marieCookie = await signInByMagicLink('marie@glot.test')
 
-  const created = await fetch(`${baseUrl}/api/auth/organization/create`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ name: 'Second workspace', slug: 'second-workspace' }),
+  async function call(options: { cookie: string; path: string; body: unknown }) {
+    return fetch(`${baseUrl}/api/auth${options.path}`, {
+      method: 'POST',
+      headers: { cookie: options.cookie, origin: baseUrl, 'content-type': 'application/json' },
+      body: JSON.stringify(options.body),
+    })
+  }
+
+  const refused = await call({
+    cookie: sessionCookie,
+    path: '/organization/create',
+    body: { name: 'Reviewer space', slug: 'reviewer-space' },
+  })
+
+  expect(refused.status).toBe(403)
+
+  const created = await call({
+    cookie: marieCookie,
+    path: '/organization/create',
+    body: { name: 'Second workspace', slug: 'second-workspace' },
   }).then((response) => response.json())
 
   expect(created.id).toMatch(/^[0-9a-f-]{36}$/u)
 
-  const invited = await fetch(`${baseUrl}/api/auth/organization/invite-member`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ email: 'writer@glot.test', role: 'writer', organizationId: created.id }),
+  const invited = await call({
+    cookie: marieCookie,
+    path: '/organization/invite-member',
+    body: { email: 'writer@glot.test', role: 'writer', organizationId: created.id },
   })
 
-  expect(invited.status).toBe(200)
-  await expect(invited.json()).resolves.toMatchObject({ role: 'writer', status: 'pending' })
+  expect(invited.status).toBe(404)
 })
 
 test('a draft is saved for its author', async () => {
