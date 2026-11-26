@@ -10,6 +10,7 @@ Placement rules govern necessary declarations. Default to local implementation, 
 | `@glot/database` | Tables, relations, canonical constants, derived validators and inferred types, the database connection, migrations.                     |
 | `@glot/auth`     | better-auth configuration, session and API-key resolution, the browser auth client.                                                     |
 | `@glot/checks`   | Parsing vue-i18n messages and the checks on them: syntax, placeholders, plural forms, HTML tags, words to avoid. Pure and browser-safe. |
+| `@glot/cli`      | The `glot` command for a repository's own CI: `glot check` runs `@glot/checks` on its language files.                                   |
 | `@glot/contract` | The oRPC contract: procedures, their input and output schemas, errors and OpenAPI metadata. Browser-safe.                               |
 | `@glot/sdk`      | Typed clients over RPC and REST, built from the contract alone.                                                                         |
 | `@glot/ui`       | Tokens that feed Nuxt UI's theme, and the components only Glot has: state strip, legend, text value with placeholder chips.             |
