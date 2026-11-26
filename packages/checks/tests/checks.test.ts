@@ -96,6 +96,7 @@ test('HTML tags must be the same as in the source', () => {
 
   expect(codes({ source: 'Ligne<br/>suivante', target: 'Next<br>line' })).toEqual(['HTML_TAGS'])
   expect(codes({ source: '<b>{name}</b>', target: '<i>{name}</i>' })).toEqual(['HTML_TAGS'])
+  expect(codes({ source: '<b>a</b> <b>b</b>', target: '<b>a</b> <b>b' })).toEqual(['HTML_TAGS'])
 })
 
 test('words to avoid are found as whole words in any case', () => {

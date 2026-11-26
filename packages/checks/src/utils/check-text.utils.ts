@@ -4,7 +4,19 @@ import { htmlTagsOf } from './html.utils.ts'
 import { parseMessage, placeholdersOf, plainTextOf } from './message.utils.ts'
 
 function difference(options: { from: string[]; without: string[] }) {
-  return options.from.filter((item) => !options.without.includes(item))
+  const remaining = [...options.without]
+
+  return options.from.filter((item) => {
+    const at = remaining.indexOf(item)
+
+    if (at === -1) {
+      return true
+    }
+
+    remaining.splice(at, 1)
+
+    return false
+  })
 }
 
 function mismatch(options: { source: string[]; target: string[] }) {
