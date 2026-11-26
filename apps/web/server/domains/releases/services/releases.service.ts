@@ -215,15 +215,18 @@ export class ReleasesService {
     const previousValue = change.previousValue
 
     const restored = await this.#context.db.transaction(async (tx) => {
-      await tx.drafts.updateMany({
+      const waiting = await tx.drafts.exists({
         where: {
           projectId: project.id,
           textId: change.textId,
           language: change.language,
-          status: DRAFT_STATUSES.APPROVED,
+          status: { in: [DRAFT_STATUSES.APPROVED, DRAFT_STATUSES.CONFLICT] },
         },
-        data: { status: DRAFT_STATUSES.WITHDRAWN },
       })
+
+      if (waiting) {
+        return null
+      }
 
       const draft = await tx.drafts.create({
         data: {
@@ -242,6 +245,12 @@ export class ReleasesService {
         .update({ where: { id: change.id }, data: { undoDraftId: draft.id } })
         .throw()
     })
+
+    if (!restored) {
+      throw new ORPCError('CONFLICT', {
+        message: 'Another change to this text is waiting to be released',
+      })
+    }
 
     return releaseChangeView({ change: restored, authorName: change.author?.name ?? null })
   }

@@ -695,6 +695,52 @@ test('keeping a conflict withdraws the other approved change to the same text, s
   expect(await show({ directory: jamRepository, path: PL, ref: 'glot/release' })).toContain('Usuń')
 })
 
+test('undo is refused while another change to the text is approved or in conflict, and keeps it', async () => {
+  const projectId = jamProjectId
+
+  await mergeReleaseBranch(jamRepository)
+  await as('Dave').projects.sync({ projectId })
+
+  const history = await as('Dave').releases.history({ projectId })
+  const release = history.items[0]
+  const changes = await as('Dave').releases.changes({ projectId, releaseId: release?.id ?? '' })
+  const usun = changes.items.find(({ value }) => value === 'Usuń')
+
+  if (!usun) throw new Error('The release did not write Usuń')
+
+  const input = { projectId, releaseId: release?.id ?? '', changeId: usun.id }
+
+  const { draft } = await approveDraft({
+    project: projectId,
+    source: 'Supprimer',
+    value: 'Wyrzuć',
+  })
+
+  await expect(as('Dave').releases.undo(input)).rejects.toMatchObject({
+    code: 'CONFLICT',
+    message: 'Another change to this text is waiting to be released',
+  })
+
+  await commitUpstream({
+    directory: jamRepository,
+    path: FR,
+    edit: (content) => content.replace('"Supprimer"', '"Effacer"'),
+  })
+
+  await as('Dave').projects.sync({ projectId })
+
+  await expect(as('Dave').releases.next({ projectId })).resolves.toMatchObject({ conflicts: 1 })
+
+  await expect(as('Dave').releases.undo(input)).rejects.toMatchObject({
+    code: 'CONFLICT',
+    message: 'Another change to this text is waiting to be released',
+  })
+
+  const conflicts = await as('Lena').releases.conflicts({ projectId })
+
+  expect(conflicts.items).toMatchObject([{ draft: { id: draft.id, status: 'CONFLICT' } }])
+})
+
 test('values are replaced and added in place in a file with its own formatting', async () => {
   const original = [
     '﻿{',
