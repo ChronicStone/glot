@@ -48,6 +48,7 @@ export class ReviewsService {
           language: input.language,
           status: DRAFT_STATUSES.IN_REVIEW,
         },
+        include: { author: true },
         orderBy: { updatedAt: 'asc' },
       }),
       this.#context.db.comments.findMany({
@@ -87,6 +88,7 @@ export class ReviewsService {
         draft: draft
           ? draftView({
               draft,
+              authorName: draft.author.name,
               failures: texts.failures({
                 repository: project.repository,
                 language: input.language,

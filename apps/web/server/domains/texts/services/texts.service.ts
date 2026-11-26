@@ -1,6 +1,6 @@
 import { checkText } from '@glot/checks'
 import type { Text, TextRefInput, TextSearchInput } from '@glot/contract'
-import type { Draft } from '@glot/database'
+import type { Draft, User } from '@glot/database'
 import { DRAFT_STATUSES } from '@glot/database/constants/drafts'
 import { TEXT_STATES } from '@glot/database/constants/texts'
 import { hashText } from '@glot/utils/hash'
@@ -91,6 +91,7 @@ export class TextsService {
             { status: DRAFT_STATUSES.DRAFT, authorId: userId },
           ],
         },
+        include: { author: true },
         orderBy: { updatedAt: 'asc' },
       }),
     ])
@@ -108,7 +109,7 @@ export class TextsService {
       }
     }
 
-    const draftsByPair = new Map<string, Draft[]>()
+    const draftsByPair = new Map<string, Array<Draft & { author: User }>>()
 
     for (const draft of drafts) {
       const key = pairKey(draft)
@@ -150,7 +151,7 @@ export class TextsService {
     translation: CatalogTranslation
     approvedBy: Map<string, string>
     selfApproved: Set<string>
-    drafts: Draft[] | undefined
+    drafts: Array<Draft & { author: User }> | undefined
     avoid: string[]
   }) {
     const { entry, avoid } = options
@@ -193,6 +194,7 @@ export class TextsService {
       draft: shown
         ? draftView({
             draft: shown,
+            authorName: shown.author.name,
             failures: checkText({ source: entry.sourceValue, target: shown.value, avoid }),
           })
         : null,

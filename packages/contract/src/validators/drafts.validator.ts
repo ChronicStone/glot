@@ -14,6 +14,7 @@ export const draftSchema = draftSelectSchema
     updatedAt: true,
   })
   .extend({
+    authorName: z.string(),
     failures: z
       .array(checkFailureSchema)
       .describe('The checks this draft fails. A draft that fails a check cannot be sent.'),

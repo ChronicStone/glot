@@ -37,10 +37,12 @@ export class DraftsService {
     })
 
     const draft = active
-      ? await this.#context.db.drafts.update({
-          where: { id: active.id },
-          data: { value: input.value, status: DRAFT_STATUSES.DRAFT },
-        })
+      ? await this.#context.db.drafts
+          .update({
+            where: { id: active.id },
+            data: { value: input.value, status: DRAFT_STATUSES.DRAFT },
+          })
+          .throw()
       : await this.#context.db.drafts.create({
           data: {
             projectId: input.projectId,
@@ -51,7 +53,7 @@ export class DraftsService {
           },
         })
 
-    return this.#view({ draft, repository: project.repository, source: text.source.value })
+    return await this.#view({ draft, repository: project.repository, source: text.source.value })
   }
 
   async send(input: DraftRefInput) {
@@ -61,16 +63,18 @@ export class DraftsService {
       throw new ORPCError('CONFLICT', { message: 'This draft is not waiting to be sent' })
     }
 
-    const view = this.#view({ draft, repository, source })
+    const view = await this.#view({ draft, repository, source })
 
     if (view.failures.length > 0) {
       throw new ORPCError('CONFLICT', { message: 'This draft fails a check' })
     }
 
-    const sent = await this.#context.db.drafts.update({
-      where: { id: draft.id },
-      data: { status: DRAFT_STATUSES.IN_REVIEW },
-    })
+    const sent = await this.#context.db.drafts
+      .update({
+        where: { id: draft.id },
+        data: { status: DRAFT_STATUSES.IN_REVIEW },
+      })
+      .throw()
 
     return this.#view({ draft: sent, repository, source })
   }
@@ -82,10 +86,12 @@ export class DraftsService {
       throw new ORPCError('CONFLICT', { message: 'This draft can no longer be withdrawn' })
     }
 
-    const withdrawn = await this.#context.db.drafts.update({
-      where: { id: draft.id },
-      data: { status: DRAFT_STATUSES.WITHDRAWN },
-    })
+    const withdrawn = await this.#context.db.drafts
+      .update({
+        where: { id: draft.id },
+        data: { status: DRAFT_STATUSES.WITHDRAWN },
+      })
+      .throw()
 
     return this.#view({ draft: withdrawn, repository, source })
   }
@@ -116,9 +122,12 @@ export class DraftsService {
     return { draft, repository: project.repository, source: text.source.value }
   }
 
-  #view(options: { draft: Draft; repository: string; source: string }) {
+  async #view(options: { draft: Draft; repository: string; source: string }) {
+    const author = await this.#context.db.user.findFirst({ where: { id: options.draft.authorId } })
+
     return draftView({
       draft: options.draft,
+      authorName: author?.name ?? '',
       failures: new TextsService(this.#context).failures({
         repository: options.repository,
         language: options.draft.language,

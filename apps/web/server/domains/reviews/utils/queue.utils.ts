@@ -1,13 +1,13 @@
 import { REVIEW_REASONS } from '@glot/contract'
-import type { Text } from '@glot/contract'
-import type { Approval, Comment, Draft } from '@glot/database'
+import type { ReviewReason, Text } from '@glot/contract'
+import type { Approval, Comment, Draft, User } from '@glot/database'
 import { TEXT_STATES } from '@glot/database/constants/texts'
 import { hashText } from '@glot/utils/hash'
 
 export function queueItems(options: {
   texts: Text[]
   language: string
-  drafts: Draft[]
+  drafts: Array<Draft & { author: User }>
   changeRequests: Comment[]
   approvals: Approval[]
   hideAuthorId: string | null
@@ -20,42 +20,46 @@ export function queueItems(options: {
     options.changeRequests.map((comment) => `${comment.textId}|${comment.targetHash}`),
   )
 
-  const items = options.texts.flatMap((text) => {
-    const translation = text.translations.find((candidate) => candidate.language === language)
-    const sent = draftsOf.get(text.id) ?? []
+  const items = options.texts.flatMap(
+    (
+      text,
+    ): Array<{ reason: ReviewReason; text: Text; draft: (Draft & { author: User }) | null }> => {
+      const translation = text.translations.find((candidate) => candidate.language === language)
+      const sent = draftsOf.get(text.id) ?? []
 
-    if (!translation) {
-      return []
-    }
+      if (!translation) {
+        return []
+      }
 
-    if (sent.length > 0) {
-      return sent
-        .filter((draft) => draft.authorId !== options.hideAuthorId)
-        .map((draft) => ({ reason: REVIEW_REASONS.SENT_FOR_REVIEW, text, draft }))
-    }
+      if (sent.length > 0) {
+        return sent
+          .filter((draft) => draft.authorId !== options.hideAuthorId)
+          .map((draft) => ({ reason: REVIEW_REASONS.SENT_FOR_REVIEW, text, draft }))
+      }
 
-    if (
-      translation.state !== TEXT_STATES.TO_CHECK ||
-      translation.value === null ||
-      requested.has(`${text.id}|${hashText(translation.value)}`)
-    ) {
-      return []
-    }
+      if (
+        translation.state !== TEXT_STATES.TO_CHECK ||
+        translation.value === null ||
+        requested.has(`${text.id}|${hashText(translation.value)}`)
+      ) {
+        return []
+      }
 
-    const sourceHash = hashText(text.source.value)
+      const sourceHash = hashText(text.source.value)
 
-    const sourceChanged = (approvalsOf.get(text.id) ?? []).some(
-      (approval) => approval.sourceHash !== sourceHash,
-    )
+      const sourceChanged = (approvalsOf.get(text.id) ?? []).some(
+        (approval) => approval.sourceHash !== sourceHash,
+      )
 
-    return [
-      {
-        reason: sourceChanged ? REVIEW_REASONS.SOURCE_CHANGED : REVIEW_REASONS.TO_CHECK,
-        text,
-        draft: null,
-      },
-    ]
-  })
+      return [
+        {
+          reason: sourceChanged ? REVIEW_REASONS.SOURCE_CHANGED : REVIEW_REASONS.TO_CHECK,
+          text,
+          draft: null,
+        },
+      ]
+    },
+  )
 
   return items.toSorted((a, b) => b.text.shownIn.length - a.text.shownIn.length)
 }
