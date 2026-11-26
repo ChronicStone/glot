@@ -1,6 +1,6 @@
 # Catalog and checks
 
-Status: Planned
+Status: Verified
 
 ## Scope
 
@@ -15,3 +15,12 @@ Status: Planned
 
 - End-to-end: the seeded project lists texts read from its git files; changing a file and committing in the fixture repository then calling `projects.sync` shows the new text; a renamed placeholder shows as "needs a fix" with its reason; an approval stops counting when the French changes.
 - `@glot/checks` unit tests on real vue-i18n syntax: named, list, plural, linked, literal, HTML.
+
+## Verification
+
+- `bun run test` in `apps/web` (`GLOT_TEST_PORT=3191`): `tests/catalog.test.ts` reads the seeded project from its git repository, commits to a second fixture repository and calls `projects.sync`, shows a renamed placeholder as needing a fix with its reason, and shows an approval (pending in PostgreSQL and released in `.glot/reviews`) stop counting when the French changes. The GitHub reader is tested with recorded responses at that seam only.
+- `bun run test` in `packages/checks`: named, list, plural, linked, literal and HTML syntax.
+
+## Decisions
+
+D-014 to D-020.

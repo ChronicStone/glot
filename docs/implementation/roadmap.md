@@ -5,7 +5,7 @@ V1 is complete when every slice below is Verified. Slices in the same wave run i
 | Wave | Slice                                                                                                  | Status   |
 | ---- | ------------------------------------------------------------------------------------------------------ | -------- |
 | 0    | [Foundation](slices/foundation.md)                                                                     | Verified |
-| 1    | [Catalog and checks](slices/catalog-and-checks.md)                                                     | Planned  |
+| 1    | [Catalog and checks](slices/catalog-and-checks.md)                                                     | Verified |
 | 1    | [Self-hosting](slices/self-hosting.md)                                                                 | Planned  |
 | 1    | [App shell](slices/app-shell.md)                                                                       | Planned  |
 | 2    | [Drafts and review](slices/drafts-and-review.md)                                                       | Planned  |
