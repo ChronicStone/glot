@@ -6,6 +6,7 @@ import { join } from 'node:path'
 import { createGlotAuth } from '@glot/auth'
 import { createDatabase } from '@glot/database/server'
 import { seedDemo } from '@glot/seed'
+import { seedDemoRepository } from '@glot/seed/repository'
 import { migrate } from 'drizzle-orm/node-postgres/migrator'
 import { Client } from 'pg'
 import type { TestProject } from 'vite-plus/test/node'
@@ -25,7 +26,7 @@ async function resetDatabase() {
   await admin.end()
 }
 
-async function seed() {
+async function seed(options: { repositories: string }) {
   const connection = createDatabase({ connectionString: DATABASE_URL })
   await migrate(connection.drizzle, {
     migrationsFolder: new URL('../../../../packages/database/migrations', import.meta.url).pathname,
@@ -42,7 +43,9 @@ async function seed() {
   const key = await auth.api.createApiKey({ body: { userId: user.id, name: 'Release agent' } })
   await connection.close()
 
-  return { projectId: project.id, agentKey: key.key }
+  const { directory } = await seedDemoRepository({ root: options.repositories })
+
+  return { projectId: project.id, agentKey: key.key, repositoryPath: directory }
 }
 
 async function waitForServer(log: string) {
@@ -60,8 +63,9 @@ async function waitForServer(log: string) {
 
 export default async function setup(project: TestProject) {
   await resetDatabase()
-  const { projectId, agentKey } = await seed()
   const directory = await mkdtemp(join(tmpdir(), 'glot-test-'))
+  const repositories = join(directory, 'repositories')
+  const { projectId, agentKey, repositoryPath } = await seed({ repositories })
   const log = join(directory, 'server.log')
   const output = createWriteStream(log)
 
@@ -76,6 +80,7 @@ export default async function setup(project: TestProject) {
       DATABASE_URL,
       AUTH_SECRET,
       APP_URL: BASE_URL,
+      GLOT_GIT_ROOT: repositories,
       GLOT_VERSION: 'test',
     },
   })
@@ -88,6 +93,9 @@ export default async function setup(project: TestProject) {
   project.provide('serverLog', log)
   project.provide('projectId', projectId)
   project.provide('agentKey', agentKey)
+  project.provide('repositoryPath', repositoryPath)
+  project.provide('repositoriesRoot', repositories)
+  project.provide('databaseUrl', DATABASE_URL)
 
   return () => {
     server.kill()
@@ -100,5 +108,8 @@ declare module 'vite-plus/test' {
     serverLog: string
     projectId: string
     agentKey: string
+    repositoryPath: string
+    repositoriesRoot: string
+    databaseUrl: string
   }
 }
