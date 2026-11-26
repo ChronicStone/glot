@@ -6,6 +6,7 @@
   "type": "module",
   "exports": {
     "./theme.css": "./src/styles/theme.css",
+    "./glot.css": "./src/styles/glot.css",
     "./components/*": "./src/components/*",
     "./constants": "./src/constants/ui.constants.ts"
   },

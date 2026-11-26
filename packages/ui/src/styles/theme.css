@@ -48,6 +48,9 @@
   --glot-d-orange: light-dark(#e58c37, #ec9846);
   --glot-d-green: light-dark(#3aa86b, #45b878);
   --glot-d-pink: light-dark(#e0699f, #ea78ab);
+  --glot-d-slate: light-dark(#8a94a6, #7d879a);
+  --glot-font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --glot-font-mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
   --glot-primary-fill: var(--glot-primary);
   --glot-primary-edge:
     inset 0 1px 0 rgb(255 255 255 / 9%), 0 1px 2px rgb(20 18 14 / 22%),

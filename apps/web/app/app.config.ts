@@ -27,7 +27,7 @@ export default defineAppConfig({
       compoundVariants: [
         {
           color: 'primary',
-          variant: 'solid',
+          variant: ['solid', 'outline'],
           class:
             'text-on-primary shadow-primary [background:var(--glot-primary-fill)] hover:[background:var(--glot-primary-hover)]',
         },
