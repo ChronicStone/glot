@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
+
 const route = useRoute()
 const paletteOpen = ref<boolean>(false)
 
