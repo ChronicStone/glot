@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/seed.ts",
-    "./repository": "./src/demo-repository.ts"
+    "./repository": "./src/demo-repository.ts",
+    "./fixtures": "./src/fixtures/demo-repository.fixtures.ts"
   },
   "scripts": {
     "db:seed": "bun src/run.ts",

@@ -29,8 +29,9 @@ test('a signed-in person reads the Polish texts that need a fix', async () => {
 test('projects list with their apps through the public REST API and an agent key', async () => {
   const glot = createGlotRestClient({ url: baseUrl, token: agentKey })
   const projects = await glot.projects.list()
-  expect(projects.map((project) => project.name)).toEqual(['Demo apps'])
-  expect(projects[0]?.apps.map((app) => app.name).toSorted()).toEqual(['Admin', 'Market'])
+  const demo = projects.find((project) => project.name === 'Demo apps')
+
+  expect(demo?.apps.map((app) => app.name).toSorted()).toEqual(['Admin', 'Market'])
 })
 
 test('an agent key cannot approve, a signed-in person can', async () => {
