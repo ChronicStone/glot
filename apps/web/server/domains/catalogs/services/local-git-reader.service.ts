@@ -123,6 +123,7 @@ export class LocalGitReader implements GitReader, GitWriter {
       const git = spawn('git', ['-C', directory, ...options.args], {
         env: { ...process.env, ...options.env },
       })
+
       const output: Buffer[] = []
       const errors: Buffer[] = []
 
