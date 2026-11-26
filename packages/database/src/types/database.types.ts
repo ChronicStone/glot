@@ -12,3 +12,5 @@ export type DatabaseConnection = ReturnType<typeof createDatabase>
 export type Database = DatabaseConnection['db']
 
 export type DrizzleDatabase = DatabaseConnection['drizzle']
+
+export type DatabaseTransaction = Parameters<Parameters<Database['transaction']>[0]>[0]
