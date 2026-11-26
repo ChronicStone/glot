@@ -1,8 +1,4 @@
-import * as z from 'zod'
 import { languageCodeSchema } from './languages.validator.ts'
+import { textRefInputSchema } from './texts.validator.ts'
 
-export const approveInputSchema = z.object({
-  projectId: z.uuid(),
-  textId: z.string(),
-  language: languageCodeSchema,
-})
+export const approveInputSchema = textRefInputSchema.extend({ language: languageCodeSchema })

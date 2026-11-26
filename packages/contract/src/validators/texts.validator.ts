@@ -1,3 +1,4 @@
+import { draftSelectSchema } from '@glot/database/validators/drafts'
 import { textStateSchema } from '@glot/database/validators/texts'
 import * as z from 'zod'
 import { languageCodeSchema } from './languages.validator.ts'
@@ -29,8 +30,9 @@ export const textSchema = z.object({
   translations: z.array(translationSchema),
 })
 
-export const textSearchInputSchema = z.object({
-  projectId: z.uuid(),
+export const textRefInputSchema = draftSelectSchema.pick({ projectId: true, textId: true })
+
+export const textSearchInputSchema = textRefInputSchema.pick({ projectId: true }).extend({
   q: z.string().optional().describe('Words to find, in any language.'),
   state: textStateSchema.optional(),
   language: languageCodeSchema.optional().describe('The language the state filter applies to.'),
@@ -43,5 +45,3 @@ export const textPageSchema = z.object({
   total: z.number().int(),
   nextCursor: z.string().nullable(),
 })
-
-export const textRefInputSchema = z.object({ projectId: z.uuid(), textId: z.string() })
