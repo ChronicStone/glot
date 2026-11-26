@@ -11,16 +11,17 @@ import { Client } from 'pg'
 import type { TestProject } from 'vite-plus/test/node'
 
 const ADMIN_URL = process.env.GLOT_TEST_ADMIN_URL ?? 'postgres://glot:glot@localhost:54329/glot'
-const DATABASE_URL = ADMIN_URL.replace(/\/glot$/u, '/glot_test')
-const PORT = 3199
+const PORT = Number(process.env.GLOT_TEST_PORT ?? 3199)
+const DATABASE_NAME = `glot_test_${PORT}`
+const DATABASE_URL = ADMIN_URL.replace(/\/glot$/u, `/${DATABASE_NAME}`)
 const BASE_URL = `http://localhost:${PORT}`
 const AUTH_SECRET = 'glot-test-secret-that-is-at-least-32-characters'
 
 async function resetDatabase() {
   const admin = new Client({ connectionString: ADMIN_URL })
   await admin.connect()
-  await admin.query('DROP DATABASE IF EXISTS glot_test WITH (FORCE)')
-  await admin.query('CREATE DATABASE glot_test')
+  await admin.query(`DROP DATABASE IF EXISTS ${DATABASE_NAME} WITH (FORCE)`)
+  await admin.query(`CREATE DATABASE ${DATABASE_NAME}`)
   await admin.end()
 }
 
@@ -70,6 +71,8 @@ export default async function setup(project: TestProject) {
       ...Object.fromEntries(
         Object.entries(process.env).filter(([name]) => !/^(?:VITEST|TEST$|NODE_ENV$)/u.test(name)),
       ),
+      NUXT_IGNORE_LOCK: '1',
+      GLOT_BUILD_DIR: `.nuxt-test-${PORT}`,
       DATABASE_URL,
       AUTH_SECRET,
       APP_URL: BASE_URL,
