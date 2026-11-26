@@ -23,8 +23,8 @@
     "infra:up": "docker compose -p glot up -d --wait",
     "infra:down": "docker compose -p glot down",
     "db:generate": "bun run --cwd packages/database db:generate",
-    "db:migrate": "bun --env-file=.env run --cwd packages/database db:migrate",
-    "db:studio": "bun --env-file=.env run --cwd packages/database db:studio",
+    "db:migrate": "bun --env-file=../../.env run --cwd packages/database db:migrate",
+    "db:studio": "bun --env-file=../../.env run --cwd packages/database db:studio",
     "ready": "bun run check && bun run test && vp run -r build",
     "db:seed": "bun --env-file=.env tooling/seed/src/run.ts"
   },
