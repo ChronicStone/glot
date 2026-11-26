@@ -39,7 +39,9 @@
     "@glot/seed": "workspace:*",
     "@types/node": "catalog:",
     "@types/pg": "catalog:",
+    "@types/smtp-server": "catalog:",
     "pg": "catalog:",
+    "smtp-server": "catalog:",
     "vite-plus": "catalog:"
   }
 }

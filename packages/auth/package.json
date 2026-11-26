@@ -18,6 +18,11 @@
     "@glot/utils": "workspace:*",
     "better-auth": "catalog:",
     "drizzle-orm": "catalog:",
-    "vue": "catalog:"
+    "nodemailer": "catalog:",
+    "vue": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/nodemailer": "catalog:"
   }
 }
