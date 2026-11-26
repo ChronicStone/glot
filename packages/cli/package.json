@@ -3,10 +3,10 @@
   "version": "0.0.0",
   "description": "glot check: run Glot's checks on the language files of a repository, for its own CI.",
   "license": "MIT",
-  "type": "module",
   "bin": {
     "glot": "./src/bin.ts"
   },
+  "type": "module",
   "scripts": {
     "typecheck": "tsrs --noEmit",
     "test": "vp test run"

@@ -13,6 +13,7 @@ apps/web (Nuxt 4)
 
 packages/contract  oRPC contract: procedures, schemas derived from the database validators
 packages/sdk       typed clients over RPC and REST, from the contract alone
+packages/cli       glot check for a repository's own CI, built on the checks
 packages/database  tables, relations, constants, validators, types, connection, migrations
 packages/auth      better-auth: Google, magic links, workspaces, API keys
 packages/ui        tokens fed to Nuxt UI, and Glot's own components (state strip, legend, text value)
