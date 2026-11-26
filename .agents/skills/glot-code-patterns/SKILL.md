@@ -25,7 +25,7 @@ Build the smallest complete design that satisfies current behavior, security, pe
 - A file holds one kind of declaration, named by its dotted suffix: `*.schema.ts`, `*.relations.ts`, `*.constants.ts`, `*.types.ts`, `*.validator.ts`, `*.utils.ts`, `*.contract.ts`, `*.router.ts`, `*.service.ts`, `*.config.ts`, `*.fixtures.ts`. It lives in the matching directory. Type files contain only types; utility files contain only pure functions; constants files contain only UPPER_SNAKE records.
 - `glot-patterns/backend-structural-ownership` enforces placement in the backend and shared packages. Lint is the floor, not the bar: a file that passes but mixes concerns is still wrong.
 
-Read the mandatory [ownership and file-role contract](references/ownership-and-file-roles.md) before adding a file, and [construction and reuse](references/construction-and-reuse.md) before extracting a helper, type, service or package.
+Read the mandatory [ownership and file-role contract](references/ownership-and-file-roles.md) before adding a file, and [construction and reuse](references/construction-and-reuse.md) before extracting a helper, type, service or package. Read [screens: server state, tables and forms](references/frontend-state-tables-forms.md) before writing a screen, a query, a table or a form.
 
 ## Module depth
 
