@@ -1,4 +1,4 @@
-import { checkText } from '@glot/checks'
+import { checkText, flattenMessages, parseJsonFile } from '@glot/checks'
 import type { GlossaryTerm } from '@glot/contract'
 import type { ProjectSource } from '@glot/database'
 import { SOURCE_LOCALE_TOKEN } from '@glot/database/constants/projects'
@@ -7,7 +7,6 @@ import { GLOT_REPOSITORY } from '../constants/catalog.constants.ts'
 import type { CatalogEntry, CatalogProject } from '../types/catalog.types.ts'
 import { reviewLineSchema } from '../validators/review-line.validator.ts'
 import { approvalKey } from './approval-key.utils.ts'
-import { flattenMessages, parseJsonFile } from './flatten.utils.ts'
 import { encodeTextId } from './text-id.utils.ts'
 
 export function sourcePath(options: { pathPattern: string; language: string }) {

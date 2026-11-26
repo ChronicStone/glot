@@ -4,6 +4,8 @@ export { checkCodeSchema, checkFailureSchema } from './validators/checks.validat
 
 export { checkText } from './utils/check-text.utils.ts'
 
+export { flattenMessages, parseJsonFile } from './utils/flatten.utils.ts'
+
 export { messageSegments } from './utils/message.utils.ts'
 
 export type * from './types/checks.types.ts'
