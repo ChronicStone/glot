@@ -49,8 +49,9 @@ Open it, enter the workspace name, your name and your email. Glot creates the ad
 | `MAIL_FROM`                                | no       | Sender of sign-in emails, for example `Glot <glot@example.com>`.                                                                                                             |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | no       | Enable Google sign-in.                                                                                                                                                       |
 | `GLOT_GIT_ROOT`                            | no       | Folder holding clones of your repositories as `<folder>/<owner>/<name>`. With it set, texts are read from these clones with `git`. In the compose setup use `/repositories`. |
-| `GITHUB_TOKEN`                             | no       | Token for reading texts from GitHub when `GLOT_GIT_ROOT` is empty. Required for private repositories; public ones work without it at a lower rate limit.                     |
-| `GLOT_REPOSITORIES`                        | no       | Host folder compose mounts read-only at `/repositories`. Default `./repositories`.                                                                                           |
+| `GITHUB_TOKEN`                             | no       | Token for GitHub when `GLOT_GIT_ROOT` is empty. Reading private repositories and releasing need it; releasing needs write access to contents and pull requests.              |
+| `GLOT_CLOCK`                               | no       | `on` or `off`: the twice-a-day release. On in the image, off in development unless set.                                                                                      |
+| `GLOT_REPOSITORIES`                        | no       | Host folder compose mounts at `/repositories`. Default `./repositories`. Releases commit to a branch there, so it must be writable.                                          |
 | `GLOT_PORT`                                | no       | Port published by compose. Default `3100`.                                                                                                                                   |
 
 Sign-in links reach people by SMTP. Without `SMTP_URL` a production server cannot send them: invitations fail, and everyone, the setup administrator included once their session ends after 14 days, can sign in only with Google. Set SMTP or Google before inviting anyone. Google sign-in never creates an account: a person must be invited first.
@@ -61,6 +62,10 @@ Glot reads texts from the Git repository of each project, in one of two ways:
 
 - **GitHub** (default): leave `GLOT_GIT_ROOT` empty. Glot reads through the GitHub API; set `GITHUB_TOKEN` for private repositories.
 - **Local clones**: put clones in a folder, one per repository (`repositories/acme/web` for `acme/web`), keep them up to date with `git fetch`, and set `GLOT_GIT_ROOT=/repositories` with `GLOT_REPOSITORIES` pointing at that folder. The image includes `git`.
+
+## Releasing
+
+A release writes the approved texts and approvals to the branch `glot/release` and opens, or updates, one pull request from it. Your merge queue and required checks stay in charge of merging. With local clones Glot only commits to that branch in the clone, without touching its working tree; push it and open the pull request yourself. The clock releases at 08:00 and 14:00 UTC, and owners, admins and developers can release at any time.
 
 ## Upgrades
 

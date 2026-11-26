@@ -33,8 +33,9 @@ services:
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       GLOT_GIT_ROOT: ${GLOT_GIT_ROOT:-}
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      GLOT_CLOCK: ${GLOT_CLOCK:-on}
     volumes:
-      - ${GLOT_REPOSITORIES:-./repositories}:/repositories:ro
+      - ${GLOT_REPOSITORIES:-./repositories}:/repositories
     ports:
       - '${GLOT_PORT:-3100}:3000'
 
