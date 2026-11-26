@@ -6,4 +6,5 @@ export const reviewLineSchema = z.object({
   sourceHash: z.string(),
   targetHash: z.string(),
   reviewedBy: z.string(),
+  selfApproved: z.boolean().optional(),
 })

@@ -97,7 +97,7 @@ export class TextsService {
     ])
 
     const approvedBy = new Map(catalog.released)
-    const selfApproved = new Set<string>()
+    const selfApproved = new Set(catalog.releasedSelfApproved)
 
     for (const approval of pending) {
       const key = approvalKey(approval)

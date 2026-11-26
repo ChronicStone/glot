@@ -123,6 +123,7 @@ function safeJson(line: string) {
 
 export function parseReleased(options: { project: CatalogProject; files: Map<string, string> }) {
   const released = new Map<string, string>()
+  const selfApproved = new Set<string>()
 
   for (const language of targetLanguages(options.project)) {
     const lines = (options.files.get(reviewsPath(language)) ?? '').split('\n')
@@ -131,18 +132,21 @@ export function parseReleased(options: { project: CatalogProject; files: Map<str
       const parsed = reviewLineSchema.safeParse(safeJson(line))
 
       if (parsed.success) {
-        released.set(
-          approvalKey({
-            textId: encodeTextId(parsed.data.key),
-            language,
-            sourceHash: parsed.data.sourceHash,
-            targetHash: parsed.data.targetHash,
-          }),
-          parsed.data.reviewedBy,
-        )
+        const key = approvalKey({
+          textId: encodeTextId(parsed.data.key),
+          language,
+          sourceHash: parsed.data.sourceHash,
+          targetHash: parsed.data.targetHash,
+        })
+
+        released.set(key, parsed.data.reviewedBy)
+
+        if (parsed.data.selfApproved) {
+          selfApproved.add(key)
+        }
       }
     }
   }
 
-  return released
+  return { released, selfApproved }
 }

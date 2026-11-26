@@ -83,10 +83,13 @@ export class CatalogService {
       paths: catalogPaths(project),
     })
 
+    const { released, selfApproved } = parseReleased({ project, files })
+
     return {
       commit,
       entries: buildEntries({ project, files, glossary: this.glossary(project.repository) }),
-      released: parseReleased({ project, files }),
+      released,
+      releasedSelfApproved: selfApproved,
     }
   }
 }
