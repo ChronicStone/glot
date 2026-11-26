@@ -8,6 +8,7 @@ import {
   AUTH_COOKIE_PREFIX,
   DATABASE_ID_MODELS,
   MAGIC_LINK_EXPIRES_IN_SECONDS,
+  REPLACED_WORKSPACE_PATHS,
   SESSION_EXPIRES_IN_SECONDS,
   SESSION_UPDATE_AGE_SECONDS,
 } from './constants/auth.constants.ts'
@@ -40,7 +41,10 @@ export function createGlotAuth(options: CreateAuthOptions) {
         apikey: schema.apiKeys,
       },
     }),
-    socialProviders: options.google ? { google: options.google } : {},
+    disabledPaths: Object.values(REPLACED_WORKSPACE_PATHS),
+    socialProviders: options.google
+      ? { google: { ...options.google, disableImplicitSignUp: true } }
+      : {},
     session: {
       expiresIn: SESSION_EXPIRES_IN_SECONDS,
       updateAge: SESSION_UPDATE_AGE_SECONDS,
@@ -56,7 +60,12 @@ export function createGlotAuth(options: CreateAuthOptions) {
     user: { additionalFields: userAdditionalFields },
     plugins: [
       organization({
-        allowUserToCreateOrganization: true,
+        allowUserToCreateOrganization: async (user) =>
+          Boolean(
+            await options.database.query.workspaceMemberships.findFirst({
+              where: { userId: user.id, role: WORKSPACE_ROLES.OWNER },
+            }),
+          ),
         ac: workspaceAccessControl,
         roles: workspaceRoles,
         creatorRole: WORKSPACE_ROLES.OWNER,
