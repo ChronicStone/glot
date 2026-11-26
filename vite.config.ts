@@ -29,6 +29,7 @@ const restrictedGlobals = [
 const generatedPatterns = [
   '.claude/**',
   '**/.nuxt/**',
+  '**/.nuxt-*/**',
   '**/.output/**',
   'packages/database/migrations/**',
   'docs/openapi.json',
