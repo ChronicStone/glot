@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import * as z from 'zod'
+import { setupCompleteSchema } from '@glot/auth/validators/setup'
+import { useForm } from '@tanstack/vue-form'
 
 definePageMeta({ layout: 'auth' })
 
@@ -9,67 +10,65 @@ const token = computed<string>(() => String(route.query.token ?? ''))
 const open = ref<boolean | undefined>(undefined)
 const message = ref<string>('')
 
-const schema = z.object({
-  workspaceName: z.string().min(1),
-  name: z.string().min(1),
-  email: z.email(),
+const fields = [
+  { name: 'workspaceName', label: 'Workspace name', type: 'text', autocomplete: 'organization' },
+  { name: 'name', label: 'Your name', type: 'text', autocomplete: 'name' },
+  { name: 'email', label: 'Email', type: 'email', autocomplete: 'email' },
+] as const
+
+const form = useForm({
+  defaultValues: { workspaceName: '', name: '', email: '' },
+  validators: { onSubmit: setupCompleteSchema.omit({ token: true }) },
+  onSubmit: async ({ value }) => {
+    message.value = ''
+
+    const { error } = await $auth.setup.complete({ token: token.value, ...value })
+
+    if (error) {
+      message.value = error.message ?? ''
+
+      return
+    }
+
+    await navigateTo('/', { external: true })
+  },
 })
 
-const state = reactive({ workspaceName: '', name: '', email: '' })
+const submitting = form.useSelector((state) => state.isSubmitting)
 
 onMounted(async () => {
   const { data } = await $auth.setup.status()
   open.value = Boolean(data?.open) && token.value !== ''
 })
-
-async function createAdministrator() {
-  message.value = ''
-
-  const { error } = await $auth.setup.complete({ token: token.value, ...state })
-
-  if (error) {
-    message.value = error.message ?? ''
-
-    return
-  }
-
-  await navigateTo('/', { external: true })
-}
 </script>
 
 <template>
   <template v-if="open">
     <h1 class="mb-4 text-[19px] font-semibold tracking-tight text-highlighted">Set up Glot</h1>
-    <UForm
-      :schema="schema"
-      :state="state"
-      class="flex flex-col gap-4"
-      @submit="createAdministrator"
-    >
-      <UFormField name="workspaceName" label="Workspace name">
-        <UInput
-          v-model="state.workspaceName"
-          autocomplete="organization"
-          size="lg"
-          class="w-full"
-        />
-      </UFormField>
-      <UFormField name="name" label="Your name">
-        <UInput v-model="state.name" autocomplete="name" size="lg" class="w-full" />
-      </UFormField>
-      <UFormField name="email" label="Email">
-        <UInput
-          v-model="state.email"
-          type="email"
-          autocomplete="email"
-          placeholder="you@company.com"
-          size="lg"
-          class="w-full"
-        />
-      </UFormField>
+    <form class="flex flex-col gap-4" @submit.prevent.stop="form.handleSubmit()">
+      <form.Field v-for="input in fields" :key="input.name" v-slot="{ field }" :name="input.name">
+        <UFormField :label="input.label" :error="field.state.meta.errors[0]?.message ?? false">
+          <UInput
+            :model-value="field.state.value"
+            :type="input.type"
+            :autocomplete="input.autocomplete"
+            size="lg"
+            class="w-full"
+            @update:model-value="field.handleChange"
+            @blur="field.handleBlur"
+          />
+        </UFormField>
+      </form.Field>
       <UAlert v-if="message" color="error" variant="soft" :title="message" />
-      <UButton type="submit" color="neutral" size="lg" block label="Create administrator" />
-    </UForm>
+      <UButton
+        type="submit"
+        color="neutral"
+        size="lg"
+        block
+        label="Create administrator"
+        :loading="submitting"
+      />
+    </form>
   </template>
   <template v-else-if="open === false">
     <h1 class="mb-2 text-[19px] font-semibold tracking-tight text-highlighted">
