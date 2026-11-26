@@ -1,5 +1,7 @@
+import type { ApproveInput } from '@glot/contract'
 import { ORPCError } from '@orpc/server'
 import type { RequestContext } from '../../../types/context.types.ts'
+import { actorUserId } from '../../../utils/actor.utils.ts'
 import { hashText } from '../../../utils/hash.utils.ts'
 import { TextsService } from '../../texts/services/texts.service.ts'
 
@@ -10,13 +12,7 @@ export class ReviewsService {
     this.#context = context
   }
 
-  async approve(input: { projectId: string; textId: string; language: string }) {
-    const { actor } = this.#context
-
-    if (actor.kind !== 'person') {
-      throw new ORPCError('PEOPLE_ONLY')
-    }
-
+  async approve(input: ApproveInput) {
     const texts = new TextsService(this.#context)
     const text = await texts.get(input)
     const translation = text.translations.find((t) => t.language === input.language)
@@ -33,9 +29,13 @@ export class ReviewsService {
       targetHash: hashText(translation.value),
     }
 
-    if (!(await this.#context.db.approvals.exists({ where: pair }))) {
-      await this.#context.db.approvals.create({ data: { ...pair, reviewerId: actor.user.id } })
-    }
+    const reviewerId = actorUserId(this.#context.actor)
+
+    await this.#context.db.approvals.upsert({
+      where: pair,
+      create: { ...pair, reviewerId },
+      update: { reviewerId },
+    })
 
     return texts.get(input)
   }
