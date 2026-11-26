@@ -1,5 +1,5 @@
 import { expect, test } from 'vite-plus/test'
-import { checkText } from '../src/index.ts'
+import { checkText, checkWords } from '../src/index.ts'
 
 function codes(input: { source: string; target: string; avoid?: string[] }) {
   return checkText({ avoid: [], ...input }).map((failure) => failure.code)
@@ -114,4 +114,49 @@ test('words to avoid are found as whole words in any case', () => {
 
 test('placeholder names are not scanned for words to avoid', () => {
   expect(codes({ source: '{charge}', target: '{charge}', avoid: ['charge'] })).toEqual([])
+})
+
+test('a never-translated word of the source must stay in the target', () => {
+  const keep = ['Agorastore']
+
+  expect(
+    checkText({
+      source: 'Bienvenue sur Agorastore',
+      target: 'Welcome to Agorastore',
+      avoid: [],
+      keep,
+    }),
+  ).toEqual([])
+
+  expect(
+    checkText({
+      source: 'Bienvenue sur Agorastore',
+      target: 'Welcome to the store',
+      avoid: [],
+      keep,
+    }),
+  ).toEqual([
+    {
+      code: 'NEVER_TRANSLATE',
+      message: 'Keep “Agorastore” as it is: the glossary says it is never translated.',
+    },
+  ])
+
+  expect(checkText({ source: 'Bienvenue', target: 'Welcome', avoid: [], keep })).toEqual([])
+})
+
+test('checkWords reports only the glossary failures and nothing for a text with a syntax error', () => {
+  const words = { avoid: ['Grundstück'], keep: ['Agorastore'] }
+
+  expect(checkWords({ source: 'Ce lot', target: 'Dieses Grundstück {date', ...words })).toEqual([])
+
+  expect(
+    checkWords({ source: 'Ce lot sur Agorastore', target: 'Dieses Grundstück', ...words }).map(
+      (failure) => failure.code,
+    ),
+  ).toEqual(['AVOID_WORDS', 'NEVER_TRANSLATE'])
+
+  expect(
+    checkWords({ source: 'Fin le {date}', target: 'Koniec {data}', avoid: [], keep: [] }),
+  ).toEqual([])
 })

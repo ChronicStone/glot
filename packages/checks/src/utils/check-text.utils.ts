@@ -1,7 +1,8 @@
 import { CHECK_CODES } from '../constants/checks.constants.ts'
 import type { CheckFailure } from '../types/checks.types.ts'
 import { htmlTagsOf } from './html.utils.ts'
-import { parseMessage, placeholdersOf, plainTextOf } from './message.utils.ts'
+import { parseMessage, placeholdersOf } from './message.utils.ts'
+import { wordFailures } from './words.utils.ts'
 
 function difference(options: { from: string[]; without: string[] }) {
   const remaining = [...options.without]
@@ -29,27 +30,12 @@ function mismatch(options: { source: string[]; target: string[] }) {
   ].join(' ')
 }
 
-function isLetter(character: string | undefined) {
-  return /[\p{L}\p{N}]/u.test(character ?? '')
-}
-
-function containsWord(options: { text: string; word: string }) {
-  const text = options.text.toLocaleLowerCase()
-  const word = options.word.toLocaleLowerCase()
-  let at = word === '' ? -1 : text.indexOf(word)
-
-  while (at !== -1) {
-    if (!isLetter(text[at - 1]) && !isLetter(text[at + word.length])) {
-      return true
-    }
-
-    at = text.indexOf(word, at + 1)
-  }
-
-  return false
-}
-
-export function checkText(input: { source: string; target: string; avoid: string[] }) {
+export function checkText(input: {
+  source: string
+  target: string
+  avoid: string[]
+  keep?: string[]
+}) {
   const target = parseMessage(input.target)
 
   if (target.problem) {
@@ -89,16 +75,7 @@ export function checkText(input: { source: string; target: string; avoid: string
     })
   }
 
-  const text = plainTextOf(target.forms)
-
-  for (const word of input.avoid) {
-    if (containsWord({ text, word })) {
-      failures.push({
-        code: CHECK_CODES.AVOID_WORDS,
-        message: `Avoid “${word}”: the glossary asks for another word.`,
-      })
-    }
-  }
+  failures.push(...wordFailures({ source, target, avoid: input.avoid, keep: input.keep ?? [] }))
 
   return failures
 }
