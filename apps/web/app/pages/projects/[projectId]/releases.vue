@@ -1,3 +1,3 @@
 <template>
-  <AppPageHeader title="Releases" />
+  <AppPage id="releases" title="Releases" />
 </template>

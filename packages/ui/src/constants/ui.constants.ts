@@ -1,9 +1,3 @@
-export const BUTTON_TONES = {
-  PRIMARY: 'primary',
-  OUTLINE: 'outline',
-  QUIET: 'quiet',
-} as const
-
 import { TEXT_STATES } from '@glot/database/constants/texts'
 
 export const TEXT_STATE_TONES = {

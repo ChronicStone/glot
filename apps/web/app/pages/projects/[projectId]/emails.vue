@@ -1,3 +1,3 @@
 <template>
-  <AppPageHeader title="Emails & documents" />
+  <AppPage id="emails" title="Emails & documents" />
 </template>

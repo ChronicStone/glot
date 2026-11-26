@@ -1,13 +1,35 @@
 @import 'tailwindcss';
+@import '@nuxt/ui';
 @import '@glot/ui/theme.css';
 
 @source '../../../../../packages/ui/src';
 
-html,
+:root,
+:root.dark {
+  --ui-bg: var(--glot-surface);
+  --ui-bg-muted: var(--glot-sunken);
+  --ui-bg-elevated: var(--glot-sunken);
+  --ui-bg-accented: var(--glot-line-strong);
+  --ui-bg-inverted: var(--glot-button);
+  --ui-text: var(--glot-ink);
+  --ui-text-highlighted: var(--glot-ink);
+  --ui-text-toned: var(--glot-ink-2);
+  --ui-text-muted: var(--glot-ink-3);
+  --ui-text-dimmed: var(--glot-ink-3);
+  --ui-text-inverted: var(--glot-button-ink);
+  --ui-border: var(--glot-line);
+  --ui-border-muted: var(--glot-line);
+  --ui-border-accented: var(--glot-line-strong);
+  --ui-border-inverted: var(--glot-button);
+  --ui-primary: var(--glot-accent);
+  --ui-success: var(--glot-ok);
+  --ui-warning: var(--glot-warn);
+  --ui-error: var(--glot-bad);
+  --ui-radius: 0.6875rem;
+}
+
 body {
   background: var(--glot-bg);
-  color: var(--glot-ink);
-  font-family: var(--font-sans);
   font-size: 13px;
   -webkit-font-smoothing: antialiased;
 }

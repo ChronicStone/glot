@@ -2,7 +2,6 @@
 import type { Text } from '@glot/contract'
 import { TEXT_STATE_LABELS, TEXT_STATE_TONES } from '@glot/ui/constants'
 import GlotTextValue from '@glot/ui/components/GlotTextValue.vue'
-import { ArrowLeftIcon, XIcon } from '@lucide/vue'
 
 defineProps<{ text: Text }>()
 
@@ -11,52 +10,39 @@ const details = ref<boolean>(false)
 </script>
 
 <template>
-  <section class="flex min-h-0 flex-col" aria-label="Text">
-    <header class="border-b border-line px-4 pt-3 pb-4 md:px-6 md:pt-5">
+  <section class="flex h-full min-h-0 flex-col" aria-label="Text">
+    <header class="border-b border-line px-4 pt-3 pb-4 md:px-6 md:pt-4">
       <div class="flex items-center gap-2">
-        <button
-          type="button"
-          class="-ml-2 flex h-8 items-center gap-1.5 rounded-control px-2 text-ink-2 hover:bg-sunken md:hidden"
-          @click="emit('close')"
-        >
-          <ArrowLeftIcon class="size-4" aria-hidden="true" />
-          Texts
-        </button>
-        <span class="hidden min-w-0 flex-1 truncate text-xs text-ink-3 md:block">{{
-          text.where
-        }}</span>
-        <span class="flex-1 md:hidden" />
-        <button
-          type="button"
-          :aria-pressed="details"
-          class="h-8 rounded-control px-2.5 text-[12.5px] font-medium text-ink-2 hover:bg-sunken aria-pressed:bg-sunken aria-pressed:text-ink"
+        <span class="min-w-0 flex-1 truncate text-xs text-muted">{{ text.where }}</span>
+        <UButton
+          label="Details"
+          color="neutral"
+          :variant="details ? 'soft' : 'ghost'"
+          size="sm"
           @click="details = !details"
-        >
-          Details
-        </button>
-        <button
-          type="button"
+        />
+        <UButton
+          icon="i-lucide-x"
           aria-label="Close"
-          class="hidden size-8 place-items-center rounded-control text-ink-3 hover:bg-sunken md:grid"
+          color="neutral"
+          variant="ghost"
+          size="sm"
           @click="emit('close')"
-        >
-          <XIcon class="size-4" />
-        </button>
+        />
       </div>
       <GlotTextValue
         :value="text.source.value"
         class="mt-2 block text-[18px] leading-snug font-semibold tracking-tight [overflow-wrap:anywhere]"
       />
-      <p class="mt-1 text-xs text-ink-3 md:hidden">{{ text.where }}</p>
-      <ul class="mt-3 flex flex-wrap gap-1.5">
-        <li
+      <div class="mt-3 flex flex-wrap gap-1.5">
+        <UBadge
           v-for="app in text.shownIn"
           :key="app"
-          class="rounded-control border border-line-strong px-2 py-0.5 text-xs text-ink-2"
-        >
-          {{ app }}
-        </li>
-      </ul>
+          :label="app"
+          color="neutral"
+          variant="outline"
+        />
+      </div>
       <dl
         v-if="details"
         class="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 rounded-control bg-sunken px-3 py-2 text-xs"

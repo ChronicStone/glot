@@ -1,3 +1,3 @@
 <template>
-  <AppPageHeader title="Settings" />
+  <AppPage id="settings" title="Settings" />
 </template>

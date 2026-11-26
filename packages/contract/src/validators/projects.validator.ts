@@ -15,7 +15,7 @@ export const projectSourceSchema = projectSourceSelectSchema.pick({
 })
 
 export const projectSchema = projectSelectSchema
-  .pick({ id: true, name: true, sourceLanguage: true, languages: true })
+  .pick({ id: true, workspaceId: true, name: true, sourceLanguage: true, languages: true })
   .extend({
     apps: z.array(projectAppSelectSchema.pick({ id: true, name: true, widget: true })),
     sources: z.array(projectSourceSchema),

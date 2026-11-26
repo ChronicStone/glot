@@ -1,75 +1,47 @@
 <script setup lang="ts">
-import GlotAvatar from '@glot/ui/components/GlotAvatar.vue'
-import { CheckIcon, LogOutIcon } from '@lucide/vue'
-import {
-  Menu,
-  MenuContent,
-  MenuGroupLabel,
-  MenuItem,
-  MenuItemIndicator,
-  MenuRadioGroup,
-  MenuRadioItem,
-  MenuSeparator,
-  MenuTrigger,
-} from '@ui-sdk/vue/menu'
+import type { DropdownMenuItem } from '@nuxt/ui'
 import { APPEARANCES, APPEARANCE_LABELS } from '../constants/shell.constants.ts'
 
 const { $auth } = useNuxtApp()
 const session = $auth.useSession()
-const { appearance, choose } = useAppearance()
-const choices = Object.values(APPEARANCES)
+const colorMode = useColorMode()
 
 async function signOut() {
   await $auth.signOut()
   await navigateTo('/sign-in')
 }
 
-function chooseAppearance(value: string) {
-  const next = choices.find((choice) => choice === value)
-
-  if (next) {
-    choose(next)
-  }
-}
+const items = computed<DropdownMenuItem[][]>(() => [
+  [
+    { type: 'label', label: 'Appearance' },
+    ...Object.values(APPEARANCES).map((appearance) => ({
+      label: APPEARANCE_LABELS[appearance],
+      type: 'checkbox' as const,
+      checked: colorMode.preference === appearance,
+      onSelect: () => {
+        colorMode.preference = appearance
+      },
+    })),
+  ],
+  [{ label: 'Sign out', icon: 'i-lucide-log-out', onSelect: signOut }],
+])
 </script>
 
 <template>
-  <Menu v-if="session.data">
-    <MenuTrigger
-      class="flex w-full items-center gap-2.5 rounded-control border-0 bg-transparent px-2 py-2 text-left outline-none hover:bg-surface/70 focus-visible:ring-2 focus-visible:ring-accent-line"
-    >
-      <GlotAvatar :name="session.data.user.name" />
-      <span class="min-w-0 flex-1">
-        <span class="block truncate font-medium">{{ session.data.user.name }}</span>
-        <span class="block truncate text-xs text-ink-3">{{ session.data.user.email }}</span>
-      </span>
-    </MenuTrigger>
-    <MenuContent
-      side="top"
-      align="start"
-      class="z-50 w-60 rounded-card bg-surface p-1 shadow-pop outline-none"
-    >
-      <MenuRadioGroup :value="appearance" @value-change="chooseAppearance">
-        <MenuGroupLabel class="px-3 pt-2 pb-1 text-xs text-ink-3">Appearance</MenuGroupLabel>
-        <MenuRadioItem
-          v-for="choice in choices"
-          :key="choice"
-          :value="choice"
-          class="flex h-9 cursor-default items-center gap-2 rounded-control px-3 outline-none data-highlighted:bg-sunken"
-        >
-          <span class="flex-1">{{ APPEARANCE_LABELS[choice] }}</span>
-          <MenuItemIndicator><CheckIcon class="size-4 text-accent" /></MenuItemIndicator>
-        </MenuRadioItem>
-      </MenuRadioGroup>
-      <MenuSeparator class="my-1 h-px bg-line" />
-      <MenuItem
-        value="sign-out"
-        class="flex h-9 cursor-default items-center gap-2 rounded-control px-3 outline-none data-highlighted:bg-sunken"
-        @select="signOut"
-      >
-        <LogOutIcon class="size-4 text-ink-3" aria-hidden="true" />
-        Sign out
-      </MenuItem>
-    </MenuContent>
-  </Menu>
+  <UDropdownMenu
+    v-if="session.data"
+    :items="items"
+    :content="{ side: 'top', align: 'start' }"
+    :ui="{ content: 'w-60' }"
+  >
+    <UButton color="neutral" variant="ghost" block class="justify-start px-1.5">
+      <UUser
+        :name="session.data.user.name"
+        :description="session.data.user.email"
+        :avatar="{ alt: session.data.user.name }"
+        size="sm"
+        :ui="{ wrapper: 'min-w-0 text-left', description: 'truncate' }"
+      />
+    </UButton>
+  </UDropdownMenu>
 </template>
