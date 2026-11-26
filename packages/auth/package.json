@@ -6,7 +6,9 @@
   "exports": {
     ".": "./src/index.ts",
     "./client": "./src/client.ts",
-    "./constants": "./src/constants/auth.constants.ts"
+    "./constants": "./src/constants/auth.constants.ts",
+    "./validators/setup": "./src/validators/setup.validator.ts",
+    "./validators/sign-in": "./src/validators/sign-in.validator.ts"
   },
   "scripts": {
     "typecheck": "tsrs --noEmit"
