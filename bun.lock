@@ -47,6 +47,7 @@
         "@vueuse/core": "catalog:",
         "@vueuse/nuxt": "catalog:",
         "drizzle-orm": "catalog:",
+        "jsonc-parser": "catalog:",
         "nuxt": "catalog:",
         "tailwindcss": "catalog:",
         "vue": "catalog:",
