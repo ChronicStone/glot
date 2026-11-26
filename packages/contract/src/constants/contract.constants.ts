@@ -6,6 +6,9 @@ export const PEOPLE_ONLY_PROCEDURES = {
   RELEASE_NOW: 'releases.run',
   UNDO_RELEASED_CHANGE: 'releases.undo',
   RESOLVE_CONFLICT: 'releases.resolveConflict',
+  UPDATE_GLOSSARY_CONCEPT: 'glossary.updateConcept',
+  SET_GLOSSARY_STATUS: 'glossary.setConceptStatus',
+  REMOVE_GLOSSARY_CONCEPT: 'glossary.removeConcept',
   INVITE_PERSON: 'people.invite',
   UPDATE_PERSON: 'people.update',
   REMOVE_PERSON: 'people.remove',
@@ -40,6 +43,14 @@ export const RELEASE_ERRORS = {
   ...NOT_FOUND_ERRORS,
   FORBIDDEN: { message: 'Only an owner, an admin or a developer can release' },
   CONFLICT: { message: 'This cannot be done in its current state' },
+}
+
+export const GLOSSARY_ERRORS = {
+  ...NOT_FOUND_ERRORS,
+  FORBIDDEN: {
+    message: 'Only an owner, an admin or a reviewer of the languages involved changes the glossary',
+  },
+  CONFLICT: { message: 'A concept with this name already exists' },
 }
 
 export const ADMIN_ONLY_ERRORS = { FORBIDDEN: { message: 'Only an admin can do this' } }

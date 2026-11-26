@@ -1,6 +1,7 @@
 import type { Database } from '@glot/database'
 import { SOURCE_KINDS } from '@glot/database/constants/projects'
 import { WORKSPACE_ROLES } from '@glot/database/constants/workspaces'
+import { seedDemoGlossary } from './demo-glossary.ts'
 import { DEMO_REPOSITORY, DEMO_SOURCE } from './fixtures/demo-repository.fixtures.ts'
 
 export async function seedDemoProject(
@@ -60,6 +61,8 @@ export async function seedDemo(db: Database) {
     workspaceId: workspace.id,
     repository: DEMO_REPOSITORY,
   })
+
+  await seedDemoGlossary(db, { workspaceId: workspace.id })
 
   return { user: anna, workspace, project }
 }
