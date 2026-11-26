@@ -1,5 +1,5 @@
 <script setup lang="ts">
-defineProps<{ title: string; scroll?: boolean; context?: string }>()
+defineProps<{ title: string; scroll?: boolean; context?: string | undefined }>()
 
 const openMenu = inject<() => void>('openMenu', () => undefined)
 const openPalette = inject<() => void>('openPalette', () => undefined)
