@@ -1,4 +1,5 @@
 import { boolean, index, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core'
+import { DEFAULT_LOCALE } from '../../constants/users.constants.ts'
 
 export const user = pgTable(
   'user',
@@ -8,7 +9,7 @@ export const user = pgTable(
     email: text().notNull(),
     emailVerified: boolean().notNull().default(false),
     image: text(),
-    locale: text().notNull().default('en'),
+    locale: text().notNull().default(DEFAULT_LOCALE),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
