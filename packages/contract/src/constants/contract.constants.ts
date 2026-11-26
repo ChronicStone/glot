@@ -3,6 +3,9 @@ export const PEOPLE_ONLY_PROCEDURES = {
   EDIT_AND_APPROVE_TEXT: 'reviews.editAndApprove',
   APPROVE_SAME_TEXTS: 'reviews.approveSame',
   REQUEST_CHANGE: 'reviews.requestChange',
+  RELEASE_NOW: 'releases.run',
+  UNDO_RELEASED_CHANGE: 'releases.undo',
+  RESOLVE_CONFLICT: 'releases.resolveConflict',
   INVITE_PERSON: 'people.invite',
   UPDATE_PERSON: 'people.update',
   REMOVE_PERSON: 'people.remove',
@@ -16,9 +19,26 @@ export const REVIEW_REASONS = {
   SOURCE_CHANGED: 'SOURCE_CHANGED',
 } as const
 
+export const CONFLICT_REASONS = {
+  SOURCE_CHANGED: 'SOURCE_CHANGED',
+  TARGET_CHANGED: 'TARGET_CHANGED',
+  TEXT_REMOVED: 'TEXT_REMOVED',
+} as const
+
+export const CONFLICT_RESOLUTIONS = {
+  KEEP: 'KEEP',
+  LEAVE_OUT: 'LEAVE_OUT',
+} as const
+
 export const LANGUAGE_RIGHTS_ERRORS = {
   ...NOT_FOUND_ERRORS,
   FORBIDDEN: { message: 'You do not work on this language' },
+  CONFLICT: { message: 'This cannot be done in its current state' },
+}
+
+export const RELEASE_ERRORS = {
+  ...NOT_FOUND_ERRORS,
+  FORBIDDEN: { message: 'Only an owner, an admin or a developer can release' },
   CONFLICT: { message: 'This cannot be done in its current state' },
 }
 
