@@ -10,6 +10,7 @@
 | Emails and documents: template texts, preview adapter                                                              | Planned  |
 | Glossary: editor, checks, pull API for other services                                                              | Planned  |
 | AI fills: provider interface, token protocol, budget                                                               | Planned  |
+| Publishing: build the MIT packages with `vp pack`, split browser-safe database exports, publish to npm             | Planned  |
 
 ## Deferred
 
