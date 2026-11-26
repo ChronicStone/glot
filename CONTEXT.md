@@ -9,7 +9,7 @@ One message in one language, such as the Polish label of a Save button.
 _Avoid_: Translation string, key
 
 **Key**:
-Where a text lives: a source and its JSON path segments. `["a.b"]` and `["a", "b"]` are two keys. Never shown to writers.
+Where a text lives: a source and its JSON path segments. `["a.b"]` and `["a", "b"]` are two keys. It is how everyone manages a text, so it is shown with every text, everywhere.
 _Avoid_: Text, label
 
 **Source**:
