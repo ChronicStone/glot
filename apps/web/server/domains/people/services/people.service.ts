@@ -35,7 +35,7 @@ export class PeopleService {
 
     const manager = await this.#access.requireManager({
       workspaceId: membership.workspaceId,
-      ...(input.grantedRole ? { grantedRole: input.grantedRole } : {}),
+      roles: input.grantedRole ? [membership.role, input.grantedRole] : [membership.role],
     })
 
     if (manager.id === membership.id) {
@@ -88,7 +88,7 @@ export class PeopleService {
   }
 
   async invite(input: PersonInviteInput) {
-    await this.#access.requireManager({ workspaceId: input.workspaceId, grantedRole: input.role })
+    await this.#access.requireManager({ workspaceId: input.workspaceId, roles: [input.role] })
 
     const user = await this.#userFor(input)
 
@@ -100,19 +100,23 @@ export class PeopleService {
       throw new ORPCError('CONFLICT')
     }
 
-    const membership = await this.#context.db.workspaceMemberships.create({
-      data: {
-        workspaceId: input.workspaceId,
-        userId: user.id,
-        role: input.role,
-        languages: input.languages,
-        expiresAt: input.expiresAt ?? null,
-      },
-    })
+    const membership = await this.#context.db.transaction(async (tx) => {
+      const created = await tx.workspaceMemberships.create({
+        data: {
+          workspaceId: input.workspaceId,
+          userId: user.id,
+          role: input.role,
+          languages: input.languages,
+          expiresAt: input.expiresAt ?? null,
+        },
+      })
 
-    await this.#context.auth.api.signInMagicLink({
-      body: { email: user.email, callbackURL: INVITATION_CALLBACK_PATH },
-      headers: new Headers(),
+      await this.#context.auth.api.signInMagicLink({
+        body: { email: user.email, callbackURL: INVITATION_CALLBACK_PATH },
+        headers: new Headers(),
+      })
+
+      return created
     })
 
     return toPerson({ ...membership, user })
@@ -127,7 +131,7 @@ export class PeopleService {
     const changes = {
       role: input.role,
       languages: input.languages,
-      expiresAt: input.expiresAt ?? null,
+      expiresAt: input.expiresAt,
     }
 
     const membership = await this.#context.db.workspaceMemberships.update({

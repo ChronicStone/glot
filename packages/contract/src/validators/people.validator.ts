@@ -38,6 +38,9 @@ export const personInviteInputSchema = membershipChangesSchema.extend({
   name: userSelectSchema.shape.name.min(1).optional(),
 })
 
-export const personUpdateInputSchema = membershipChangesSchema.extend(
-  membershipRefInputSchema.shape,
-)
+export const personUpdateInputSchema = membershipChangesSchema.extend({
+  ...membershipRefInputSchema.shape,
+  expiresAt: workspaceMembershipSelectSchema.shape.expiresAt.describe(
+    'When access ends; null for ongoing access. Always sent, so a change never drops it.',
+  ),
+})

@@ -165,3 +165,39 @@ test('an admin cannot make someone an owner', async () => {
     admin.people.invite({ workspaceId, email: 'boss@glot.test', role: 'owner', languages: null }),
   ).rejects.toMatchObject({ code: 'FORBIDDEN' })
 })
+
+test('an admin cannot change or remove the owner', async () => {
+  const owner = createGlotClient({ url: baseUrl, fetch: withCookie(ownerCookie) })
+  const people = await owner.people.list({ workspaceId })
+  const ownerMembership = people.find(({ role }) => role === 'owner')
+
+  const admin = createGlotClient({
+    url: baseUrl,
+    fetch: withCookie(await signInByMagicLink('lead@glot.test')),
+  })
+
+  await expect(
+    admin.people.update({
+      membershipId: ownerMembership?.id ?? '',
+      role: 'viewer',
+      languages: null,
+      expiresAt: null,
+    }),
+  ).rejects.toMatchObject({ code: 'FORBIDDEN' })
+
+  await expect(
+    admin.people.remove({ membershipId: ownerMembership?.id ?? '' }),
+  ).rejects.toMatchObject({ code: 'FORBIDDEN' })
+})
+
+test('changing a role without saying when access ends is refused, so the end date never drops', async () => {
+  const owner = createGlotClient({ url: baseUrl, fetch: withCookie(ownerCookie) })
+  const people = await owner.people.list({ workspaceId })
+  const jan = people.find(({ user }) => user.email === 'jan@glot.test')
+  const change = { membershipId: jan?.id ?? '', role: 'writer', languages: ['pl'] }
+
+  await expect(owner.people.update(change as never)).rejects.toMatchObject({ code: 'BAD_REQUEST' })
+  await expect(owner.people.list({ workspaceId })).resolves.toContainEqual(
+    expect.objectContaining({ id: jan?.id, expiresAt: new Date('2027-03-31T00:00:00Z') }),
+  )
+})

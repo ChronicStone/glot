@@ -1,10 +1,9 @@
-import { WORKSPACE_ROLES } from '@glot/database/constants/workspaces'
 import type { WorkspaceRole } from '@glot/database/types/workspaces'
 import { ORPCError } from '@orpc/server'
 import type { RequestContext } from '../../../types/context.types.ts'
 import { actorUserId } from '../../../utils/actor.utils.ts'
 import { activeMembershipWhere } from '../../../utils/membership.utils.ts'
-import { PEOPLE_MANAGER_ROLES } from '../constants/people.constants.ts'
+import { PEOPLE_MANAGER_ROLES, ROLE_RANKS } from '../constants/people.constants.ts'
 
 export class WorkspaceAccessService {
   readonly #context: RequestContext
@@ -25,14 +24,12 @@ export class WorkspaceAccessService {
     return membership
   }
 
-  async requireManager(input: { workspaceId: string; grantedRole?: WorkspaceRole }) {
+  async requireManager(input: { workspaceId: string; roles?: WorkspaceRole[] }) {
     const membership = await this.membershipOf(input.workspaceId)
-    const grantsOwnership = input.grantedRole === WORKSPACE_ROLES.OWNER
+    const rank = ROLE_RANKS[membership.role]
+    const outranked = (input.roles ?? []).some((role) => ROLE_RANKS[role] > rank)
 
-    if (
-      !Object.values<string>(PEOPLE_MANAGER_ROLES).includes(membership.role) ||
-      (grantsOwnership && membership.role !== WORKSPACE_ROLES.OWNER)
-    ) {
+    if (!Object.values<string>(PEOPLE_MANAGER_ROLES).includes(membership.role) || outranked) {
       throw new ORPCError('FORBIDDEN')
     }
 
