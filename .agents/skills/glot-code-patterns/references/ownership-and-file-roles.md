@@ -12,7 +12,7 @@ Placement rules govern necessary declarations. Default to local implementation, 
 | `@glot/checks`   | Parsing vue-i18n messages and the checks on them: syntax, placeholders, plural forms, HTML tags, words to avoid. Pure and browser-safe. |
 | `@glot/contract` | The oRPC contract: procedures, their input and output schemas, errors and OpenAPI metadata. Browser-safe.                               |
 | `@glot/sdk`      | Typed clients over RPC and REST, built from the contract alone.                                                                         |
-| `@glot/ui`       | Tokens, the Tailwind theme and components built on ui-sdk.                                                                              |
+| `@glot/ui`       | Tokens that feed Nuxt UI's theme, and the components only Glot has: state strip, legend, text value with placeholder chips.             |
 | `@glot/nuxt`     | The in-app module: widget, key log, identity exchange.                                                                                  |
 | `apps/web`       | The Nuxt app and its server: routes, domains, configuration.                                                                            |
 | `tooling/seed`   | Development and test data.                                                                                                              |

@@ -14,4 +14,4 @@ Group related necessary declarations in cohesive files of one role. Do not creat
 
 When several variants share orchestration, define variants as typed configuration and keep execution in one deep runtime.
 
-For an owned or chosen library such as better-drizzle, oRPC or ui-sdk, fix a missing capability upstream and consume the published version rather than inventing a competing protocol or patching installed packages.
+For an owned or chosen library such as better-drizzle, oRPC or Nuxt UI, fix a missing capability upstream and consume the published version rather than inventing a competing protocol or patching installed packages.

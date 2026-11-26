@@ -35,7 +35,7 @@ Read the mandatory [ownership and file-role contract](references/ownership-and-f
 
 ## Construction
 
-- Use direct native capabilities: oRPC, better-drizzle and Drizzle, PostgreSQL, better-auth, Zod, Nuxt, ui-sdk. Extend an owned dependency when it lacks a general capability; do not create a competing protocol.
+- Use direct native capabilities: oRPC, better-drizzle and Drizzle, PostgreSQL, better-auth, Zod, Nuxt. Build screens from Nuxt UI components and VueUse composables; reach for ui-sdk only where Nuxt UI has no equivalent, such as a custom overlay. Extend an owned dependency when it lacks a general capability; do not create a competing protocol.
 - Use at most two authored function parameters, with an inline options object instead of positional primitives. Framework-required signatures are exempt.
 - Prefer inline parameter annotations and inferred return types. Introduce a named type only when it is a shared contract with a stable owner.
 - Use named top-level functions and arrow callbacks. Group initialization, guards, business work and return with purposeful blank lines.

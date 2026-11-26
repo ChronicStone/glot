@@ -4,7 +4,7 @@ Status: Verified
 
 ## Scope
 
-The layout from the design proposal, built with `@glot/ui` on ui-sdk: workspace rail (Home, Glossary, Settings), project switcher (Texts, Emails and documents, Releases), signed-in person with sign-out, light and dark, 375 px. Texts screen: search, state filters with legend, virtualized list, side panel with every language, placeholders shown as chips, keys only behind Details.
+The layout from the design proposal, built on Nuxt UI's dashboard components with `@glot/ui` tokens: workspace rail (Home, Glossary, Settings), project switcher (Texts, Emails and documents, Releases), signed-in person with sign-out, light and dark, 375 px. Texts screen: search, state filters with legend, virtualized list, side panel with every language, placeholders shown as chips, keys only behind Details.
 
 ## Acceptance evidence
 

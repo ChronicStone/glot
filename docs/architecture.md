@@ -15,7 +15,7 @@ packages/contract  oRPC contract: procedures, schemas derived from the database 
 packages/sdk       typed clients over RPC and REST, from the contract alone
 packages/database  tables, relations, constants, validators, types, connection, migrations
 packages/auth      better-auth: Google, magic links, workspaces, API keys
-packages/ui        tokens, Tailwind theme, ui-sdk components
+packages/ui        tokens fed to Nuxt UI, and Glot's own components (state strip, legend, text value)
 packages/nuxt      the in-app module for host apps
 packages/utils     generic types
 tooling/seed       development and test data
