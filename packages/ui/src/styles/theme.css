@@ -1,27 +1,63 @@
 :root {
   color-scheme: light dark;
-  --glot-bg: light-dark(#f5f5f3, #0e0e0e);
-  --glot-surface: light-dark(#ffffff, #171717);
-  --glot-sunken: light-dark(#f3f3f1, #131313);
-  --glot-line: light-dark(#ecebe8, #242424);
-  --glot-line-strong: light-dark(#e0dfdb, #333331);
-  --glot-ink: light-dark(#1d1c1a, #ededea);
-  --glot-ink-2: light-dark(#55534e, #b3b2ae);
-  --glot-ink-3: light-dark(#73716b, #95948f);
-  --glot-ink-4: light-dark(#c4c2bd, #55544f);
-  --glot-accent: light-dark(#3f70d1, #8db0f4);
-  --glot-accent-soft: light-dark(#eaf1fd, #1a2233);
-  --glot-accent-line: light-dark(#b9cef4, #3a5584);
-  --glot-ok: light-dark(#3e7650, #8fc6a0);
-  --glot-ok-soft: light-dark(#e9f2ec, #17241b);
-  --glot-warn: light-dark(#86601c, #ddb872);
-  --glot-warn-soft: light-dark(#f7efdd, #2a2316);
-  --glot-bad: light-dark(#a3473d, #e79c91);
-  --glot-bad-soft: light-dark(#f8e8e5, #2c1a17);
-  --glot-button: light-dark(#262421, #f1f1ee);
-  --glot-button-ink: light-dark(#ffffff, #121212);
-  --glot-shadow-card: 0 1px 2px rgb(20 18 15 / 4%), 0 8px 24px rgb(20 18 15 / 4%);
-  --glot-shadow-pop: 0 2px 6px rgb(20 18 15 / 6%), 0 18px 48px rgb(20 18 15 / 12%);
+  --glot-page: light-dark(#f5f4f0, #0b0b0c);
+  --glot-panel: light-dark(#ffffff, #141415);
+  --glot-panel-2: light-dark(#fbfaf8, #171718);
+  --glot-sunken: light-dark(#f3f2ee, #0e0e0f);
+  --glot-tile: light-dark(#efeeea, #1e1e20);
+  --glot-hover: light-dark(#f5f4f0, #1a1a1c);
+  --glot-hover-page: light-dark(rgb(40 36 28 / 4.5%), rgb(255 255 255 / 4.5%));
+  --glot-active-page: light-dark(rgb(40 36 28 / 7%), rgb(255 255 255 / 7.5%));
+  --glot-press: light-dark(#ebeae5, #232326);
+  --glot-line: light-dark(#e9e7e2, #242426);
+  --glot-line-2: light-dark(#dfddd7, #2e2e31);
+  --glot-line-3: light-dark(#cdcbc4, #3c3c40);
+  --glot-scrim: light-dark(rgb(28 26 22 / 18%), rgb(0 0 0 / 55%));
+  --glot-ink: light-dark(#1c1b19, #f3f2ef);
+  --glot-ink-2: light-dark(#46443f, #cfcec9);
+  --glot-ink-3: light-dark(#6c6a64, #96958f);
+  --glot-ink-4: light-dark(#a7a59e, #62615d);
+  --glot-primary: light-dark(#22211e, #edece8);
+  --glot-primary-hover: light-dark(#36342f, #ffffff);
+  --glot-on-primary: light-dark(#fbfaf7, #161615);
+  --glot-sel: light-dark(#e9f0fd, #18233b);
+  --glot-sel-ring: light-dark(#a9c1ef, #41609e);
+  --glot-sel-ink: light-dark(#3864c8, #93b4f4);
+  --glot-focus: light-dark(#6f95e6, #7ea2ef);
+  --glot-focus-halo: light-dark(rgb(111 149 230 / 22%), rgb(126 162 239 / 25%));
+  --glot-ok: light-dark(#3b7651, #7fd29e);
+  --glot-ok-bg: light-dark(#e6f0e7, #132619);
+  --glot-ok-bar: light-dark(#84ba95, #3f9461);
+  --glot-check: light-dark(#3864c8, #93b4f4);
+  --glot-check-bg: light-dark(#e9f0fd, #16213a);
+  --glot-check-bar: light-dark(#92b2ee, #4a72c4);
+  --glot-fix: light-dark(#ad3f49, #f2919a);
+  --glot-fix-bg: light-dark(#fbe7e8, #321619);
+  --glot-fix-bar: light-dark(#e7959d, #b8505b);
+  --glot-miss: light-dark(#85827b, #8b8a85);
+  --glot-miss-bg: light-dark(#f1f0ec, #1c1c1e);
+  --glot-miss-bar: light-dark(#dddbd5, #36363a);
+  --glot-ai: light-dark(#6e52cc, #b9a6f8);
+  --glot-ai-bg: light-dark(#f1edfc, #211b37);
+  --glot-ai-bar: light-dark(#b4a2ee, #7a62d6);
+  --glot-warn: light-dark(#9a5f17, #f0b768);
+  --glot-warn-bg: light-dark(#fbf0de, #2e2112);
+  --glot-d-blue: light-dark(#5b8def, #6e9cf5);
+  --glot-d-violet: light-dark(#9b7cf0, #a98af5);
+  --glot-d-teal: light-dark(#2fb6a0, #36c2aa);
+  --glot-d-orange: light-dark(#e58c37, #ec9846);
+  --glot-d-green: light-dark(#3aa86b, #45b878);
+  --glot-d-pink: light-dark(#e0699f, #ea78ab);
+  --glot-primary-fill: var(--glot-primary);
+  --glot-primary-edge:
+    inset 0 1px 0 rgb(255 255 255 / 9%), 0 1px 2px rgb(20 18 14 / 22%),
+    0 2px 6px -2px rgb(20 18 14 / 18%);
+  --glot-shadow-lift: 0 1px 1px rgb(28 25 20 / 4%), 0 1px 3px rgb(28 25 20 / 6%);
+  --glot-shadow-card: 0 1px 2px rgb(28 25 20 / 4%), 0 6px 16px -6px rgb(28 25 20 / 8%);
+  --glot-shadow-pop:
+    0 2px 4px rgb(28 25 20 / 4%), 0 12px 28px -6px rgb(28 25 20 / 16%),
+    0 32px 64px -24px rgb(28 25 20 / 18%);
+  --glot-shadow-dialog: 0 4px 8px rgb(28 25 20 / 5%), 0 24px 56px -12px rgb(28 25 20 / 28%);
 }
 
 html.light {
@@ -30,43 +66,102 @@ html.light {
 
 html.dark {
   color-scheme: dark;
-  --glot-shadow-card: 0 0 0 1px rgb(255 255 255 / 2.5%), 0 8px 24px rgb(0 0 0 / 35%);
-  --glot-shadow-pop: 0 0 0 1px rgb(255 255 255 / 5%), 0 18px 48px rgb(0 0 0 / 60%);
+  --glot-primary-fill: linear-gradient(180deg, #f6f5f2 0%, #dcdbd7 100%);
+  --glot-primary-edge:
+    inset 0 1px 0 rgb(255 255 255 / 70%), inset 0 -1px 0 rgb(0 0 0 / 12%),
+    0 1px 2px rgb(0 0 0 / 50%);
+  --glot-shadow-lift: 0 1px 2px rgb(0 0 0 / 50%);
+  --glot-shadow-card: 0 1px 2px rgb(0 0 0 / 50%), 0 8px 20px -8px rgb(0 0 0 / 60%);
+  --glot-shadow-pop: 0 2px 6px rgb(0 0 0 / 45%), 0 18px 40px -10px rgb(0 0 0 / 70%);
+  --glot-shadow-dialog: 0 4px 10px rgb(0 0 0 / 50%), 0 30px 70px -16px rgb(0 0 0 / 80%);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not(.light) {
-    --glot-shadow-card: 0 0 0 1px rgb(255 255 255 / 2.5%), 0 8px 24px rgb(0 0 0 / 35%);
-    --glot-shadow-pop: 0 0 0 1px rgb(255 255 255 / 5%), 0 18px 48px rgb(0 0 0 / 60%);
-  }
+@theme static {
+  --text-title: 2.125rem;
+  --text-title--line-height: 2.5rem;
+  --text-title--letter-spacing: -0.032em;
+  --text-title--font-weight: 600;
+  --text-display: 1.75rem;
+  --text-display--line-height: 2.125rem;
+  --text-display--letter-spacing: -0.03em;
+  --text-display--font-weight: 600;
+  --text-section: 1.25rem;
+  --text-section--line-height: 1.75rem;
+  --text-section--letter-spacing: -0.02em;
+  --text-section--font-weight: 600;
+  --text-heading: 1.0625rem;
+  --text-heading--line-height: 1.5rem;
+  --text-heading--letter-spacing: -0.018em;
+  --text-heading--font-weight: 600;
+  --radius-chip: 6px;
+  --radius-control: 11px;
+  --radius-card: 16px;
+  --radius-panel: 24px;
+  --ease-glot: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --animate-pop-in: pop-in 180ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @theme inline {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'Geist Mono', ui-monospace, monospace;
-  --color-bg: var(--glot-bg);
-  --color-surface: var(--glot-surface);
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --color-page: var(--glot-page);
+  --color-panel: var(--glot-panel);
+  --color-panel-2: var(--glot-panel-2);
   --color-sunken: var(--glot-sunken);
+  --color-tile: var(--glot-tile);
+  --color-hover: var(--glot-hover);
+  --color-hover-page: var(--glot-hover-page);
+  --color-active-page: var(--glot-active-page);
+  --color-press: var(--glot-press);
   --color-line: var(--glot-line);
-  --color-line-strong: var(--glot-line-strong);
+  --color-line-2: var(--glot-line-2);
+  --color-line-3: var(--glot-line-3);
+  --color-scrim: var(--glot-scrim);
   --color-ink: var(--glot-ink);
   --color-ink-2: var(--glot-ink-2);
   --color-ink-3: var(--glot-ink-3);
   --color-ink-4: var(--glot-ink-4);
-  --color-accent: var(--glot-accent);
-  --color-accent-soft: var(--glot-accent-soft);
-  --color-accent-line: var(--glot-accent-line);
+  --color-primary-ink: var(--glot-primary);
+  --color-primary-hover: var(--glot-primary-hover);
+  --color-on-primary: var(--glot-on-primary);
+  --color-sel: var(--glot-sel);
+  --color-sel-ring: var(--glot-sel-ring);
+  --color-sel-ink: var(--glot-sel-ink);
+  --color-focus: var(--glot-focus);
   --color-ok: var(--glot-ok);
-  --color-ok-soft: var(--glot-ok-soft);
+  --color-ok-bg: var(--glot-ok-bg);
+  --color-ok-bar: var(--glot-ok-bar);
+  --color-check: var(--glot-check);
+  --color-check-bg: var(--glot-check-bg);
+  --color-check-bar: var(--glot-check-bar);
+  --color-fix: var(--glot-fix);
+  --color-fix-bg: var(--glot-fix-bg);
+  --color-fix-bar: var(--glot-fix-bar);
+  --color-miss: var(--glot-miss);
+  --color-miss-bg: var(--glot-miss-bg);
+  --color-miss-bar: var(--glot-miss-bar);
+  --color-ai: var(--glot-ai);
+  --color-ai-bg: var(--glot-ai-bg);
+  --color-ai-bar: var(--glot-ai-bar);
   --color-warn: var(--glot-warn);
-  --color-warn-soft: var(--glot-warn-soft);
-  --color-bad: var(--glot-bad);
-  --color-bad-soft: var(--glot-bad-soft);
-  --color-button: var(--glot-button);
-  --color-button-ink: var(--glot-button-ink);
+  --color-warn-bg: var(--glot-warn-bg);
+  --color-d-blue: var(--glot-d-blue);
+  --color-d-violet: var(--glot-d-violet);
+  --color-d-teal: var(--glot-d-teal);
+  --color-d-orange: var(--glot-d-orange);
+  --color-d-green: var(--glot-d-green);
+  --color-d-pink: var(--glot-d-pink);
+  --shadow-lift: var(--glot-shadow-lift);
   --shadow-card: var(--glot-shadow-card);
   --shadow-pop: var(--glot-shadow-pop);
-  --radius-panel: 20px;
-  --radius-card: 16px;
-  --radius-control: 11px;
+  --shadow-dialog: var(--glot-shadow-dialog);
+  --shadow-primary: var(--glot-primary-edge);
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
 }

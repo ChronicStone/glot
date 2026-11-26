@@ -6,30 +6,60 @@
 
 :root,
 :root.dark {
-  --ui-bg: var(--glot-surface);
+  --ui-bg: var(--glot-panel);
   --ui-bg-muted: var(--glot-sunken);
-  --ui-bg-elevated: var(--glot-sunken);
-  --ui-bg-accented: var(--glot-line-strong);
-  --ui-bg-inverted: var(--glot-button);
+  --ui-bg-elevated: var(--glot-tile);
+  --ui-bg-accented: var(--glot-line-2);
+  --ui-bg-inverted: var(--glot-primary);
   --ui-text: var(--glot-ink);
   --ui-text-highlighted: var(--glot-ink);
   --ui-text-toned: var(--glot-ink-2);
   --ui-text-muted: var(--glot-ink-3);
-  --ui-text-dimmed: var(--glot-ink-3);
-  --ui-text-inverted: var(--glot-button-ink);
+  --ui-text-dimmed: var(--glot-ink-4);
+  --ui-text-inverted: var(--glot-on-primary);
   --ui-border: var(--glot-line);
   --ui-border-muted: var(--glot-line);
-  --ui-border-accented: var(--glot-line-strong);
-  --ui-border-inverted: var(--glot-button);
-  --ui-primary: var(--glot-accent);
+  --ui-border-accented: var(--glot-line-2);
+  --ui-border-inverted: var(--glot-primary);
+  --ui-primary: var(--glot-primary);
+  --ui-secondary: var(--glot-sel-ink);
   --ui-success: var(--glot-ok);
+  --ui-info: var(--glot-check);
   --ui-warning: var(--glot-warn);
-  --ui-error: var(--glot-bad);
+  --ui-error: var(--glot-fix);
   --ui-radius: 0.6875rem;
 }
 
 body {
-  background: var(--glot-bg);
-  font-size: 13px;
+  background: var(--glot-page);
+  color: var(--glot-ink);
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: -0.006em;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11', 'ss03';
   -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--glot-sel);
+  color: var(--glot-sel-ink);
+}
+
+input,
+textarea {
+  caret-color: var(--glot-sel-ink);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--glot-line-2) transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
 }

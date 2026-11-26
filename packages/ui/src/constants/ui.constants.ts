@@ -1,10 +1,10 @@
 import { TEXT_STATES } from '@glot/database/constants/texts'
 
 export const TEXT_STATE_TONES = {
-  [TEXT_STATES.REVIEWED]: 'bg-ok-soft text-ok',
-  [TEXT_STATES.TO_CHECK]: 'bg-accent-soft text-accent',
-  [TEXT_STATES.NEEDS_FIX]: 'bg-bad-soft text-bad',
-  [TEXT_STATES.MISSING]: 'text-ink-3 ring-1 ring-inset ring-ink-4',
+  [TEXT_STATES.REVIEWED]: 'bg-ok-bg text-ok',
+  [TEXT_STATES.TO_CHECK]: 'bg-check-bg text-check',
+  [TEXT_STATES.NEEDS_FIX]: 'bg-fix-bg text-fix',
+  [TEXT_STATES.MISSING]: 'text-ink-4 ring-1 ring-inset ring-line-2',
 } as const
 
 export const TEXT_STATE_LABELS = {

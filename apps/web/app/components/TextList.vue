@@ -62,7 +62,7 @@ watch(rows, (visible) => {
           <button
             type="button"
             :aria-current="text.id === selectedId"
-            class="grid h-16 w-full grid-cols-[1fr_auto] items-center gap-4 border-b border-line px-4 text-left hover:bg-sunken/70 aria-[current=true]:bg-accent-soft aria-[current=true]:shadow-[inset_3px_0_0_var(--glot-accent)] md:grid-cols-[1fr_96px_auto] md:px-6"
+            class="grid h-16 w-full grid-cols-[1fr_auto] items-center gap-4 border-b border-line px-4 text-left hover:bg-sunken/70 aria-[current=true]:bg-sel aria-[current=true]:shadow-[inset_3px_0_0_var(--glot-sel-ink)] md:grid-cols-[1fr_96px_auto] md:px-6"
             @click="emit('select', text.id)"
           >
             <span class="min-w-0">

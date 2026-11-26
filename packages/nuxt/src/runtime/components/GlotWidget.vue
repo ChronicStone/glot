@@ -11,7 +11,7 @@ const texts = computed(() => [...seen.value.entries()])
   <div class="fixed right-3 bottom-3 z-[2147483647] flex flex-col items-end gap-2 text-ink">
     <section
       v-if="open"
-      class="flex max-h-[60vh] w-[380px] flex-col overflow-hidden rounded-panel bg-surface shadow-pop"
+      class="flex max-h-[60vh] w-[380px] flex-col overflow-hidden rounded-panel bg-panel shadow-pop"
     >
       <header class="flex items-center gap-2 border-b border-line px-4 py-3">
         <b class="text-sm font-semibold">On this page</b>
@@ -25,7 +25,7 @@ const texts = computed(() => [...seen.value.entries()])
       </ul>
     </section>
     <button
-      class="flex items-center gap-2.5 rounded-full bg-button py-2 pr-2 pl-3.5 text-[13px] font-medium text-button-ink shadow-pop"
+      class="flex items-center gap-2.5 rounded-full [background:var(--glot-primary-fill)] py-2 pr-2 pl-3.5 text-[13px] font-medium text-on-primary shadow-pop"
       @click="open = !open"
     >
       Glot
