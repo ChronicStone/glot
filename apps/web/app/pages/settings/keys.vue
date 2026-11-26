@@ -1,28 +1,21 @@
 <script setup lang="ts">
-import { useMutation, useQuery } from '@tanstack/vue-query'
-import { QUERY_KEYS } from '../../constants/queries.constants.ts'
+import { createAppColumnHelper, useAppTable } from '../../config/table.config.ts'
 
-const { $auth, $queryClient } = useNuxtApp()
+const { keys, revoke } = useApiKeys()
 const modalOpen = ref<boolean>(false)
 const dateFormat = new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' })
+const data = computed(() => keys.data.value ?? [])
+const helper = createAppColumnHelper<(typeof data.value)[number]>()
 
-const keys = useQuery({
-  queryKey: [QUERY_KEYS.API_KEYS],
-  queryFn: async () => (await $auth.apiKey.list()).data?.apiKeys ?? [],
-})
+const columns = helper.columns([
+  helper.accessor('name', { header: 'Name' }),
+  helper.accessor('start', { header: 'Key', enableSorting: false }),
+  helper.accessor('createdAt', { header: 'Created' }),
+  helper.accessor('lastRequest', { header: 'Last used', sortUndefined: 'last' }),
+  helper.display({ id: 'actions', header: '' }),
+])
 
-const revoke = useMutation({
-  mutationFn: (keyId: string) => $auth.apiKey.delete({ keyId }),
-  onSuccess: () => $queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.API_KEYS] }),
-})
-
-const columns = [
-  { accessorKey: 'name', header: 'Name' },
-  { accessorKey: 'start', header: 'Key' },
-  { accessorKey: 'createdAt', header: 'Created' },
-  { accessorKey: 'lastRequest', header: 'Last used' },
-  { id: 'actions', header: '' },
-]
+const table = useAppTable({ columns, data, getRowId: (key) => key.id })
 </script>
 
 <template>
@@ -33,39 +26,37 @@ const columns = [
     <template #toolbar>
       <SettingsTabs />
     </template>
-    <UTable
-      :data="keys.data.value ?? []"
-      :columns="columns"
+    <AppDataTable
+      :table="table"
       :loading="keys.isPending.value"
       empty="No key yet."
       class="-mx-4 -mt-4 sm:-mx-6 sm:-mt-6"
-      :ui="{ th: 'font-normal text-muted text-xs', td: 'py-3' }"
     >
-      <template #name-cell="{ row }">
-        <span class="font-medium text-highlighted">{{ row.original.name }}</span>
+      <template #cell-name="{ row }">
+        <span class="font-medium text-highlighted">{{ row.name }}</span>
       </template>
-      <template #start-cell="{ row }">
-        <span class="font-mono text-muted">{{ row.original.start }}…</span>
+      <template #cell-start="{ row }">
+        <span class="font-mono text-muted">{{ row.start }}…</span>
       </template>
-      <template #createdAt-cell="{ row }">
-        <span class="text-muted">{{ dateFormat.format(new Date(row.original.createdAt)) }}</span>
+      <template #cell-createdAt="{ row }">
+        <span class="text-muted">{{ dateFormat.format(new Date(row.createdAt)) }}</span>
       </template>
-      <template #lastRequest-cell="{ row }">
+      <template #cell-lastRequest="{ row }">
         <span class="text-muted">{{
-          row.original.lastRequest ? dateFormat.format(new Date(row.original.lastRequest)) : 'Never'
+          row.lastRequest ? dateFormat.format(new Date(row.lastRequest)) : 'Never'
         }}</span>
       </template>
-      <template #actions-cell="{ row }">
+      <template #cell-actions="{ row }">
         <UButton
           label="Revoke"
           color="error"
           variant="ghost"
           size="sm"
-          :loading="revoke.isPending.value && revoke.variables.value === row.original.id"
-          @click="revoke.mutate(row.original.id)"
+          :loading="revoke.isPending.value && revoke.variables.value === row.id"
+          @click="revoke.mutate(row.id)"
         />
       </template>
-    </UTable>
+    </AppDataTable>
     <KeyModal v-model:open="modalOpen" />
   </AppPage>
 </template>

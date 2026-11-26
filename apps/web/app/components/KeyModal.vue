@@ -1,35 +1,31 @@
 <script setup lang="ts">
-import { useMutation } from '@tanstack/vue-query'
-import { QUERY_KEYS } from '../constants/queries.constants.ts'
+import { useForm } from '@tanstack/vue-form'
+import * as z from 'zod'
 
 const open = defineModel<boolean>('open', { required: true })
 
-const { $auth, $queryClient } = useNuxtApp()
 const toast = useToast()
-const name = ref<string>('')
+const { create } = useApiKeys()
 const created = ref<string>('')
 const { copy, copied } = useClipboard()
 
-const create = useMutation({
-  mutationFn: async () => {
-    const { data, error } = await $auth.apiKey.create({ name: name.value })
-
-    if (error) {
-      throw new Error(error.message)
+const form = useForm({
+  defaultValues: { name: '' },
+  validators: { onSubmit: z.object({ name: z.string().trim().min(1) }) },
+  onSubmit: async ({ value }) => {
+    try {
+      created.value = (await create.mutateAsync(value.name)).key
+    } catch (error) {
+      toast.add({ title: error instanceof Error ? error.message : String(error), color: 'error' })
     }
-
-    return data
   },
-  onSuccess: async (key) => {
-    created.value = key.key
-    await $queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.API_KEYS] })
-  },
-  onError: (error) => toast.add({ title: error.message, color: 'error' }),
 })
+
+const submitting = form.useSelector((state) => state.isSubmitting)
 
 watch(open, (isOpen) => {
   if (!isOpen) {
-    name.value = ''
+    form.reset()
     created.value = ''
   }
 })
@@ -52,11 +48,19 @@ watch(open, (isOpen) => {
           @click="copy(created)"
         />
       </div>
-      <UForm v-else id="key-form" :state="{ name }" @submit="create.mutate()">
-        <UFormField name="name" label="Name" required>
-          <UInput v-model="name" placeholder="Release agent" class="w-full" autofocus required />
-        </UFormField>
-      </UForm>
+      <form v-else id="key-form" @submit.prevent.stop="form.handleSubmit()">
+        <form.Field v-slot="{ field }" name="name">
+          <UFormField label="Name" :error="field.state.meta.errors[0]?.message ?? false">
+            <UInput
+              :model-value="field.state.value"
+              placeholder="Release agent"
+              class="w-full"
+              autofocus
+              @update:model-value="field.handleChange"
+            />
+          </UFormField>
+        </form.Field>
+      </form>
     </template>
     <template #footer>
       <span class="flex-1" />
@@ -68,7 +72,7 @@ watch(open, (isOpen) => {
           form="key-form"
           label="Create key"
           color="neutral"
-          :loading="create.isPending.value"
+          :loading="submitting"
         />
       </template>
     </template>
