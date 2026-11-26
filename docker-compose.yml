@@ -31,6 +31,10 @@ services:
       MAIL_FROM: ${MAIL_FROM:-}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GLOT_GIT_ROOT: ${GLOT_GIT_ROOT:-}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+    volumes:
+      - ${GLOT_REPOSITORIES:-./repositories}:/repositories:ro
     ports:
       - '${GLOT_PORT:-3100}:3000'
 

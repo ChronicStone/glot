@@ -39,18 +39,28 @@ Open it, enter the workspace name, your name and your email. Glot creates the ad
 
 ## Environment variables
 
-| Variable                                   | Required | Meaning                                                                                 |
-| ------------------------------------------ | -------- | --------------------------------------------------------------------------------------- |
-| `DATABASE_URL`                             | yes      | PostgreSQL connection string. Compose sets it for the bundled database.                 |
-| `AUTH_SECRET`                              | yes      | At least 32 characters; signs sessions and tokens.                                      |
-| `APP_URL`                                  | yes      | Public address of the server. Sign-in links and trusted origins use it.                 |
-| `POSTGRES_PASSWORD`                        | no       | Password of the bundled database user. Default `glot`.                                  |
-| `SMTP_URL`                                 | no       | `smtp://user:password@host:587` or `smtps://user:password@host:465`. Needs `MAIL_FROM`. |
-| `MAIL_FROM`                                | no       | Sender of sign-in emails, for example `Glot <glot@example.com>`.                        |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | no       | Enable Google sign-in.                                                                  |
-| `GLOT_PORT`                                | no       | Port published by compose. Default `3100`.                                              |
+| Variable                                   | Required | Meaning                                                                                                                                                                      |
+| ------------------------------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                             | yes      | PostgreSQL connection string. Compose sets it for the bundled database.                                                                                                      |
+| `AUTH_SECRET`                              | yes      | At least 32 characters; signs sessions and tokens.                                                                                                                           |
+| `APP_URL`                                  | yes      | Public address of the server. Sign-in links and trusted origins use it.                                                                                                      |
+| `POSTGRES_PASSWORD`                        | no       | Password of the bundled database user. Default `glot`.                                                                                                                       |
+| `SMTP_URL`                                 | no       | `smtp://user:password@host:587` or `smtps://user:password@host:465`. Needs `MAIL_FROM`.                                                                                      |
+| `MAIL_FROM`                                | no       | Sender of sign-in emails, for example `Glot <glot@example.com>`.                                                                                                             |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | no       | Enable Google sign-in.                                                                                                                                                       |
+| `GLOT_GIT_ROOT`                            | no       | Folder holding clones of your repositories as `<folder>/<owner>/<name>`. With it set, texts are read from these clones with `git`. In the compose setup use `/repositories`. |
+| `GITHUB_TOKEN`                             | no       | Token for reading texts from GitHub when `GLOT_GIT_ROOT` is empty. Required for private repositories; public ones work without it at a lower rate limit.                     |
+| `GLOT_REPOSITORIES`                        | no       | Host folder compose mounts read-only at `/repositories`. Default `./repositories`.                                                                                           |
+| `GLOT_PORT`                                | no       | Port published by compose. Default `3100`.                                                                                                                                   |
 
 Sign-in links reach people by SMTP. Without `SMTP_URL` a production server cannot send them, so only the administrator created at setup (already signed in) and Google sign-in work.
+
+## Reading your repositories
+
+Glot reads texts from the Git repository of each project, in one of two ways:
+
+- **GitHub** (default): leave `GLOT_GIT_ROOT` empty. Glot reads through the GitHub API; set `GITHUB_TOKEN` for private repositories.
+- **Local clones**: put clones in a folder, one per repository (`repositories/acme/web` for `acme/web`), keep them up to date with `git fetch`, and set `GLOT_GIT_ROOT=/repositories` with `GLOT_REPOSITORIES` pointing at that folder. The image includes `git`.
 
 ## Upgrades
 
