@@ -1,9 +1,26 @@
-import type { ApproveInput } from '@glot/contract'
+import type {
+  ApproveInput,
+  ApproveSameInput,
+  CommentInput,
+  EditAndApproveInput,
+  QueueInput,
+  RequestChangeInput,
+  ReviewTargetInput,
+  Text,
+} from '@glot/contract'
+import type { Draft } from '@glot/database'
+import { COMMENT_KINDS } from '@glot/database/constants/comments'
+import { DRAFT_STATUSES } from '@glot/database/constants/drafts'
+import { REVIEW_REASONS } from '@glot/contract'
 import { hashText } from '@glot/utils/hash'
 import { ORPCError } from '@orpc/server'
 import type { RequestContext } from '../../../types/context.types.ts'
 import { actorUserId } from '../../../utils/actor.utils.ts'
+import { draftView } from '../../drafts/utils/draft-view.utils.ts'
 import { TextsService } from '../../texts/services/texts.service.ts'
+import { commentView } from '../utils/comment-view.utils.ts'
+import { approvedPairs, isApprovedElsewhere, queueItems } from '../utils/queue.utils.ts'
+import { RightsService } from './rights.service.ts'
 
 export class ReviewsService {
   readonly #context: RequestContext
@@ -12,31 +29,390 @@ export class ReviewsService {
     this.#context = context
   }
 
-  async approve(input: ApproveInput) {
-    const texts = new TextsService(this.#context)
-    const text = await texts.get(input)
-    const translation = text.translations.find((t) => t.language === input.language)
+  async rights(projectId: string) {
+    const { write, approve } = await new RightsService(this.#context).access(projectId)
 
-    if (!translation?.value) {
+    return { write, approve }
+  }
+
+  async queue(input: QueueInput) {
+    const { project } = await new RightsService(this.#context).requireApprove(input)
+    const texts = new TextsService(this.#context)
+    const userId = actorUserId(this.#context.actor)
+
+    const [all, drafts, changeRequests, approvals, reviewers] = await Promise.all([
+      texts.all(input.projectId),
+      this.#context.db.drafts.findMany({
+        where: {
+          projectId: input.projectId,
+          language: input.language,
+          status: DRAFT_STATUSES.IN_REVIEW,
+        },
+        orderBy: { updatedAt: 'asc' },
+      }),
+      this.#context.db.comments.findMany({
+        where: {
+          projectId: input.projectId,
+          language: input.language,
+          kind: COMMENT_KINDS.CHANGE_REQUEST,
+        },
+      }),
+      this.#context.db.approvals.findMany({
+        where: { projectId: input.projectId, language: input.language },
+      }),
+      new RightsService(this.#context).reviewerCount({
+        workspaceId: project.workspaceId,
+        language: input.language,
+      }),
+    ])
+
+    const items = queueItems({
+      texts: all,
+      language: input.language,
+      drafts,
+      changeRequests,
+      approvals,
+      hideAuthorId: reviewers >= 2 ? userId : null,
+    })
+
+    const pairs = approvedPairs({ texts: all, language: input.language })
+    const offset = input.cursor ? Number(input.cursor) : 0
+    const next = offset + input.limit
+
+    return {
+      items: items.slice(offset, next).map(({ reason, text, draft }) => ({
+        reason,
+        language: input.language,
+        text,
+        draft: draft
+          ? draftView({
+              draft,
+              failures: texts.failures({
+                repository: project.repository,
+                language: input.language,
+                source: text.source.value,
+                target: draft.value,
+              }),
+            })
+          : null,
+      })),
+      total: items.length,
+      nextCursor: next < items.length ? String(next) : null,
+      sameElsewhere: items.filter(
+        ({ reason, text }) =>
+          reason !== REVIEW_REASONS.SENT_FOR_REVIEW &&
+          isApprovedElsewhere({ text, language: input.language, pairs }),
+      ).length,
+    }
+  }
+
+  async approve(input: ApproveInput) {
+    const rights = new RightsService(this.#context)
+    const { project } = await rights.requireApprove(input)
+    const texts = new TextsService(this.#context)
+    const { text, current } = await this.#target({ texts, input })
+
+    const draft = input.draftId ? await this.#inReview({ input, draftId: input.draftId }) : null
+
+    const value = draft?.value ?? current
+
+    if (value === null) {
+      throw new ORPCError('CONFLICT', { message: 'There is no text to approve' })
+    }
+
+    const selfApproved = await this.#guard({
+      project,
+      text,
+      language: input.language,
+      value,
+      authorId: draft?.authorId ?? null,
+    })
+
+    await this.#record({
+      input,
+      text,
+      value,
+      selfApproved,
+      change: draft ? { draft } : null,
+    })
+
+    return texts.get(input)
+  }
+
+  async editAndApprove(input: EditAndApproveInput) {
+    const { project } = await new RightsService(this.#context).requireApprove(input)
+    const texts = new TextsService(this.#context)
+    const { text, current } = await this.#target({ texts, input })
+    const edited = input.value !== current
+
+    const selfApproved = await this.#guard({
+      project,
+      text,
+      language: input.language,
+      value: input.value,
+      authorId: edited ? actorUserId(this.#context.actor) : null,
+    })
+
+    await this.#record({
+      input,
+      text,
+      value: input.value,
+      selfApproved,
+      change: edited ? { value: input.value } : null,
+    })
+
+    return texts.get(input)
+  }
+
+  async approveSame(input: ApproveSameInput) {
+    const { project } = await new RightsService(this.#context).requireApprove(input)
+    const texts = await new TextsService(this.#context).all(input.projectId)
+    const userId = actorUserId(this.#context.actor)
+    const pairs = approvedPairs({ texts, language: input.language })
+
+    const matching = texts.flatMap((text) => {
+      const translation = text.translations.find(({ language }) => language === input.language)
+
+      return translation?.state === 'TO_CHECK' &&
+        isApprovedElsewhere({ text, language: input.language, pairs })
+        ? [
+            {
+              projectId: project.id,
+              textId: text.id,
+              language: input.language,
+              sourceHash: hashText(text.source.value),
+              targetHash: hashText(translation.value ?? ''),
+              reviewerId: userId,
+            },
+          ]
+        : []
+    })
+
+    await this.#context.db.approvals.createMany({ data: matching, skipDuplicates: true })
+
+    return { approved: matching.length }
+  }
+
+  async requestChange(input: RequestChangeInput) {
+    await new RightsService(this.#context).requireApprove(input)
+
+    const texts = new TextsService(this.#context)
+    const { current } = await this.#target({ texts, input })
+
+    const draft = input.draftId ? await this.#inReview({ input, draftId: input.draftId }) : null
+
+    if (!draft && current === null) {
+      throw new ORPCError('CONFLICT', { message: 'There is no text to ask a change on' })
+    }
+
+    const authorId = actorUserId(this.#context.actor)
+
+    const comment = await this.#context.db.transaction(async (tx) => {
+      if (draft) {
+        await tx.drafts.update({ where: { id: draft.id }, data: { status: DRAFT_STATUSES.DRAFT } })
+      }
+
+      return tx.comments.create({
+        data: {
+          projectId: input.projectId,
+          textId: input.textId,
+          language: input.language,
+          authorId,
+          kind: COMMENT_KINDS.CHANGE_REQUEST,
+          body: input.body,
+          targetHash: current === null ? null : hashText(current),
+        },
+      })
+    })
+
+    return commentView({ comment, authorName: await this.#authorName(authorId) })
+  }
+
+  async comment(input: CommentInput) {
+    await new RightsService(this.#context).access(input.projectId)
+
+    const texts = new TextsService(this.#context)
+
+    await this.#target({ texts, input })
+
+    const authorId = actorUserId(this.#context.actor)
+
+    const comment = await this.#context.db.comments.create({
+      data: {
+        projectId: input.projectId,
+        textId: input.textId,
+        language: input.language,
+        authorId,
+        body: input.body,
+      },
+    })
+
+    return commentView({ comment, authorName: await this.#authorName(authorId) })
+  }
+
+  async comments(input: ReviewTargetInput) {
+    await new RightsService(this.#context).access(input.projectId)
+
+    const comments = await this.#context.db.comments.findMany({
+      where: { projectId: input.projectId, textId: input.textId, language: input.language },
+      include: { author: true },
+      orderBy: { createdAt: 'asc' },
+    })
+
+    return comments.map((comment) => commentView({ comment, authorName: comment.author.name }))
+  }
+
+  async #target(options: { texts: TextsService; input: ReviewTargetInput }) {
+    const text = await options.texts.get(options.input)
+
+    const translation = text.translations.find(
+      ({ language }) => language === options.input.language,
+    )
+
+    if (!translation) {
       throw new ORPCError('NOT_FOUND')
     }
+
+    return { text, current: translation.value }
+  }
+
+  async #inReview(options: { input: ReviewTargetInput; draftId: string }) {
+    const draft = await this.#context.db.drafts.findFirst({
+      where: {
+        id: options.draftId,
+        projectId: options.input.projectId,
+        textId: options.input.textId,
+        language: options.input.language,
+        status: DRAFT_STATUSES.IN_REVIEW,
+      },
+    })
+
+    if (!draft) {
+      throw new ORPCError('NOT_FOUND')
+    }
+
+    return draft
+  }
+
+  async #guard(options: {
+    project: { workspaceId: string; repository: string }
+    text: Text
+    language: string
+    value: string
+    authorId: string | null
+  }) {
+    const failures = new TextsService(this.#context).failures({
+      repository: options.project.repository,
+      language: options.language,
+      source: options.text.source.value,
+      target: options.value,
+    })
+
+    if (failures.length > 0) {
+      throw new ORPCError('CONFLICT', { message: 'This text fails a check' })
+    }
+
+    if (options.authorId !== actorUserId(this.#context.actor)) {
+      return false
+    }
+
+    const reviewers = await new RightsService(this.#context).reviewerCount({
+      workspaceId: options.project.workspaceId,
+      language: options.language,
+    })
+
+    if (reviewers >= 2) {
+      throw new ORPCError('FORBIDDEN', {
+        message: 'Another reviewer of this language must approve your change',
+      })
+    }
+
+    return true
+  }
+
+  async #record(options: {
+    input: ReviewTargetInput
+    text: Text
+    value: string
+    selfApproved: boolean
+    change: { draft: Draft } | { value: string } | null
+  }) {
+    const { input, change } = options
+    const reviewerId = actorUserId(this.#context.actor)
 
     const pair = {
       projectId: input.projectId,
       textId: input.textId,
       language: input.language,
-      sourceHash: hashText(text.source.value),
-      targetHash: hashText(translation.value),
+      sourceHash: hashText(options.text.source.value),
+      targetHash: hashText(options.value),
     }
 
-    const reviewerId = actorUserId(this.#context.actor)
+    await this.#context.db.transaction(async (tx) => {
+      await tx.approvals.upsert({
+        where: pair,
+        create: { ...pair, reviewerId, selfApproved: options.selfApproved },
+        update: { reviewerId, selfApproved: options.selfApproved },
+      })
 
-    await this.#context.db.approvals.upsert({
-      where: pair,
-      create: { ...pair, reviewerId },
-      update: { reviewerId },
+      if (!change) {
+        return
+      }
+
+      await tx.drafts.updateMany({
+        where: {
+          projectId: input.projectId,
+          textId: input.textId,
+          language: input.language,
+          status: DRAFT_STATUSES.APPROVED,
+        },
+        data: { status: DRAFT_STATUSES.WITHDRAWN },
+      })
+
+      if ('draft' in change) {
+        await tx.drafts.update({
+          where: { id: change.draft.id },
+          data: { status: DRAFT_STATUSES.APPROVED },
+        })
+
+        return
+      }
+
+      const mine = await tx.drafts.findFirst({
+        where: {
+          projectId: input.projectId,
+          textId: input.textId,
+          language: input.language,
+          authorId: reviewerId,
+          status: { in: [DRAFT_STATUSES.DRAFT, DRAFT_STATUSES.IN_REVIEW] },
+        },
+      })
+
+      if (mine) {
+        await tx.drafts.update({
+          where: { id: mine.id },
+          data: { value: change.value, status: DRAFT_STATUSES.APPROVED },
+        })
+
+        return
+      }
+
+      await tx.drafts.create({
+        data: {
+          projectId: input.projectId,
+          textId: input.textId,
+          language: input.language,
+          value: change.value,
+          authorId: reviewerId,
+          status: DRAFT_STATUSES.APPROVED,
+        },
+      })
     })
+  }
 
-    return texts.get(input)
+  async #authorName(userId: string) {
+    const author = await this.#context.db.user.findFirst({ where: { id: userId } })
+
+    return author?.name ?? ''
   }
 }

@@ -30,7 +30,7 @@ export function catalogPaths(project: CatalogProject) {
   return [...new Set([...sources, ...targetLanguages(project).map(reviewsPath)])]
 }
 
-function avoidWords(options: { glossary: GlossaryTerm[]; language: string }) {
+export function avoidWords(options: { glossary: GlossaryTerm[]; language: string }) {
   return options.glossary.flatMap((term) => term.terms[options.language]?.avoid ?? [])
 }
 
