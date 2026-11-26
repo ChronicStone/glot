@@ -1,3 +1,5 @@
+import type { ValueOf } from '@glot/utils/types'
+import type { ACTOR_KINDS } from '../constants/auth.constants.ts'
 import type { DrizzleDatabase } from '@glot/database/types/database'
 import type { User } from '@glot/database/types/users'
 import type { createGlotAuth } from '../create-auth.ts'
@@ -16,6 +18,8 @@ export type GlotAuth = ReturnType<typeof createGlotAuth>
 
 export type AuthenticatedUser = Pick<User, 'id' | 'email' | 'name' | 'image' | 'locale'>
 
+export type ActorKind = ValueOf<typeof ACTOR_KINDS>
+
 export type AuthenticatedActor =
-  | { kind: 'person'; user: AuthenticatedUser; sessionId: string }
-  | { kind: 'key'; userId: string; keyId: string }
+  | { kind: typeof ACTOR_KINDS.PERSON; user: AuthenticatedUser; sessionId: string }
+  | { kind: typeof ACTOR_KINDS.KEY; userId: string; keyId: string }
