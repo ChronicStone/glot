@@ -1,8 +1,8 @@
 import type { ApproveInput } from '@glot/contract'
+import { hashText } from '@glot/utils/hash'
 import { ORPCError } from '@orpc/server'
 import type { RequestContext } from '../../../types/context.types.ts'
 import { actorUserId } from '../../../utils/actor.utils.ts'
-import { hashText } from '../../../utils/hash.utils.ts'
 import { TextsService } from '../../texts/services/texts.service.ts'
 
 export class ReviewsService {

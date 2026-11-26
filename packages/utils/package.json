@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./types": "./src/types/index.ts"
+    "./types": "./src/types/index.ts",
+    "./hash": "./src/utils/hash.utils.ts"
   },
   "scripts": {
     "typecheck": "tsrs --noEmit"
