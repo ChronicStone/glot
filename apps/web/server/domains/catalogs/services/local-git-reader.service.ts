@@ -1,9 +1,12 @@
 import { spawn } from 'node:child_process'
-import { resolve, sep } from 'node:path'
-import type { GitReader } from '../types/catalog.types.ts'
+import { mkdtemp, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join, resolve, sep } from 'node:path'
+import { GIT_IDENTITY } from '../constants/catalog.constants.ts'
+import type { GitPublication, GitReader, GitWriter } from '../types/catalog.types.ts'
 import { parseCatFileBatch } from '../utils/cat-file.utils.ts'
 
-export class LocalGitReader implements GitReader {
+export class LocalGitReader implements GitReader, GitWriter {
   readonly #root: string
 
   constructor(options: { root: string }) {
@@ -44,7 +47,72 @@ export class LocalGitReader implements GitReader {
     return found
   }
 
-  #git(options: { repository: string; args: string[]; input?: string }) {
+  async publish(options: GitPublication) {
+    const { repository } = options
+    const scratch = await mkdtemp(join(tmpdir(), 'glot-index-'))
+    const index = { GIT_INDEX_FILE: join(scratch, 'index') }
+
+    const identity = {
+      GIT_AUTHOR_NAME: GIT_IDENTITY.NAME,
+      GIT_AUTHOR_EMAIL: GIT_IDENTITY.EMAIL,
+      GIT_COMMITTER_NAME: GIT_IDENTITY.NAME,
+      GIT_COMMITTER_EMAIL: GIT_IDENTITY.EMAIL,
+    }
+
+    try {
+      await this.#git({ repository, args: ['read-tree', options.base.commit], env: index })
+
+      const entries: string[] = []
+
+      for (const [path, content] of options.files) {
+        if (/[\n\t]/u.test(path)) {
+          throw new Error('A path to write cannot contain a line break or a tab')
+        }
+
+        const blob = await this.#git({
+          repository,
+          args: ['hash-object', '-w', '--stdin'],
+          input: content,
+        })
+
+        entries.push(`100644 ${blob.toString('utf8').trim()}\t${path}\n`)
+      }
+
+      await this.#git({
+        repository,
+        args: ['update-index', '--index-info'],
+        input: entries.join(''),
+        env: index,
+      })
+
+      const tree = (await this.#git({ repository, args: ['write-tree'], env: index }))
+        .toString('utf8')
+        .trim()
+
+      const commit = (
+        await this.#git({
+          repository,
+          args: ['commit-tree', tree, '-p', options.base.commit, '-m', options.message],
+          env: identity,
+        })
+      )
+        .toString('utf8')
+        .trim()
+
+      await this.#git({ repository, args: ['update-ref', `refs/heads/${options.branch}`, commit] })
+
+      return { commit, pullRequest: null }
+    } finally {
+      await rm(scratch, { recursive: true, force: true })
+    }
+  }
+
+  #git(options: {
+    repository: string
+    args: string[]
+    input?: string
+    env?: Record<string, string>
+  }) {
     const directory = resolve(this.#root, options.repository)
 
     if (!directory.startsWith(this.#root + sep)) {
@@ -52,7 +120,9 @@ export class LocalGitReader implements GitReader {
     }
 
     return new Promise<Buffer>((done, fail) => {
-      const git = spawn('git', ['-C', directory, ...options.args])
+      const git = spawn('git', ['-C', directory, ...options.args], {
+        env: { ...process.env, ...options.env },
+      })
       const output: Buffer[] = []
       const errors: Buffer[] = []
 
