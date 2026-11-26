@@ -4,17 +4,18 @@ Placement rules govern necessary declarations. Default to local implementation, 
 
 ## Packages
 
-| Package          | Owns                                                                                                                |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `@glot/utils`    | Generic type and pure helpers with no domain meaning, such as `ValueOf`.                                            |
-| `@glot/database` | Tables, relations, canonical constants, derived validators and inferred types, the database connection, migrations. |
-| `@glot/auth`     | better-auth configuration, session and API-key resolution, the browser auth client.                                 |
-| `@glot/contract` | The oRPC contract: procedures, their input and output schemas, errors and OpenAPI metadata. Browser-safe.           |
-| `@glot/sdk`      | Typed clients over RPC and REST, built from the contract alone.                                                     |
-| `@glot/ui`       | Tokens, the Tailwind theme and components built on ui-sdk.                                                          |
-| `@glot/nuxt`     | The in-app module: widget, key log, identity exchange.                                                              |
-| `apps/web`       | The Nuxt app and its server: routes, domains, configuration.                                                        |
-| `tooling/seed`   | Development and test data.                                                                                          |
+| Package          | Owns                                                                                                                                    |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `@glot/utils`    | Generic type and pure helpers with no domain meaning, such as `ValueOf`.                                                                |
+| `@glot/database` | Tables, relations, canonical constants, derived validators and inferred types, the database connection, migrations.                     |
+| `@glot/auth`     | better-auth configuration, session and API-key resolution, the browser auth client.                                                     |
+| `@glot/checks`   | Parsing vue-i18n messages and the checks on them: syntax, placeholders, plural forms, HTML tags, words to avoid. Pure and browser-safe. |
+| `@glot/contract` | The oRPC contract: procedures, their input and output schemas, errors and OpenAPI metadata. Browser-safe.                               |
+| `@glot/sdk`      | Typed clients over RPC and REST, built from the contract alone.                                                                         |
+| `@glot/ui`       | Tokens, the Tailwind theme and components built on ui-sdk.                                                                              |
+| `@glot/nuxt`     | The in-app module: widget, key log, identity exchange.                                                                                  |
+| `apps/web`       | The Nuxt app and its server: routes, domains, configuration.                                                                            |
+| `tooling/seed`   | Development and test data.                                                                                                              |
 
 ## Database package
 
