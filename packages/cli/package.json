@@ -1,0 +1,22 @@
+{
+  "name": "@glot/cli",
+  "version": "0.0.0",
+  "description": "glot check: run Glot's checks on the language files of a repository, for its own CI.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "glot": "./src/bin.ts"
+  },
+  "scripts": {
+    "typecheck": "tsrs --noEmit",
+    "test": "vp test run"
+  },
+  "dependencies": {
+    "@glot/checks": "workspace:*",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "vite-plus": "catalog:"
+  }
+}

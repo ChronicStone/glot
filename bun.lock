@@ -93,6 +93,21 @@
         "vite-plus": "catalog:",
       },
     },
+    "packages/cli": {
+      "name": "@glot/cli",
+      "version": "0.0.0",
+      "bin": {
+        "glot": "./src/bin.ts",
+      },
+      "dependencies": {
+        "@glot/checks": "workspace:*",
+        "zod": "catalog:",
+      },
+      "devDependencies": {
+        "@types/node": "catalog:",
+        "vite-plus": "catalog:",
+      },
+    },
     "packages/contract": {
       "name": "@glot/contract",
       "version": "0.0.0",
@@ -418,6 +433,8 @@
     "@glot/auth": ["@glot/auth@workspace:packages/auth"],
 
     "@glot/checks": ["@glot/checks@workspace:packages/checks"],
+
+    "@glot/cli": ["@glot/cli@workspace:packages/cli"],
 
     "@glot/contract": ["@glot/contract@workspace:packages/contract"],
 
