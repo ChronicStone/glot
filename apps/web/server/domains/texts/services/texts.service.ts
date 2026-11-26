@@ -1,6 +1,5 @@
-import type { TextSearchInput } from '@glot/contract'
+import type { TextRefInput, TextSearchInput } from '@glot/contract'
 import { TEXT_STATES } from '@glot/database/constants/texts'
-import type { Approval } from '@glot/database/types/approvals'
 import { ORPCError } from '@orpc/server'
 import type { RequestContext } from '../../../types/context.types.ts'
 import { hashText } from '../../../utils/hash.utils.ts'
@@ -45,7 +44,7 @@ export class TextsService {
     }
   }
 
-  async get(input: { projectId: string; textId: string }) {
+  async get(input: TextRefInput) {
     const text = (await this.#reviewedTexts(input.projectId)).find((t) => t.id === input.textId)
 
     if (!text) {
@@ -59,27 +58,30 @@ export class TextsService {
     const project = await new ProjectsService(this.#context).findAccessible(projectId)
     const approvals = await this.#context.db.approvals.findMany({ where: { projectId } })
 
+    const approved = new Map(
+      approvals.map((approval) => [
+        `${approval.textId}|${approval.language}|${approval.sourceHash}|${approval.targetHash}`,
+        approval.reviewerId,
+      ]),
+    )
+
     return this.#context.catalog
       .texts(project.repository)
-      .map((text) => this.#withApprovals(text, approvals))
+      .map((text) => this.#withApprovals(text, approved))
   }
 
-  #withApprovals(text: CatalogText, approvals: Approval[]): CatalogText {
+  #withApprovals(text: CatalogText, approved: Map<string, string>): CatalogText {
     const sourceHash = hashText(text.source.value)
 
     return {
       ...text,
       translations: text.translations.map((translation) => {
-        const approval = approvals.find(
-          (a) =>
-            a.textId === text.id &&
-            a.language === translation.language &&
-            a.sourceHash === sourceHash &&
-            a.targetHash === hashText(translation.value ?? ''),
+        const reviewerId = approved.get(
+          `${text.id}|${translation.language}|${sourceHash}|${hashText(translation.value ?? '')}`,
         )
 
-        return approval
-          ? { ...translation, state: TEXT_STATES.REVIEWED, reviewedBy: approval.reviewerId }
+        return reviewerId
+          ? { ...translation, state: TEXT_STATES.REVIEWED, reviewedBy: reviewerId }
           : translation
       }),
     }
