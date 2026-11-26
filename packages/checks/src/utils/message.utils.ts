@@ -67,3 +67,30 @@ export function plainTextOf(forms: MessageNode[]) {
     )
     .join('')
 }
+
+export function messageSegments(message: string) {
+  const { problem, forms } = parseMessage(message)
+
+  if (problem !== null) {
+    return [{ placeholder: false, value: message }]
+  }
+
+  return forms.flatMap((form, index) => [
+    ...(index > 0 ? [{ placeholder: false, value: ' | ' }] : []),
+    ...form.items.map((item) => {
+      if (item.type === MESSAGE_NODE_TYPES.NAMED) {
+        return { placeholder: true, value: item.key }
+      }
+
+      if (item.type === MESSAGE_NODE_TYPES.LIST) {
+        return { placeholder: true, value: String(item.index) }
+      }
+
+      if (item.type === MESSAGE_NODE_TYPES.LINKED) {
+        return { placeholder: true, value: `@:${linkedKey(item.key)}` }
+      }
+
+      return { placeholder: false, value: item.value ?? '' }
+    }),
+  ])
+}
