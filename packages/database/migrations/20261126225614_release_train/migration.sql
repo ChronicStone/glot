@@ -27,7 +27,6 @@ CREATE TABLE "release" (
 	"commit" text NOT NULL,
 	"pullRequestNumber" integer,
 	"pullRequestUrl" text,
-	"approvalCount" integer DEFAULT 0 NOT NULL,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"mergedAt" timestamp with time zone
@@ -45,12 +44,15 @@ CREATE TABLE "job" (
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-ALTER TABLE "draft" ADD COLUMN "baseHash" text;--> statement-breakpoint
+ALTER TABLE "draft" ADD COLUMN "baseSourceHash" text;--> statement-breakpoint
+ALTER TABLE "draft" ADD COLUMN "baseTargetHash" text;--> statement-breakpoint
+ALTER TABLE "approval" ADD COLUMN "releaseId" uuid;--> statement-breakpoint
 CREATE UNIQUE INDEX "release_change_text_unique" ON "release_change" ("releaseId","textId","language");--> statement-breakpoint
 CREATE UNIQUE INDEX "release_open_unique" ON "release" ("projectId") WHERE status = 'OPEN';--> statement-breakpoint
 CREATE INDEX "release_project_created_idx" ON "release" ("projectId","createdAt");--> statement-breakpoint
 CREATE UNIQUE INDEX "job_slot_unique" ON "job" ("kind","projectId","runAt");--> statement-breakpoint
 CREATE INDEX "job_due_idx" ON "job" ("status","runAt");--> statement-breakpoint
+ALTER TABLE "approval" ADD CONSTRAINT "approval_releaseId_release_id_fkey" FOREIGN KEY ("releaseId") REFERENCES "release"("id") ON DELETE SET NULL;--> statement-breakpoint
 ALTER TABLE "release_change" ADD CONSTRAINT "release_change_releaseId_release_id_fkey" FOREIGN KEY ("releaseId") REFERENCES "release"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "release_change" ADD CONSTRAINT "release_change_draftId_draft_id_fkey" FOREIGN KEY ("draftId") REFERENCES "draft"("id") ON DELETE SET NULL;--> statement-breakpoint
 ALTER TABLE "release_change" ADD CONSTRAINT "release_change_authorId_user_id_fkey" FOREIGN KEY ("authorId") REFERENCES "user"("id") ON DELETE SET NULL;--> statement-breakpoint

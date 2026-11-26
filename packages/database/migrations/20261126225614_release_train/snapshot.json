@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "43e7624a-09a9-4dd6-b0b0-851b420e7b97",
+  "id": "8d571db4-4a72-4ee3-92cb-d94aa8bac42d",
   "prevIds": [
     "f5c9ce0b-635b-4ce0-b97e-febdbf0322e2"
   ],
@@ -1643,7 +1643,20 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "baseHash",
+      "name": "baseSourceHash",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "draft"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "baseTargetHash",
       "entityType": "columns",
       "schema": "public",
       "table": "draft"
@@ -1800,6 +1813,19 @@
       "generated": null,
       "identity": null,
       "name": "selfApproved",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "approval"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "releaseId",
       "entityType": "columns",
       "schema": "public",
       "table": "approval"
@@ -2203,19 +2229,6 @@
       "generated": null,
       "identity": null,
       "name": "pullRequestUrl",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "release"
-    },
-    {
-      "type": "integer",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "0",
-      "generated": null,
-      "identity": null,
-      "name": "approvalCount",
       "entityType": "columns",
       "schema": "public",
       "table": "release"
@@ -3456,6 +3469,23 @@
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "approval_reviewerId_user_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "approval"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "releaseId"
+      ],
+      "schemaTo": "public",
+      "tableTo": "release",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "SET NULL",
+      "name": "approval_releaseId_release_id_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "approval"
