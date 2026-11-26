@@ -9,6 +9,7 @@ test('named placeholders must be the same as in the source', () => {
   expect(codes({ source: 'Fin le {date}', target: 'Ended on {date}' })).toEqual([])
 
   const failures = checkText({ source: 'Fin le {date}', target: 'Koniec {data}', avoid: [] })
+
   expect(failures).toEqual([
     {
       code: 'PLACEHOLDERS',
@@ -37,9 +38,11 @@ test('linked messages must point to the same texts', () => {
 
 test('plural forms must be as many as in the source', () => {
   const source = '{count} enchère | {count} enchères'
+
   expect(codes({ source, target: '{count} bid | {count} bids' })).toEqual([])
 
   const failures = checkText({ source, target: '{count} bids', avoid: [] })
+
   expect(failures).toEqual([
     {
       code: 'PLURAL_FORMS',
@@ -79,9 +82,11 @@ test('a source with a syntax mistake does not blame the target', () => {
 
 test('HTML tags must be the same as in the source', () => {
   const source = 'J’accepte les <a href="/terms">conditions</a>'
+
   expect(codes({ source, target: 'I accept the <a href="/en/terms">terms</a>' })).toEqual([])
 
   const failures = checkText({ source, target: 'I accept the <a>terms', avoid: [] })
+
   expect(failures).toEqual([
     {
       code: 'HTML_TAGS',

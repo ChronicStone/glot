@@ -75,7 +75,7 @@ export default defineConfig({
       {
         files: [
           'apps/web/server/**/*.{ts,tsx}',
-          'packages/{auth,contract,database,sdk,utils}/**/*.{ts,tsx}',
+          'packages/{auth,checks,contract,database,sdk,utils}/**/*.{ts,tsx}',
           'tooling/**/*.{ts,tsx}',
           'apps/web/app/**/*.ts',
           'packages/{ui,nuxt}/src/**/*.ts',

@@ -1,5 +1,5 @@
 export const backendScopePattern =
-  /(?:^|\/)(?:apps\/web\/(?:server|app)|packages\/(?:auth|contract|database|nuxt|sdk|ui|utils)|tooling\/[^/]+)(?:\/|$)/u
+  /(?:^|\/)(?:apps\/web\/(?:server|app)|packages\/(?:auth|checks|contract|database|nuxt|sdk|ui|utils)|tooling\/[^/]+)(?:\/|$)/u
 export const generatedPathPattern =
   /(?:^|\/)(?:node_modules|generated|migrations?|build|dist|\.nuxt|\.output|coverage)(?:\/|$)/u
 export const implementationPathPattern =
