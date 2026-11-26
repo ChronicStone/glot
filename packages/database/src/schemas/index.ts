@@ -14,4 +14,6 @@ export * from './comments/index.ts'
 
 export * from './releases/index.ts'
 
+export * from './glossary/index.ts'
+
 export * from './jobs/index.ts'

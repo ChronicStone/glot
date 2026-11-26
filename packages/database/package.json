@@ -16,6 +16,7 @@
     "./schemas/approvals": "./src/schemas/approvals/index.ts",
     "./schemas/comments": "./src/schemas/comments/index.ts",
     "./schemas/releases": "./src/schemas/releases/index.ts",
+    "./schemas/glossary": "./src/schemas/glossary/index.ts",
     "./schemas/jobs": "./src/schemas/jobs/index.ts",
     "./validators": "./src/validators/index.ts",
     "./validators/projects": "./src/validators/projects.validator.ts",

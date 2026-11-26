@@ -3,6 +3,7 @@ import * as schema from './index.ts'
 import { approvalsRelationsPart } from './approvals/approvals.relations.ts'
 import { commentsRelationsPart } from './comments/comments.relations.ts'
 import { draftsRelationsPart } from './drafts/drafts.relations.ts'
+import { glossaryRelationsPart } from './glossary/glossary.relations.ts'
 import { projectsRelationsPart } from './projects/projects.relations.ts'
 import { releasesRelationsPart } from './releases/releases.relations.ts'
 import { usersRelationsPart } from './users/users.relations.ts'
@@ -17,4 +18,5 @@ export const relations = {
   ...approvalsRelationsPart,
   ...commentsRelationsPart,
   ...releasesRelationsPart,
+  ...glossaryRelationsPart,
 }
