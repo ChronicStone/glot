@@ -142,3 +142,11 @@ test('MCP offers every procedure except approving', async () => {
   expect(names).toContain('searchTexts')
   expect(names).not.toContain('approveText')
 })
+
+test('texts are found by their key as well as by their words', async () => {
+  const anna = createGlotClient({ url: baseUrl, fetch: withCookie(sessionCookie) })
+  const page = await anna.texts.search({ projectId, q: 'actions.save' })
+
+  expect(page.items.map((text) => text.key.path.join('.'))).toContain('actions.save')
+  expect(page.items.every((text) => text.key.path.join('.').includes('actions.save'))).toBe(true)
+})

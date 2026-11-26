@@ -31,9 +31,11 @@ export class TextsService {
       .filter(
         (text) =>
           !words ||
-          [text.source.value, ...text.translations.map((t) => t.value ?? '')].some((value) =>
-            value.toLocaleLowerCase().includes(words),
-          ),
+          [
+            text.key.path.join('.'),
+            text.source.value,
+            ...text.translations.map((t) => t.value ?? ''),
+          ].some((value) => value.toLocaleLowerCase().includes(words)),
       )
       .filter(
         (text) =>

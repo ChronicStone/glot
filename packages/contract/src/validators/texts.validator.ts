@@ -13,7 +13,7 @@ export const keyRefSchema = z
       .min(1)
       .describe("JSON path segments: ['a.b'] and ['a', 'b'] are two keys."),
   })
-  .describe('Where a text lives. Never shown to writers.')
+  .describe('Where a text lives: the key people manage it by, shown with every text.')
 
 export const translationSchema = z.object({
   language: languageCodeSchema,
@@ -44,7 +44,7 @@ export const textSchema = z.object({
 export const textRefInputSchema = draftSelectSchema.pick({ projectId: true, textId: true })
 
 export const textSearchInputSchema = textRefInputSchema.pick({ projectId: true }).extend({
-  q: z.string().optional().describe('Words to find, in any language.'),
+  q: z.string().optional().describe('Words to find in the key or in any language.'),
   state: textStateSchema.optional(),
   language: languageCodeSchema.optional().describe('The language the state filter applies to.'),
   limit: z.coerce.number().int().min(1).max(200).default(50),
