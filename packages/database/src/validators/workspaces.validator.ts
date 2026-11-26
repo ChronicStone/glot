@@ -5,5 +5,11 @@ import { workspaceMemberships, workspaces } from '../schemas/workspaces/workspac
 
 export const workspaceSelectSchema = createSelectSchema(workspaces)
 export const workspaceRoleSchema = z.enum(WORKSPACE_ROLES)
-export const workspaceMembershipSelectSchema = createSelectSchema(workspaceMemberships)
-export const workspaceMembershipInsertSchema = createInsertSchema(workspaceMemberships)
+
+export const workspaceMembershipSelectSchema = createSelectSchema(workspaceMemberships, {
+  role: workspaceRoleSchema,
+})
+
+export const workspaceMembershipInsertSchema = createInsertSchema(workspaceMemberships, {
+  role: workspaceRoleSchema,
+})
