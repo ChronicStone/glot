@@ -23,9 +23,16 @@ const projectLinks = computed<NavigationMenuItem[]>(() =>
     : [],
 )
 
-const settingsLinks: NavigationMenuItem[] = [
-  { label: 'Settings', icon: 'i-lucide-settings', to: '/settings' },
-]
+const route = useRoute()
+
+const settingsLinks = computed<NavigationMenuItem[]>(() => [
+  {
+    label: 'Settings',
+    icon: 'i-lucide-settings',
+    to: '/settings',
+    active: route.path.startsWith('/settings'),
+  },
+])
 </script>
 
 <template>
