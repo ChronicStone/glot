@@ -758,7 +758,13 @@
 .input.is-disabled {
   background: var(--glot-tile);
   box-shadow: none;
-  color: var(--glot-ink-4);
+  color: var(--glot-ink-3);
+}
+.input input:disabled,
+.input textarea:disabled {
+  color: inherit;
+  -webkit-text-fill-color: currentColor;
+  opacity: 1;
 }
 .input-soft {
   background: var(--glot-sunken);

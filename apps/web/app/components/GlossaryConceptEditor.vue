@@ -120,7 +120,7 @@ const submitting = form.useSelector((state) => state.isSubmitting)
             ><input
               :value="field.state.value"
               :disabled="!details"
-              placeholder="lot"
+              :placeholder="details ? 'lot' : ''"
               aria-label="Concept"
               @input="field.handleChange(inputValue($event))"
           /></label>
@@ -137,7 +137,7 @@ const submitting = form.useSelector((state) => state.isSubmitting)
               :value="field.state.value"
               :disabled="!details"
               rows="2"
-              placeholder="An item sold at auction. Never a plot of land."
+              :placeholder="details ? 'An item sold at auction. Never a plot of land.' : ''"
               aria-label="Definition"
               @input="field.handleChange(inputValue($event))"
             />
