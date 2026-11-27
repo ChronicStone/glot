@@ -3438,6 +3438,37 @@
   cursor: progress;
   font-variant-numeric: tabular-nums;
 }
+.r-line {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  white-space: nowrap;
+}
+.r-line .key {
+  flex: none;
+  max-width: 100%;
+}
+.r-line .r-rest {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.needs-filter {
+  margin-left: auto;
+}
+.drafts-block {
+  border-top: 1px solid var(--glot-line);
+  padding-top: 6px;
+}
+.drafts-h {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px 4px;
+  font-size: var(--glot-t-13);
+  color: var(--glot-ink-3);
+}
 .ai-ask {
   margin-top: 8px;
   align-self: flex-start;

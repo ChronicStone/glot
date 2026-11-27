@@ -1,11 +1,16 @@
 <script setup lang="ts">
+import { DRAFT_STATUSES } from '@glot/database/constants/drafts'
 import { TEXT_STATES } from '@glot/database/constants/texts'
+import GlotTextValue from '@glot/ui/components/GlotTextValue.vue'
 import { TEXT_STATE_CLASSES, TEXT_STATE_LABELS } from '@glot/ui/constants'
-import { useQueries, useQuery } from '@tanstack/vue-query'
+import { useMutation, useQuery } from '@tanstack/vue-query'
 import { formatTimeAgo } from '@vueuse/core'
+import { NEEDS_FILTER_LABELS, NEEDS_FILTERS } from '../constants/home.constants.ts'
 import { REVIEW_SECONDS_PER_TEXT } from '../constants/review.constants.ts'
 
-const { $api, $auth } = useNuxtApp()
+const { $api, $auth, $queryClient } = useNuxtApp()
+const toast = useToast()
+const { workspace } = useCurrentWorkspace()
 const session = $auth.useSession()
 const { project, projects } = useCurrentProject()
 const { approve } = useRights()
@@ -31,76 +36,118 @@ const today = new Intl.DateTimeFormat('en-GB', {
 
 const clock = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit' })
 
-const queues = useQueries({
-  queries: computed(() =>
-    approve.value.map((language) => ({
-      ...$api.reviews.queue.queryOptions({
-        input: { projectId: project.value?.id ?? '', language, limit: 1 },
-      }),
-      enabled: Boolean(project.value),
-    })),
-  ),
-  combine: (results) =>
-    results.map((result, index) => ({
-      language: approve.value[index] ?? '',
-      total: result.data?.total ?? 0,
-    })),
-})
+const overview = useQuery(() => ({
+  ...$api.home.overview.queryOptions({ input: { workspaceId: workspace.value?.id ?? '' } }),
+  enabled: Boolean(workspace.value),
+}))
 
 const next = useQuery(() => ({
   ...$api.releases.next.queryOptions({ input: { projectId: project.value?.id ?? '' } }),
   enabled: Boolean(project.value),
 }))
 
-const history = useQuery(() => ({
-  ...$api.releases.history.queryOptions({
-    input: { projectId: project.value?.id ?? '', limit: 5 },
-  }),
-  enabled: Boolean(project.value),
-}))
+const filter = ref<string>(NEEDS_FILTERS.ALL)
+const needsYou = computed(() => overview.data.value?.needsYou)
 
-const needs = computed(() => [
-  ...(counts.value.states[TEXT_STATES.NEEDS_FIX] > 0
-    ? [
-        {
-          tone: 'fix',
-          icon: 'i-lucide-triangle-alert',
-          title: `${counts.value.states[TEXT_STATES.NEEDS_FIX]} texts fail a check`,
-          sub: 'Readers may see them wrong. Each one says what to fix.',
-          meta: project.value?.name ?? '',
-          action: 'Fix',
-          primary: true,
-          to: `/projects/${project.value?.id}/texts`,
-        },
-      ]
-    : []),
-  ...queues.value
+const fixRows = computed(() =>
+  (needsYou.value?.fixes.items ?? []).map((item) => ({
+    id: `fix-${item.projectId}-${item.textId}-${item.language}`,
+    filter: NEEDS_FILTERS.FIXES,
+    tone: 'fix',
+    icon: 'i-lucide-triangle-alert',
+    title: ` in ${languageName(item.language)}`,
+    value: item.value ?? item.source.value,
+    sub: item.reason.message,
+    key: item.key.path.join('.'),
+    meta: `${item.shownIn.length} ${item.shownIn.length === 1 ? 'app' : 'apps'}`,
+    action: 'Fix',
+    primary: true,
+    to: `/projects/${item.projectId}/texts?text=${item.textId}`,
+  })),
+)
+
+const reviewRows = computed(() =>
+  (needsYou.value?.reviews ?? [])
     .filter(({ total }) => total > 0)
-    .map(({ language, total }) => ({
+    .map((item) => ({
+      id: `review-${item.projectId}-${item.language}`,
+      filter: NEEDS_FILTERS.REVIEWS,
       tone: 'check',
       icon: 'i-lucide-list-checks',
-      title: `${total.toLocaleString('en-US')} ${languageName(language)} texts to check`,
-      sub: `You review ${languageName(language)}.`,
-      meta: `~${Math.max(1, Math.round((total * REVIEW_SECONDS_PER_TEXT) / 60))} min`,
+      title: `${item.total.toLocaleString('en-US')} ${languageName(item.language)} texts to check`,
+      sub:
+        item.sentForReview > 0
+          ? `${item.sentForReview} sent for review · ${item.projectName}`
+          : `You review ${languageName(item.language)} · ${item.projectName}`,
+      key: undefined,
+      value: undefined,
+      meta: `~${Math.max(1, Math.round((item.total * REVIEW_SECONDS_PER_TEXT) / 60))} min`,
       action: 'Review',
       primary: false,
-      to: `/projects/${project.value?.id}/review/${language}`,
+      to: `/projects/${item.projectId}/review/${item.language}`,
     })),
-  ...((next.data.value?.conflicts ?? 0) > 0
-    ? [
-        {
-          tone: 'warn',
-          icon: 'i-lucide-git-compare-arrows',
-          title: `${next.data.value?.conflicts} approved changes held back`,
-          sub: 'The French or the text changed after they were approved.',
-          meta: 'Releases',
-          action: 'Resolve',
-          primary: false,
-          to: `/projects/${project.value?.id}/releases`,
-        },
-      ]
-    : []),
-])
+)
+
+const conflictRows = computed(() =>
+  (needsYou.value?.conflicts ?? [])
+    .filter(({ total }) => total > 0)
+    .map((item) => ({
+      id: `conflict-${item.projectId}`,
+      filter: NEEDS_FILTERS.REVIEWS,
+      tone: 'warn',
+      icon: 'i-lucide-git-compare-arrows',
+      title: `${item.total} approved ${item.total === 1 ? 'change' : 'changes'} held back`,
+      sub: `The French or the text changed after approval · ${item.projectName}`,
+      key: undefined,
+      value: undefined,
+      meta: 'Releases',
+      action: 'Resolve',
+      primary: false,
+      to: `/projects/${item.projectId}/releases`,
+    })),
+)
+
+const drafts = computed(() => needsYou.value?.drafts.latest ?? [])
+
+const filters = computed(() =>
+  Object.values(NEEDS_FILTERS).map((value) => ({
+    value,
+    label: NEEDS_FILTER_LABELS[value],
+    count: {
+      [NEEDS_FILTERS.ALL]:
+        fixRows.value.length +
+        reviewRows.value.length +
+        conflictRows.value.length +
+        drafts.value.length,
+      [NEEDS_FILTERS.FIXES]: fixRows.value.length,
+      [NEEDS_FILTERS.REVIEWS]: reviewRows.value.length + conflictRows.value.length,
+      [NEEDS_FILTERS.DRAFTS]: drafts.value.length,
+    }[value],
+  })),
+)
+
+const needs = computed(() =>
+  [...fixRows.value, ...reviewRows.value, ...conflictRows.value].filter(
+    (row) => filter.value === NEEDS_FILTERS.ALL || row.filter === filter.value,
+  ),
+)
+
+const showDrafts = computed(
+  () =>
+    drafts.value.length > 0 &&
+    (filter.value === NEEDS_FILTERS.ALL || filter.value === NEEDS_FILTERS.DRAFTS),
+)
+
+const send = useMutation(
+  $api.drafts.send.mutationOptions({
+    onSuccess: async () => {
+      toast.add({ title: 'Sent for review', icon: 'i-lucide-circle-check', color: 'success' })
+      await $queryClient.invalidateQueries({ queryKey: $api.home.key() })
+    },
+    onError: (error) =>
+      toast.add({ title: error.message, icon: 'i-lucide-circle-alert', color: 'error' }),
+  }),
+)
 
 const pending = computed(() => [TEXT_STATES.TO_CHECK, TEXT_STATES.NEEDS_FIX, TEXT_STATES.MISSING])
 
@@ -130,8 +177,8 @@ const reviewedShare = computed(() => {
 <template>
   <AppPage :title="`${greeting}, ${firstName}`" context="Home" scroll>
     <template #pill>
-      <span v-if="needs.length > 0" class="pill check pill-lg"
-        ><UIcon name="i-lucide-bell" />{{ needs.length }} need you</span
+      <span v-if="filters[0]?.count" class="pill check pill-lg"
+        ><UIcon name="i-lucide-bell" />{{ filters[0].count }} need you</span
       >
     </template>
     <template #meta>
@@ -172,13 +219,48 @@ const reviewedShare = computed(() => {
     <div class="home">
       <div class="home-col">
         <section class="panel">
-          <div class="panel-h"><h3>Needs you</h3></div>
-          <div v-if="needs.length > 0" class="rows hoverable" style="padding: 8px 24px 12px">
-            <div v-for="row in needs" :key="row.title" class="r">
-              <span :class="row.tone" class="ico-tile"><UIcon :name="row.icon" /></span>
+          <div class="panel-h">
+            <h3>Needs you</h3>
+            <AppSegmented
+              v-if="filters[0]?.count"
+              v-model="filter"
+              :items="filters"
+              small
+              class="needs-filter"
+            />
+          </div>
+          <div v-if="overview.isPending.value" class="rows" style="padding: 8px 24px 12px">
+            <div v-for="line in 4" :key="line" class="r">
+              <span class="sk" style="width: 34px; height: 34px; border-radius: 10px" />
               <div class="g-grow">
-                <div class="r-title">{{ row.title }}</div>
-                <div class="r-sub">{{ row.sub }}</div>
+                <div class="sk" style="height: 12px; width: 60%" />
+                <div class="sk" style="height: 10px; width: 40%; margin-top: 8px" />
+              </div>
+            </div>
+          </div>
+          <div v-else-if="overview.isError.value" class="empty" style="padding: 36px 24px">
+            <span class="ico-tile fix"><UIcon name="i-lucide-circle-alert" /></span>
+            <div class="h3">Could not load what needs you</div>
+            <div class="row-flex">
+              <button type="button" class="btn btn-outline btn-sm" @click="overview.refetch()">
+                <UIcon name="i-lucide-rotate-cw" />Try again
+              </button>
+            </div>
+          </div>
+          <div v-else-if="needs.length > 0" class="rows hoverable" style="padding: 8px 24px 12px">
+            <div v-for="row in needs" :key="row.id" class="r">
+              <span :class="row.tone" class="ico-tile"><UIcon :name="row.icon" /></span>
+              <div class="g-grow" style="min-width: 0">
+                <div class="r-title">
+                  <template v-if="row.value !== undefined"
+                    >“<GlotTextValue :value="row.value" />”</template
+                  >{{ row.title }}
+                </div>
+                <div class="r-sub r-line">
+                  <span v-if="row.key" class="key">{{ row.key }}</span
+                  ><span v-if="row.key" class="faint">·</span
+                  ><span class="r-rest">{{ row.sub }}</span>
+                </div>
               </div>
               <div class="acts">
                 <span class="meta">{{ row.meta }}</span>
@@ -191,8 +273,44 @@ const reviewedShare = computed(() => {
               </div>
             </div>
           </div>
+          <div v-if="showDrafts" class="drafts-block">
+            <div class="drafts-h">
+              <UIcon name="i-lucide-pencil-line" class="ic-14" />Your drafts · only you see them in
+              the apps
+            </div>
+            <div class="rows" style="padding: 0 24px 12px">
+              <div v-for="draft in drafts" :key="draft.draftId" class="r">
+                <span class="lc plain">{{ draft.language }}</span>
+                <div class="g-grow" style="min-width: 0">
+                  <div class="r-title"><span class="key">{{ draft.key.path.join('.') }}</span></div>
+                  <div class="r-sub">
+                    {{ draft.status === DRAFT_STATUSES.DRAFT ? 'Saved' : 'Sent' }}
+                    {{ formatTimeAgo(new Date(draft.updatedAt)) }} · {{ draft.key.source }}
+                  </div>
+                </div>
+                <button
+                  v-if="draft.status === DRAFT_STATUSES.DRAFT"
+                  type="button"
+                  class="btn btn-ghost btn-sm"
+                  :class="{
+                    'is-loading':
+                      send.isPending.value && send.variables.value?.draftId === draft.draftId,
+                  }"
+                  @click="send.mutate({ projectId: draft.projectId, draftId: draft.draftId })"
+                >
+                  Send for review<UIcon name="i-lucide-arrow-right" />
+                </button>
+                <span v-else class="meta">Waiting for a reviewer</span>
+              </div>
+            </div>
+          </div>
           <div
-            v-else
+            v-if="
+              !overview.isPending.value &&
+              !overview.isError.value &&
+              needs.length === 0 &&
+              !showDrafts
+            "
             style="
               padding: 40px 24px 44px;
               display: flex;
@@ -265,17 +383,17 @@ const reviewedShare = computed(() => {
             <NuxtLink class="meta" :to="`/projects/${project?.id}/releases`">All releases</NuxtLink>
           </div>
           <div class="act rows">
-            <div v-for="release in history.data.value?.items ?? []" :key="release.id" class="r">
+            <div v-for="release in overview.data.value?.shipped ?? []" :key="release.id" class="r">
               <span class="ico-tile ok" style="width: 24px; height: 24px; border-radius: 7px"
                 ><UIcon name="i-lucide-rocket" class="ic-13"
               /></span>
               <div class="g-grow">
-                <b>{{ release.startedByName ?? 'The clock' }}</b> released
-                {{ release.changes }} texts
+                <b>{{ release.startedByName ?? 'The clock' }}</b> released {{ release.changes }}
+                {{ release.projectName }} texts
               </div>
               <span class="meta">{{ formatTimeAgo(new Date(release.createdAt)) }}</span>
             </div>
-            <div v-if="(history.data.value?.items.length ?? 0) === 0" class="r">
+            <div v-if="(overview.data.value?.shipped.length ?? 0) === 0" class="r">
               <div class="g-grow muted">No release yet.</div>
             </div>
           </div>
