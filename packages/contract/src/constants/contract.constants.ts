@@ -15,6 +15,7 @@ export const PEOPLE_ONLY_PROCEDURES = {
   UPDATE_PERSON: 'people.update',
   REMOVE_PERSON: 'people.remove',
   UPDATE_MY_PREFERENCES: 'people.updatePreferences',
+  UPDATE_WORKSPACE: 'people.updateWorkspace',
   ISSUE_WIDGET_TOKEN: 'widget.token',
   UPDATE_AI_SETTINGS: 'ai.updateSettings',
   SET_AI_KEY: 'ai.setKey',

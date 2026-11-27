@@ -3,6 +3,7 @@ import {
   workspaceMembershipInsertSchema,
   workspaceMembershipSelectSchema,
   workspaceRoleSchema,
+  workspaceSelectSchema,
 } from '@glot/database/validators/workspaces'
 import * as z from 'zod'
 import { languageCodeSchema } from './languages.validator.ts'
@@ -13,6 +14,12 @@ const languagesSchema = z
   .describe('The languages this person changes. Null means every language.')
 
 export const workspaceRefInputSchema = workspaceMembershipSelectSchema.pick({ workspaceId: true })
+
+export const workspaceSchema = workspaceSelectSchema.pick({ id: true, name: true })
+
+export const workspaceUpdateInputSchema = workspaceRefInputSchema.extend({
+  name: workspaceSelectSchema.shape.name.trim().min(1).max(80),
+})
 
 export const membershipRefInputSchema = z.object({
   membershipId: workspaceMembershipSelectSchema.shape.id,

@@ -15,6 +15,8 @@ import {
   personUpdateInputSchema,
   preferencesSchema,
   workspaceRefInputSchema,
+  workspaceSchema,
+  workspaceUpdateInputSchema,
 } from '../validators/people.validator.ts'
 
 export const peopleContract = {
@@ -71,6 +73,20 @@ export const peopleContract = {
     .input(preferencesSchema)
     .output(preferencesSchema)
     .errors(PEOPLE_ONLY_ERRORS),
+  updateWorkspace: oc
+    .meta(
+      openapi({
+        method: 'PATCH',
+        path: '/workspaces/{workspaceId}',
+        operationId: 'updateWorkspace',
+        summary: 'Rename a workspace',
+        description: 'Owners and admins only. People only.',
+        tags: ['people'],
+      }),
+    )
+    .input(workspaceUpdateInputSchema)
+    .output(workspaceSchema)
+    .errors({ ...NOT_FOUND_ERRORS, ...ADMIN_ONLY_ERRORS, ...PEOPLE_ONLY_ERRORS }),
   invite: oc
     .meta(
       openapi({

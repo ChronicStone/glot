@@ -7,6 +7,8 @@ import type {
   personUpdateInputSchema,
   preferencesSchema,
   workspaceRefInputSchema,
+  workspaceSchema,
+  workspaceUpdateInputSchema,
 } from '../validators/people.validator.ts'
 
 export type WorkspaceRefInput = z.infer<typeof workspaceRefInputSchema>
@@ -22,3 +24,7 @@ export type PersonInviteInput = z.infer<typeof personInviteInputSchema>
 export type PersonUpdateInput = z.infer<typeof personUpdateInputSchema>
 
 export type Preferences = z.infer<typeof preferencesSchema>
+
+export type Workspace = z.infer<typeof workspaceSchema>
+
+export type WorkspaceUpdateInput = z.infer<typeof workspaceUpdateInputSchema>
