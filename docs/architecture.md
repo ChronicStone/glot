@@ -13,6 +13,7 @@ apps/web (Nuxt 4)
 
 packages/contract  oRPC contract: procedures, schemas derived from the database validators
 packages/sdk       typed clients over RPC and REST, from the contract alone
+packages/checks    the syntaxes (vue-i18n, handlebars-html) and the checks on texts, SMS length
 packages/cli       glot check for a repository's own CI, built on the checks
 packages/database  tables, relations, constants, validators, types, connection, migrations
 packages/auth      better-auth: Google, magic links, workspaces, API keys
@@ -20,6 +21,9 @@ packages/ui        tokens fed to Nuxt UI, and Glot's own components (state strip
 packages/nuxt      the in-app module for host apps
 packages/utils     generic types
 tooling/seed       development and test data
+tooling/demo       bun run demo: Postgres, a demo project, Glot, the demo app and the preview adapter
+tooling/preview-demo  a preview adapter that renders the demo emails, documents and SMS
+apps/demo          an auction site in five languages with the in-app widget
 ```
 
 ## Types flow one way
@@ -41,6 +45,7 @@ Nothing restates a type owned upstream.
 | Glossary                                            | PostgreSQL, per workspace (D-042)                          |
 | People, workspaces, memberships, sessions, API keys | PostgreSQL through better-auth                             |
 | Drafts, pending approvals                           | PostgreSQL                                                 |
+| Email, document and SMS templates, sample data      | Your product, rendered by its preview adapter (D-070)      |
 
 ## Callers
 
