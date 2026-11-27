@@ -61,6 +61,11 @@
     0 2px 4px rgb(28 25 20 / 4%), 0 12px 28px -6px rgb(28 25 20 / 16%),
     0 32px 64px -24px rgb(28 25 20 / 18%);
   --glot-shadow-dialog: 0 4px 8px rgb(28 25 20 / 5%), 0 24px 56px -12px rgb(28 25 20 / 28%);
+  --glot-control-h: 36px;
+  --glot-control-h-sm: 30px;
+  --glot-control-h-xs: 26px;
+  --glot-control-h-lg: 44px;
+  --glot-control-inset: 3px;
 }
 
 html.light {
@@ -160,6 +165,12 @@ html.dark {
   --shadow-pop: var(--glot-shadow-pop);
   --shadow-dialog: var(--glot-shadow-dialog);
   --shadow-primary: var(--glot-primary-edge);
+  --spacing-control: var(--glot-control-h);
+  --spacing-control-sm: var(--glot-control-h-sm);
+  --spacing-control-xs: var(--glot-control-h-xs);
+  --spacing-control-lg: var(--glot-control-h-lg);
+  --spacing-control-inner: calc(var(--glot-control-h) - 2 * var(--glot-control-inset));
+  --spacing-control-inner-sm: calc(var(--glot-control-h-sm) - 2 * var(--glot-control-inset));
 }
 
 @keyframes pop-in {

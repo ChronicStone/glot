@@ -154,7 +154,7 @@ function edit(concept: GlossaryTerm | undefined) {
               aria-label="Search the glossary"
             /><span class="kbd">/</span></label
           >
-          <AppSegmented v-model="filter" :items="filters" small />
+          <AppSegmented v-model="filter" :items="filters" />
         </div>
         <div class="pane-scroll">
           <div v-if="all.length === 0 && !concepts.isPending.value" class="empty">

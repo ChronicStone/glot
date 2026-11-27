@@ -87,7 +87,7 @@ const selected = computed(() =>
     :filter-fields="['label', 'native', 'code', 'description']"
     :content="{ align: 'start', sideOffset: 6 }"
     :ui="{
-      base: button ? 'btn btn-outline btn-sm sel-btn w-auto' : 'input sel',
+      base: button ? 'btn btn-outline sel-btn w-auto' : 'input sel',
       content: wide ? 'pop sel-menu wide' : 'pop sel-menu',
       viewport: 'sel-list',
       group: 'p-0',

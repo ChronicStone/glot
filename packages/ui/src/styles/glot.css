@@ -164,8 +164,8 @@
 }
 
 .btn {
-  --h: 36px;
-  height: var(--h);
+  --ctl-h: var(--ctl-row-h, var(--glot-control-h));
+  height: var(--ctl-h);
   padding: 0 14px;
   border-radius: var(--glot-r-control);
   display: inline-flex;
@@ -192,7 +192,7 @@
   height: 16px;
 }
 .btn-sm {
-  --h: 30px;
+  --ctl-h: var(--glot-control-h-sm);
   padding: 0 11px;
   border-radius: 9px;
   font-size: var(--glot-t-13);
@@ -203,7 +203,7 @@
   height: 14px;
 }
 .btn-xs {
-  --h: 26px;
+  --ctl-h: var(--glot-control-h-xs);
   padding: 0 9px;
   border-radius: 8px;
   font-size: var(--glot-t-12);
@@ -214,7 +214,7 @@
   height: 13px;
 }
 .btn-lg {
-  --h: 44px;
+  --ctl-h: var(--glot-control-h-lg);
   padding: 0 20px;
   border-radius: 13px;
   font-size: var(--glot-t-15);
@@ -710,7 +710,8 @@
   color: var(--glot-fix);
 }
 .input {
-  height: 36px;
+  --ctl-h: var(--ctl-row-h, var(--glot-control-h));
+  height: var(--ctl-h);
   border-radius: var(--glot-r-control);
   padding: 0 12px;
   display: flex;
@@ -763,7 +764,7 @@
   box-shadow: inset 0 0 0 1px var(--glot-line);
 }
 .input-lg {
-  height: 44px;
+  --ctl-h: var(--glot-control-h-lg);
   border-radius: 13px;
   padding: 0 14px;
   font-size: var(--glot-t-15);
@@ -835,8 +836,10 @@
 }
 
 .seg {
+  --ctl-h: var(--ctl-row-h, var(--glot-control-h));
+  height: var(--ctl-h);
   display: inline-flex;
-  padding: 3px;
+  padding: var(--glot-control-inset);
   gap: 2px;
   border-radius: 12px;
   background: var(--glot-sunken);
@@ -844,7 +847,7 @@
 }
 .seg > button,
 .seg > a {
-  height: 28px;
+  height: calc(var(--ctl-h) - 2 * var(--glot-control-inset));
   padding: 0 11px;
   border-radius: 9px;
   display: inline-flex;
@@ -879,20 +882,36 @@
   color: inherit;
   opacity: 0.7;
 }
-.seg-sm > button {
-  height: 24px;
+.seg-sm {
+  --ctl-h: var(--glot-control-h-sm);
+}
+.seg-sm > button,
+.seg-sm > a {
   padding: 0 9px;
   font-size: var(--glot-t-12);
   border-radius: 7px;
 }
 
+.ctl-row-sm {
+  --ctl-row-h: var(--glot-control-h-sm);
+}
+.ctl-row-xs {
+  --ctl-row-h: var(--glot-control-h-xs);
+}
+.input-sm {
+  --ctl-h: var(--glot-control-h-sm);
+  border-radius: 9px;
+  padding: 0 10px;
+  font-size: var(--glot-t-13);
+}
 .chips {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
 }
 .chip {
-  height: 30px;
+  --ctl-h: var(--ctl-row-h, var(--glot-control-h));
+  height: var(--ctl-h);
   padding: 0 11px;
   border-radius: 10px;
   display: inline-flex;
@@ -922,6 +941,9 @@
 .chip.on .count {
   color: var(--glot-sel-ink);
   opacity: 0.75;
+}
+.chip-sm {
+  --ctl-h: var(--glot-control-h-sm);
 }
 .chip .swatch {
   width: 8px;
@@ -4107,7 +4129,7 @@
   gap: 8px;
 }
 .rv-acts .btn {
-  --h: 48px;
+  --ctl-h: 48px;
   border-radius: 14px;
   font-size: var(--glot-t-15);
 }
@@ -4428,7 +4450,7 @@
     gap: 6px;
   }
   .rv-acts .btn {
-    --h: 52px;
+    --ctl-h: 52px;
     flex-direction: column;
     gap: 2px;
     font-size: 12.5px;
@@ -5610,9 +5632,6 @@
   color: var(--glot-ink-3);
   font-weight: 500;
 }
-.term-row .input {
-  height: 32px;
-}
 .gd .actions-row {
   display: flex;
   gap: 6px;
@@ -6567,7 +6586,7 @@
   padding: 24px 24px 64px;
 }
 .sys-tbl .btn {
-  --h: 28px;
+  --ctl-h: 28px;
   padding: 0 9px;
   font-size: 12.5px;
   border-radius: 8px;

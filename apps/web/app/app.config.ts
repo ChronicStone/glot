@@ -11,17 +11,17 @@ export default defineAppConfig({
       variants: {
         size: {
           xs: {
-            base: 'h-[26px] gap-[5px] rounded-lg px-[9px] text-xs',
+            base: 'h-control-xs gap-[5px] rounded-lg px-[9px] text-xs',
             leadingIcon: 'size-[13px]',
             trailingIcon: 'size-[13px]',
           },
           sm: {
-            base: 'h-[30px] gap-1.5 rounded-[9px] px-[11px] text-[13px]',
+            base: 'h-control-sm gap-1.5 rounded-[9px] px-[11px] text-[13px]',
             leadingIcon: 'size-3.5',
             trailingIcon: 'size-3.5',
           },
-          md: { base: 'h-9 gap-2 px-3.5 text-sm' },
-          lg: { base: 'h-11 gap-2 rounded-[13px] px-5 text-[15px]' },
+          md: { base: 'h-control gap-2 px-3.5 text-sm' },
+          lg: { base: 'h-control-lg gap-2 rounded-[13px] px-5 text-[15px]' },
         },
       },
       compoundVariants: [
@@ -68,8 +68,9 @@ export default defineAppConfig({
       },
       variants: {
         size: {
-          md: { base: 'h-9 px-3 text-sm' },
-          lg: { base: 'h-11 rounded-[13px] px-3.5 text-[15px]' },
+          sm: { base: 'h-control-sm rounded-[9px] px-2.5 text-[13px]' },
+          md: { base: 'h-control px-3 text-sm' },
+          lg: { base: 'h-control-lg rounded-[13px] px-3.5 text-[15px]' },
         },
       },
       compoundVariants: [
@@ -117,11 +118,11 @@ export default defineAppConfig({
     },
     tabs: {
       slots: {
-        list: 'gap-0.5 rounded-xl bg-sunken p-[3px] ring-1 ring-line ring-inset',
+        list: 'h-control gap-0.5 rounded-xl bg-sunken p-(--glot-control-inset) ring-1 ring-line ring-inset',
         indicator:
           'rounded-[9px] bg-panel shadow-lift ring-1 ring-line transition-[width,transform] duration-[180ms] ease-glot dark:bg-tile dark:ring-0',
         trigger:
-          'h-7 px-[11px] text-[13px] font-medium text-ink-3 hover:text-ink data-[state=active]:text-ink',
+          'h-control-inner px-[11px] text-[13px] font-medium text-ink-3 hover:text-ink data-[state=active]:text-ink',
       },
     },
     table: {
