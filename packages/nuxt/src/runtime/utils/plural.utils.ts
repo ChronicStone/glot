@@ -1,8 +1,5 @@
-import {
-  PLURAL,
-  PLURAL_CATEGORY_ORDER,
-  VUE_I18N_FORM_LABELS,
-} from '../constants/widget.constants.ts'
+import { integerPluralCategories } from '@glot/checks'
+import { PLURAL, VUE_I18N_FORM_LABELS } from '../constants/widget.constants.ts'
 
 function ranges(numbers: number[]) {
   const found: Array<[number, number]> = []
@@ -42,9 +39,7 @@ export function pluralLabels(options: { language: string; count: number; appRule
   const rules = new Intl.PluralRules(options.language)
   const numbers = Array.from({ length: PLURAL.SAMPLE_UP_TO + 1 }, (_, index) => index)
 
-  const categories = Object.values(PLURAL_CATEGORY_ORDER).filter((category) =>
-    numbers.some((value) => rules.select(value) === category),
-  )
+  const categories = integerPluralCategories(options.language)
 
   if (options.appRule && categories.length === options.count) {
     return categories.map(

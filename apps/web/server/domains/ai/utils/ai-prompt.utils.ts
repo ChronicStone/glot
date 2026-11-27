@@ -1,3 +1,4 @@
+import { integerPluralCategories } from '@glot/checks'
 import type { GlossaryTerm, Text } from '@glot/contract'
 import { TEXT_STATES } from '@glot/database/constants/texts'
 import { AI_BATCH } from '../constants/ai.constants.ts'
@@ -16,18 +17,6 @@ export const AI_SYSTEM_PROMPT = [
 ].join('\n')
 
 const LANGUAGE_NAMES = new Intl.DisplayNames('en', { type: 'language' })
-
-const CLDR_ORDER = ['zero', 'one', 'two', 'few', 'many', 'other']
-
-function pluralCategories(language: string) {
-  try {
-    return new Intl.PluralRules(language)
-      .resolvedOptions()
-      .pluralCategories.toSorted((a, b) => CLDR_ORDER.indexOf(a) - CLDR_ORDER.indexOf(b))
-  } catch {
-    return ['other']
-  }
-}
 
 function relevantTerms(options: {
   sourceLanguage: string
@@ -77,7 +66,7 @@ export function translationPrompt(options: {
     sourceLanguage: LANGUAGE_NAMES.of(sourceLanguage) ?? sourceLanguage,
     targetLanguage: LANGUAGE_NAMES.of(language) ?? language,
     targetLanguageCode: language,
-    pluralCategories: pluralCategories(language),
+    pluralCategories: integerPluralCategories(language),
     glossary: relevantTerms({
       sourceLanguage,
       language,

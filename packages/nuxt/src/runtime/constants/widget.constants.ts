@@ -66,15 +66,6 @@ export const PLURAL = {
   RANGES_SHOWN: 2,
 } as const
 
-export const PLURAL_CATEGORY_ORDER = {
-  ZERO: 'zero',
-  ONE: 'one',
-  TWO: 'two',
-  FEW: 'few',
-  MANY: 'many',
-  OTHER: 'other',
-} as const
-
 export const VUE_I18N_FORM_LABELS = {
   TWO: ['1', 'other'],
   THREE: ['0', '1', '2+'],

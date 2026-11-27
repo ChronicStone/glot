@@ -451,7 +451,7 @@ test('a suggestion keeps every placeholder, tag and link, and carries the contex
     sourceLanguage: 'French',
     targetLanguage: 'Polish',
     targetLanguageCode: 'pl',
-    pluralCategories: ['one', 'few', 'many', 'other'],
+    pluralCategories: ['one', 'few', 'many'],
     texts: [
       {
         id: 1,
