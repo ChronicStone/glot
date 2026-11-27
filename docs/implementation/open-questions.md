@@ -14,3 +14,4 @@ Do not answer these questions by inference. Ask the owner.
 | When does the clock release: 08:00 and 14:00 UTC, or the team's local times?                                            | 08:00 and 14:00 UTC (D-038).                                 |
 | Should undo remove a text that had no text before its release?                                                          | Refused: undo restores a previous text only.                 |
 | When does the daily digest arrive: 07:00 UTC, or the morning of each person?                                            | 07:00 UTC (D-059).                                           |
+| Should drafts written by an AI fill belong to the person who asked, or to a system author that anyone may approve?      | The person who asked (D-066).                                |
