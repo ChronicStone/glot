@@ -1,6 +1,6 @@
 import { ref, watch } from 'vue'
 import type { Ref } from 'vue'
-import { DRAG } from '../constants/widget.constants.ts'
+import { dragThreshold } from '../utils/layout.utils.ts'
 
 export function usePointerDrag(options: {
   handle: Readonly<Ref<HTMLElement | null>>
@@ -32,7 +32,7 @@ export function usePointerDrag(options: {
 
     const delta = { dx: event.clientX - start.x, dy: event.clientY - start.y }
 
-    if (!moved.value && Math.hypot(delta.dx, delta.dy) < DRAG.THRESHOLD) {
+    if (!moved.value && Math.hypot(delta.dx, delta.dy) < dragThreshold(event.pointerType)) {
       return
     }
 

@@ -72,7 +72,8 @@ export const VUE_I18N_FORM_LABELS = {
 } as const
 
 export const DRAG = {
-  THRESHOLD: 4,
+  THRESHOLD_MOUSE: 4,
+  THRESHOLD_TOUCH: 8,
   IGNORE: 'button, a, select, input, [contenteditable]',
 } as const
 

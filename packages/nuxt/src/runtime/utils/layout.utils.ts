@@ -1,4 +1,4 @@
-import { DOCK_SIDES, WIDGET_LAYOUT } from '../constants/widget.constants.ts'
+import { DOCK_SIDES, DRAG, WIDGET_LAYOUT } from '../constants/widget.constants.ts'
 import type { DockSide, ScreenPoint } from '../types/widget.types.ts'
 
 export function clampPoint(options: {
@@ -34,4 +34,8 @@ export function coveredBy(options: { rect: DOMRect; side: DockSide }) {
 
 export function nearerSide(rect: DOMRect) {
   return rect.left + rect.width / 2 < window.innerWidth / 2 ? DOCK_SIDES.LEFT : DOCK_SIDES.RIGHT
+}
+
+export function dragThreshold(pointerType: string) {
+  return pointerType === 'mouse' ? DRAG.THRESHOLD_MOUSE : DRAG.THRESHOLD_TOUCH
 }
