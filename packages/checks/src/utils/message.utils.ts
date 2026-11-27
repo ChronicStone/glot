@@ -154,7 +154,10 @@ export function markupInLinkKeys(forms: MessageNode[]) {
   return forms.some((form) =>
     form.items.some(
       (item) =>
-        item.type === MESSAGE_NODE_TYPES.LINKED && MARKUP_IN_KEY_PATTERN.test(linkedKey(item.key)),
+        item.type === MESSAGE_NODE_TYPES.LINKED &&
+        item.key.type !== MESSAGE_NODE_TYPES.NAMED &&
+        item.key.type !== MESSAGE_NODE_TYPES.LIST &&
+        MARKUP_IN_KEY_PATTERN.test(String(item.key.value ?? '')),
     ),
   )
 }

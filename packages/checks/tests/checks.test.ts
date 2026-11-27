@@ -807,8 +807,11 @@ test('a raw-text element spelled with literals is still found', () => {
   ).toContain('HTML_TAGS')
 })
 
-test('a linked text in a comment is not inside a tag, and a source failure reads as one', () => {
-  expect(checkSource({ source: 'Voir <!-- @:b --> ici' })).toEqual([])
+test('a linked text in a comment is reported as such, and a source failure reads as one', () => {
+  const [inComment] = checkSource({ source: 'Voir <!-- @:b --> ici' })
+
+  expect(inComment?.message).toContain('inside a comment')
+  expect(inComment?.message).not.toContain('inside a tag')
 
   const [failure] = checkSource({ source: 'Voir <i @:b > ici' })
 
@@ -817,4 +820,34 @@ test('a linked text in a comment is not inside a tag, and a source failure reads
   expect(checkSource({ source: 'Voir @:common.save! ici' }).map(({ code }) => code)).toContain(
     'HTML_TAGS',
   )
+})
+
+test('a literal-key linked text passes when its name is plain', () => {
+  expect(checkSource({ source: "Voir @:{'common.save'} ici" })).toEqual([])
+  expect(checkSource({ source: "Voir @:{'b<i'} ici" }).map(({ code }) => code)).toContain(
+    'HTML_TAGS',
+  )
+})
+
+test('a comment cannot start inside a tag', () => {
+  expect(checkSource({ source: '<i <!-- @:b -->>x</i>' }).map(({ code }) => code)).toContain(
+    'HTML_TAGS',
+  )
+
+  expect(codes({ source: '<i>x</i> @:b', target: '<i <!-- @:b -->>x</i>' })).toContain('HTML_TAGS')
+})
+
+test('a linked text cannot sit in a comment, and comment words cannot become attributes', () => {
+  expect(
+    checkSource({ source: 'Note <!-- @:b <i>x</i> --> fin' }).map(({ code }) => code),
+  ).toContain('HTML_TAGS')
+
+  expect(
+    codes({
+      source: 'Note <!-- remarque --> : <i>voir</i> > suite',
+      target: 'Note : <i <!-- data-probe -->>voir</i> suite',
+    }),
+  ).toContain('HTML_TAGS')
+
+  expect(checkSource({ source: "Bienvenue sur @:{'brand'} !" })).toEqual([])
 })

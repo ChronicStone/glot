@@ -12,14 +12,9 @@ const HTML_TAG_PATTERN =
 
 const HTML_ATTRIBUTE_PATTERN = /([^\s"'<>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'<>]+)))?/gu
 
-const STRAY_MARKUP_PATTERN = /<(?:\/?[a-zA-Z][a-zA-Z0-9-]*|!|\?|\/)[^<>]*/gu
+const MARKUP_OPENER_PATTERN = /<(?:\/?[a-zA-Z]|!|\?|\/)/uy
 
-const HTML_COMMENT_PATTERN = /<!--[\s\S]*?-->/gu
-
-const MARKUP_TOKEN_PATTERN = new RegExp(
-  `${HTML_COMMENT_PATTERN.source}|${HTML_TAG_PATTERN.source}`,
-  'gu',
-)
+const TAG_AT_PATTERN = new RegExp(HTML_TAG_PATTERN.source, 'uy')
 
 const RAW_TEXT = new Set<string>(Object.values(RAW_TEXT_ELEMENTS))
 
@@ -94,24 +89,59 @@ export function htmlTagRanges(message: string) {
   }))
 }
 
-export function strayMarkupOf(message: string) {
-  const tags = htmlTagRanges(message)
+function markupTokensOf(message: string) {
+  const tokens: Array<{ kind: 'tag' | 'comment' | 'stray'; text: string; closed: boolean }> = []
+  let at = message.indexOf('<')
 
-  return [...message.matchAll(STRAY_MARKUP_PATTERN)].flatMap((match) =>
-    tags.some(({ start, end }) => match.index >= start && match.index < end)
-      ? []
-      : [{ markup: match[0].trim(), closed: message.includes('>', match.index) }],
+  while (at !== -1) {
+    const commentEnd = message.startsWith('<!--', at) ? message.indexOf('-->', at + 4) : -1
+
+    TAG_AT_PATTERN.lastIndex = at
+    MARKUP_OPENER_PATTERN.lastIndex = at
+
+    const tag = commentEnd === -1 ? TAG_AT_PATTERN.exec(message) : null
+    const opener = commentEnd === -1 && !tag && MARKUP_OPENER_PATTERN.test(message)
+    const close = message.indexOf('>', at)
+
+    const end =
+      commentEnd !== -1
+        ? commentEnd + 3
+        : tag
+          ? at + tag[0].length
+          : opener
+            ? close === -1
+              ? message.length
+              : close + 1
+            : at + 1
+
+    if (commentEnd !== -1 || tag || opener) {
+      tokens.push({
+        kind: commentEnd !== -1 ? 'comment' : tag ? 'tag' : 'stray',
+        text: message.slice(at, end),
+        closed: commentEnd !== -1 || Boolean(tag) || close !== -1,
+      })
+    }
+
+    at = message.indexOf('<', end)
+  }
+
+  return tokens
+}
+
+export function strayMarkupOf(message: string) {
+  return markupTokensOf(message).flatMap(({ kind, text, closed }) =>
+    kind === 'stray' ? [{ markup: text.trim(), closed }] : [],
   )
 }
 
 export function htmlCommentsOf(message: string) {
-  return [...message.matchAll(MARKUP_TOKEN_PATTERN)].flatMap((match) =>
-    match[0].startsWith('<!--') ? [match[0]] : [],
-  )
+  return markupTokensOf(message).flatMap(({ kind, text }) => (kind === 'comment' ? [text] : []))
 }
 
 export function withoutHtmlComments(message: string) {
-  return message.replace(MARKUP_TOKEN_PATTERN, (token) => (token.startsWith('<!--') ? ' ' : token))
+  return markupTokensOf(message)
+    .filter(({ kind }) => kind === 'comment')
+    .reduce((rest, { text }) => rest.replace(text, ' '), message)
 }
 
 export function rawTextElementsOf(message: string) {
@@ -165,9 +195,14 @@ export function linksInsideTags(message: string) {
 
   return (
     opened +
-    [
-      ...[...message.matchAll(HTML_TAG_PATTERN)].map((match) => match[0]),
-      ...strayMarkupOf(message).map(({ markup }) => markup),
-    ].filter((markup) => markup.includes(LINK_MARK)).length
+    markupTokensOf(message).filter(
+      ({ kind, text }) => kind !== 'comment' && text.includes(LINK_MARK),
+    ).length
   )
+}
+
+export function linksInsideComments(message: string) {
+  return markupTokensOf(message).filter(
+    ({ kind, text }) => kind === 'comment' && text.includes(LINK_MARK),
+  ).length
 }

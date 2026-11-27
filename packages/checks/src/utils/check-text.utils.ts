@@ -13,6 +13,7 @@ import {
   hasAbruptComment,
   htmlCommentsOf,
   isActiveAttribute,
+  linksInsideComments,
   linksInsideTags,
   rawTextElementsOf,
   htmlLinksOf,
@@ -381,6 +382,14 @@ export function checkText(input: {
     )
   })
 
+  if (linkMarkedForms(target.forms).some((form) => linksInsideComments(form) > 0)) {
+    failures.push({
+      code: CHECK_CODES.HTML_TAGS,
+      message:
+        'A linked text sits inside a comment: its words could close the comment. Move it out of the comment.',
+    })
+  }
+
   if (markupInLinkKeys(target.forms)) {
     failures.push({
       code: CHECK_CODES.HTML_TAGS,
@@ -389,9 +398,7 @@ export function checkText(input: {
     })
   }
 
-  if (
-    linkMarkedForms(target.forms).some((form) => linksInsideTags(withoutHtmlComments(form)) > 0)
-  ) {
+  if (linkMarkedForms(target.forms).some((form) => linksInsideTags(form) > 0)) {
     failures.push({
       code: CHECK_CODES.HTML_TAGS,
       message:
