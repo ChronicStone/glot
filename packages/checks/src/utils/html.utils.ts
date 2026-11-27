@@ -9,3 +9,10 @@ export function htmlTagsOf(message: string) {
 export function withoutHtmlTags(message: string) {
   return message.replace(HTML_TAG_PATTERN, ' ')
 }
+
+export function htmlTagRanges(message: string) {
+  return [...message.matchAll(HTML_TAG_PATTERN)].map((match) => ({
+    start: match.index,
+    end: match.index + match[0].length,
+  }))
+}

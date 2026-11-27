@@ -1,5 +1,5 @@
 import { expect, test } from 'vite-plus/test'
-import { checkText, checkWords, countWords } from '../src/index.ts'
+import { checkText, checkWords, countWords, protectMessage, restoreMessage } from '../src/index.ts'
 
 function codes(input: { source: string; target: string; avoid?: string[] }) {
   return checkText({ avoid: [], ...input }).map((failure) => failure.code)
@@ -168,4 +168,56 @@ test('words are counted in the plain text, without placeholders, tags or the plu
   expect(countWords('{count} item | {count} items')).toBe(2)
   expect(countWords("Écrire à {'@'}glot")).toBe(3)
   expect(countWords('')).toBe(0)
+})
+
+test('placeholders, links, literals and tags become numbered tokens and come back byte for byte', () => {
+  for (const message of [
+    'Fin le {date}',
+    '{count} enchère | {count} enchères',
+    "@:common.save et @.lower:{'x'} {0}",
+    'J’accepte les <a href="/terms" class="x">conditions</a> {\'@\'}x',
+    'Ligne<br/>deux {a}{b} <b>{a}</b>',
+    'Déjà ⟦1⟧ écrit',
+    '{broken',
+    'Sans rien',
+  ]) {
+    const { text, tokens } = protectMessage(message)
+
+    expect(restoreMessage({ text, tokens })).toEqual({ value: message, problems: [] })
+  }
+
+  expect(protectMessage('{count} enchère | {count} enchères')).toEqual({
+    text: '⟦1⟧ enchère | ⟦2⟧ enchères',
+    tokens: ['{count}', '{count}'],
+  })
+
+  expect(protectMessage('J’accepte les <a href="/t">conditions</a> {n}').text).toBe(
+    'J’accepte les ⟦1⟧conditions⟦2⟧ ⟦3⟧',
+  )
+})
+
+test('tokens may be reordered or spaced, but never dropped, repeated or invented', () => {
+  const { tokens } = protectMessage('{a} et <b>{b}</b>')
+
+  expect(restoreMessage({ text: '⟦4⟧ i ⟦2⟧⟦ 3 ⟧⟦1⟧', tokens })).toEqual({
+    value: '</b> i <b>{b}{a}',
+    problems: [],
+  })
+
+  expect(restoreMessage({ text: '⟦1⟧ ⟦2⟧ ⟦3⟧', tokens }).problems).toEqual([
+    '⟦4⟧ is missing: it stands for </b>',
+  ])
+
+  expect(restoreMessage({ text: '⟦1⟧ ⟦2⟧ ⟦2⟧ ⟦3⟧ ⟦4⟧', tokens }).problems).toEqual([
+    '⟦2⟧ appears 2 times instead of once',
+  ])
+
+  expect(restoreMessage({ text: '⟦1⟧ ⟦2⟧ ⟦3⟧ ⟦4⟧ ⟦9⟧', tokens })).toEqual({
+    value: null,
+    problems: ['⟦9⟧ does not exist in the source text'],
+  })
+
+  expect(restoreMessage({ text: '⟦1⟧ ⟦2⟧ ⟦3⟧ ⟦4⟧ ⟦5', tokens }).problems).toEqual([
+    'A ⟦ or ⟧ is left over: a token is broken',
+  ])
 })

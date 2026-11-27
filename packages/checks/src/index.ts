@@ -8,6 +8,8 @@ export { checkWords } from './utils/words.utils.ts'
 
 export { countWords } from './utils/count-words.utils.ts'
 
+export { protectMessage, restoreMessage } from './utils/protect.utils.ts'
+
 export { flattenMessages, parseJsonFile } from './utils/flatten.utils.ts'
 
 export { messageSegments } from './utils/message.utils.ts'
