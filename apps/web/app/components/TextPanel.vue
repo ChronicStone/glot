@@ -4,6 +4,7 @@ import { DRAFT_STATUSES } from '@glot/database/constants/drafts'
 import { TEXT_STATES } from '@glot/database/constants/texts'
 import GlotTextValue from '@glot/ui/components/GlotTextValue.vue'
 import { TEXT_STATE_CLASSES } from '@glot/ui/constants'
+import { useForm } from '@tanstack/vue-form'
 import { useMutation } from '@tanstack/vue-query'
 import { TEXT_PANEL_TABS, TEXT_STATE_PRIORITY } from '../constants/texts.constants.ts'
 
@@ -17,7 +18,6 @@ const { project } = useCurrentProject()
 const { write, approve } = useRights()
 const tab = ref<string>(TEXT_PANEL_TABS.LANGUAGES)
 const chosen = ref<string | undefined>()
-const value = ref<string>('')
 const body = ref<string>('')
 const commenting = ref<boolean>(false)
 const showReviewed = ref<boolean>(false)
@@ -57,15 +57,24 @@ const original = computed(
   () => (own.value ? working.value?.draft?.value : working.value?.value) ?? '',
 )
 
-const changed = computed(() => value.value.trim() !== original.value.trim())
-
-watch(
-  original,
-  (next) => {
-    value.value = next
+const form = useForm({
+  defaultValues: { value: original.value },
+  validators: {
+    onMount: ({ value }) => textCheckError({ source: text.source.value, target: value.value }),
+    onChange: ({ value }) => textCheckError({ source: text.source.value, target: value.value }),
   },
-  { immediate: true },
-)
+})
+
+const value = form.useSelector((state) => state.values.value)
+const invalid = form.useSelector((state) => !state.isValid || !state.values.value.trim())
+const error = form.useSelector((state) => errorMessage(state.errors))
+const changed = computed(() => value.value.trim() !== original.value.trim())
+const [DefineEditor, UseEditor] = createReusableTemplate()
+
+watch(original, async (next) => {
+  form.reset({ value: next })
+  await form.validate('change')
+})
 
 const target = computed(() => ({
   projectId: project.value?.id ?? '',
@@ -124,11 +133,24 @@ const commentNow = useMutation(
 )
 
 defineShortcuts({
-  a: () => canApprove.value && approveNow.mutate(),
+  a: () => canApprove.value && !invalid.value && approveNow.mutate(),
 })
 </script>
 
 <template>
+  <DefineEditor>
+    <form.Field v-slot="{ field }" name="value">
+      <label :class="{ 'is-error': error }" class="input is-focus"
+        ><input
+          :value="field.state.value"
+          :aria-label="`${languageName(working?.language ?? '')} text`"
+          :aria-invalid="Boolean(error)"
+          autocomplete="off"
+          @input="field.handleChange(inputValue($event))"
+      /></label>
+      <p v-if="error" class="hint err" role="alert">{{ error }}</p>
+    </form.Field>
+  </DefineEditor>
   <div class="insp-h">
     <span class="insp-key"
       ><span class="key">{{ key }}</span
@@ -164,13 +186,13 @@ defineShortcuts({
     <TextLanguage
       v-for="translation in pending"
       :key="translation.language"
-      v-model="value"
       :translation="translation"
       :working="translation.language === working?.language"
       :editable="canWrite || canApprove"
       :own-draft="own && translation.language === working?.language"
       @select="chosen = translation.language"
     >
+      <template #editor><UseEditor /></template>
       <div v-if="commenting && translation.language === working?.language" class="editor">
         <label class="input textarea">
           <textarea v-model="body" rows="2" placeholder="Write a comment" aria-label="Comment" />
@@ -204,13 +226,14 @@ defineShortcuts({
       <TextLanguage
         v-for="translation in reviewed"
         :key="translation.language"
-        v-model="value"
         :translation="translation"
         :working="translation.language === working?.language"
         :editable="canWrite || canApprove"
         :own-draft="false"
         @select="chosen = translation.language"
-      />
+      >
+        <template #editor><UseEditor /></template>
+      </TextLanguage>
     </template>
   </div>
   <div v-else-if="tab === TEXT_PANEL_TABS.HISTORY" class="insp-body" style="padding: 6px 20px 12px">
@@ -238,7 +261,7 @@ defineShortcuts({
         type="button"
         class="btn btn-primary"
         :class="{ 'is-loading': approveNow.isPending.value }"
-        :disabled="!value.trim()"
+        :disabled="invalid"
         @click="approveNow.mutate()"
       >
         <UIcon name="i-lucide-check" />Approve<span class="kbd">A</span>
@@ -249,7 +272,7 @@ defineShortcuts({
         type="button"
         class="btn btn-ghost"
         :class="{ 'is-loading': saveNow.isPending.value }"
-        :disabled="!changed || !value.trim()"
+        :disabled="!changed || invalid"
         @click="saveNow.mutate({ ...target, value })"
       >
         Save draft
@@ -258,7 +281,7 @@ defineShortcuts({
         type="button"
         class="btn btn-primary"
         :class="{ 'is-loading': sendNow.isPending.value }"
-        :disabled="!value.trim()"
+        :disabled="invalid"
         @click="sendNow.mutate()"
       >
         Send for review

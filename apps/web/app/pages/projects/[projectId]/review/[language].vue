@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { CHECK_CODES } from '@glot/checks'
+import { CHECK_CODES, checkText } from '@glot/checks'
 import GlotTextValue from '@glot/ui/components/GlotTextValue.vue'
+import { useForm } from '@tanstack/vue-form'
 import { useMutation, useQuery } from '@tanstack/vue-query'
 import {
   CHECK_LABELS,
@@ -18,7 +19,6 @@ const { approve: approvable } = useRights()
 const projectId = computed(() => project.value?.id ?? '')
 const language = computed(() => String(route.params.language))
 const mode = ref<'view' | 'edit' | 'comment'>('view')
-const forms = ref<string[]>([])
 const body = ref<string>('')
 const outcomes = ref<Record<string, string>>({})
 const started = ref<number>(Date.now())
@@ -134,13 +134,6 @@ const reason = computed(() => {
     : REVIEW_REASON_LABELS[item.reason]
 })
 
-const checks = computed(() =>
-  Object.values(CHECK_CODES).map((code) => ({
-    code,
-    failure: failures.value.find((failure) => failure.code === code),
-  })),
-)
-
 watch(
   () => (current.value ? keyOf(current.value) : ''),
   () => {
@@ -186,12 +179,50 @@ const approve = useMutation({
 })
 
 const approveEdited = useMutation({
-  mutationFn: () =>
-    $api.reviews.editAndApprove.call({ ...target(), value: forms.value.join(' | ') }),
+  mutationFn: (value: string) => $api.reviews.editAndApprove.call({ ...target(), value }),
   onSuccess: () =>
     leave({ outcome: SESSION_OUTCOMES.EDITED, message: 'Approved with your change' }),
   onError: failed,
 })
+
+const noForms: string[] = []
+
+const editor = useForm({
+  defaultValues: { forms: noForms },
+  validators: {
+    onChange: ({ value }) =>
+      textCheckError({
+        source: current.value?.text.source.value ?? '',
+        target: value.forms.join(' | '),
+      }),
+  },
+  onSubmit: ({ value }) =>
+    approveEdited.mutateAsync(value.forms.join(' | ')).catch(() => undefined),
+})
+
+const editInvalid = editor.useSelector(
+  (state) => !state.isValid || state.values.forms.some((form) => !form.trim()),
+)
+
+const editError = editor.useSelector((state) => errorMessage(state.errors))
+const edited = editor.useSelector((state) => state.values.forms.join(' | '))
+
+const shownFailures = computed(() =>
+  mode.value === 'edit'
+    ? checkText({
+        source: current.value?.text.source.value ?? '',
+        target: edited.value,
+        avoid: hits.value.flatMap((hit) => hit.terms[language.value]?.avoid ?? []),
+      })
+    : failures.value,
+)
+
+const checks = computed(() =>
+  Object.values(CHECK_CODES).map((code) => ({
+    code,
+    failure: shownFailures.value.find((failure) => failure.code === code),
+  })),
+)
 
 const askChange = useMutation({
   mutationFn: () =>
@@ -239,7 +270,7 @@ function skip() {
 
 function edit() {
   if (idle()) {
-    forms.value = proposed.value.split('|').map((form) => form.trim())
+    editor.reset({ forms: proposed.value.split('|').map((form) => form.trim()) })
     mode.value = 'edit'
   }
 }
@@ -419,17 +450,26 @@ defineShortcuts({
             >
               <div class="n"><b>{{ form.name }}</b>{{ form.label }}</div>
               <div class="v">
-                <label
-                  v-if="mode === 'edit'"
-                  class="input input-lg is-focus"
-                  style="font-size: 18px"
-                  ><input v-model="forms[index]" :aria-label="form.name" autofocus
-                /></label>
+                <editor.Field v-if="mode === 'edit'" v-slot="{ field }" :name="`forms[${index}]`">
+                  <label
+                    :class="{ 'is-error': editError }"
+                    class="input input-lg is-focus"
+                    style="font-size: 18px"
+                    ><input
+                      :value="field.state.value"
+                      :aria-label="form.name"
+                      :aria-invalid="Boolean(editError)"
+                      autofocus
+                      @input="field.handleChange(inputValue($event))"
+                      @keydown.enter.prevent="editor.handleSubmit()"
+                  /></label>
+                </editor.Field>
                 <GlotTextValue v-else :value="form.value" />
               </div>
               <div class="pill-slot" />
             </div>
           </div>
+          <p v-if="mode === 'edit' && editError" class="hint err" role="alert">{{ editError }}</p>
           <div class="checks-row">
             <span
               v-for="check in checks"
@@ -438,7 +478,7 @@ defineShortcuts({
               class="pill"
               :title="check.failure?.message"
               ><UIcon :name="check.failure ? 'i-lucide-triangle-alert' : 'i-lucide-check'" />{{
-                check.failure ? check.failure.message : CHECK_LABELS[check.code]
+                check.failure && mode !== 'edit' ? check.failure.message : CHECK_LABELS[check.code]
               }}</span
             >
           </div>
@@ -476,7 +516,8 @@ defineShortcuts({
               type="button"
               class="btn btn-primary"
               :class="{ 'is-loading': approveEdited.isPending.value }"
-              @click="approveEdited.mutate()"
+              :disabled="editInvalid"
+              @click="editor.handleSubmit()"
             >
               <UIcon name="i-lucide-check" />Approve with change
             </button>

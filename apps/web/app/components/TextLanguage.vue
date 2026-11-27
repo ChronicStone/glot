@@ -12,7 +12,6 @@ const { translation } = defineProps<{
   ownDraft: boolean
 }>()
 
-const value = defineModel<string>({ default: '' })
 const emit = defineEmits<{ select: [] }>()
 
 const byline = computed(() => {
@@ -52,12 +51,7 @@ const byline = computed(() => {
       >
     </div>
     <div v-if="working && editable" class="editor">
-      <label class="input is-focus"
-        ><input
-          v-model="value"
-          :aria-label="`${languageName(translation.language)} text`"
-          autocomplete="off"
-      /></label>
+      <slot name="editor" />
     </div>
     <div v-else-if="translation.value" class="val">
       <GlotTextValue :value="translation.value" />
