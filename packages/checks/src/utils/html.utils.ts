@@ -10,6 +10,8 @@ const STRAY_OPENER_PATTERN = /^<(?:\/?[a-zA-Z][a-zA-Z0-9-]*|!|\?|\/)/u
 
 const STRAY_MARKUP_PATTERN = /<(?:\/?[a-zA-Z][a-zA-Z0-9-]*|!|\?|\/)[^<>]*/gu
 
+const HTML_COMMENT_PATTERN = /<!--[\s\S]*?-->/gu
+
 const VOID_ELEMENTS = new Set<string>(Object.values(HTML_VOID_ELEMENTS))
 
 export function htmlTagsOf(message: string): HtmlTag[] {
@@ -83,4 +85,16 @@ export function strayMarkupOf(message: string) {
 
 export function strayOpenerOf(markup: string) {
   return STRAY_OPENER_PATTERN.exec(markup)?.[0] ?? markup
+}
+
+export function htmlCommentsOf(message: string) {
+  return [...message.matchAll(HTML_COMMENT_PATTERN)].map((match) => match[0])
+}
+
+export function withoutHtmlComments(message: string) {
+  return message.replace(HTML_COMMENT_PATTERN, ' ')
+}
+
+export function bareClosersOf(message: string) {
+  return withoutHtmlTags(message).split('>').length - 1
 }

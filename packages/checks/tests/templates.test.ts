@@ -242,3 +242,26 @@ test('an unescaped placeholder cannot take the place of an escaped one in a link
     }),
   ).toEqual(['MARKUP'])
 })
+
+test('an email comment stays whole, so it cannot be left open to hide the rest of the email', () => {
+  const source = '<p>Payez <!--[if mso]><b>x</b><![endif]--> la suite</p>'
+
+  expect(
+    codes({ source, target: '<p>Pay <!--[if mso]><b>x</b><![endif]--> the rest</p>' }),
+  ).toEqual([])
+
+  expect(codes({ source, target: '<p>Pay <!--[if mso]> the rest <b>x</b></p>' })).toEqual([
+    'MARKUP',
+  ])
+})
+
+test('email links keep the order of the source', () => {
+  const source = '<a href="{{confirmUrl}}">Confirmer</a> ou <a href="{{cancelUrl}}">annuler</a>'
+
+  expect(
+    codes({
+      source,
+      target: '<a href="{{cancelUrl}}">Confirm</a> or <a href="{{confirmUrl}}">cancel</a>',
+    }),
+  ).toEqual(['LINKS'])
+})

@@ -7,6 +7,7 @@ import {
   UNKNOWN_SYNTAX_PROBLEM,
 } from '../constants/syntax.constants.ts'
 import type { Syntax, TextSegment } from '../types/checks.types.ts'
+import { withoutHtmlTags } from './html.utils.ts'
 import { placeholderStandIn } from './stand-in.utils.ts'
 import { templateSegments } from './template.utils.ts'
 
@@ -92,6 +93,12 @@ function renderedItem(item: MessageNode['items'][number], options: { written: bo
   }
 
   return options.written ? '{}' : placeholderStandIn('')
+}
+
+const STRAY_INTO_PLACEHOLDER_PATTERN = /<(?:\/?[a-zA-Z][a-zA-Z0-9-]*|!|\?)[^<>]*?(?:\{|@[.:])/u
+
+export function strayRunsIntoPlaceholder(written: string) {
+  return STRAY_INTO_PLACEHOLDER_PATTERN.test(withoutHtmlTags(written))
 }
 
 export function renderedForms(forms: MessageNode[], options: { written: boolean }) {

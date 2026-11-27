@@ -484,3 +484,40 @@ test('a failure names a placeholder as the translator wrote it', () => {
       .join(' '),
   ).toContain('<name onmouseover="alert(1)">')
 })
+
+test('a linked text cannot finish a stray < of another text, in either order', () => {
+  expect(codes({ source: 'x<i', target: 'x<i' })).toEqual([])
+
+  expect(
+    codes({
+      source: 'Vrai si @:ineq alors',
+      target: 'True if @:ineq onmouseover=alert(1) style=position:fixed;inset:0>then',
+    }),
+  ).toEqual(['HTML_TAGS'])
+
+  expect(codes({ source: 'Si x<i @:yes', target: 'If x<i @:yes' })).toEqual(['HTML_TAGS'])
+  expect(
+    codes({ source: 'oui', target: ' onmouseover=alert(1) style=position:fixed;inset:0>yes' }),
+  ).toEqual(['HTML_TAGS'])
+  expect(codes({ source: 'Prix > 10 €', target: 'Price > €10' })).toEqual([])
+})
+
+test('a vue-i18n comment the source has can be kept, and none can be added or dropped', () => {
+  expect(codes({ source: 'Bonjour <!-- note --> toi', target: 'Hello <!-- note --> you' })).toEqual(
+    [],
+  )
+  expect(codes({ source: 'Bonjour toi', target: 'Hello <!-- note --> you' })).toEqual(['HTML_TAGS'])
+  expect(codes({ source: 'Bonjour <!-- note --> toi', target: 'Hello you' })).toEqual(['HTML_TAGS'])
+})
+
+test('links keep the order of the source, so a confirm link cannot become the cancel one', () => {
+  const source = '<a href="{confirm}">Confirmer</a> ou <a href="{cancel}">annuler</a>'
+
+  expect(
+    codes({ source, target: '<a href="{confirm}">Confirm</a> or <a href="{cancel}">cancel</a>' }),
+  ).toEqual([])
+
+  expect(
+    codes({ source, target: '<a href="{cancel}">Confirm</a> or <a href="{confirm}">cancel</a>' }),
+  ).toEqual(['LINKS'])
+})

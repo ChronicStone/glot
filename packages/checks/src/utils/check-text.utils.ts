@@ -7,13 +7,22 @@ import {
 } from '../constants/syntax.constants.ts'
 import type { CheckCode, CheckFailure, Syntax } from '../types/checks.types.ts'
 import {
+  bareClosersOf,
+  htmlCommentsOf,
   htmlLinksOf,
   htmlMarkupOf,
   htmlTagsNest,
   strayMarkupOf,
   strayOpenerOf,
+  withoutHtmlComments,
 } from './html.utils.ts'
-import { parseMessage, placeholdersOf, plainTextOf, renderedForms } from './message.utils.ts'
+import {
+  parseMessage,
+  placeholdersOf,
+  plainTextOf,
+  renderedForms,
+  strayRunsIntoPlaceholder,
+} from './message.utils.ts'
 import { integerPluralCategories } from './plural.utils.ts'
 import { parseTemplate, templatePlainText, templateRendered } from './template.utils.ts'
 import { wordFailures } from './words.utils.ts'
@@ -91,42 +100,80 @@ function counterpart(input: {
   )
 }
 
+function firstSeen(links: string[]) {
+  return [...new Set(links)]
+}
+
+function commentProblems(input: { source: string[]; target: string[]; exact: boolean }) {
+  const source = input.source.flatMap(htmlCommentsOf)
+  const target = input.target.flatMap(htmlCommentsOf)
+
+  if (input.exact) {
+    const comments = mismatch({ source, target })
+
+    return comments ? [`The comments must stay as the source writes them. ${comments}`] : []
+  }
+
+  return target.length > source.length
+    ? ['A comment is not in the source text.']
+    : target.length < source.length
+      ? ['A comment of the source text is missing.']
+      : []
+}
+
 function markupFailures(input: {
   source: string[]
   target: string[]
   links: { source: string[]; target: string[] }
   freeValues: readonly string[]
   exactStray: boolean
+  strayIntoPlaceholder: boolean
   heading: string
   code: CheckCode
   isLink: (link: string) => boolean
   linkRule: string
 }) {
   const failures: CheckFailure[] = []
-  const sourceStray = input.source.flatMap(strayMarkupOf)
+  const source = input.source.map(withoutHtmlComments)
+  const target = input.target.map(withoutHtmlComments)
+  const sourceStray = source.flatMap(strayMarkupOf)
   const sourceSegments = new Set(sourceStray.map(({ markup }) => markup))
   const sourceOpeners = new Set(sourceStray.map(({ markup }) => strayOpenerOf(markup)))
-  const problems = new Set<string>()
+  const sourceClosers = source.some((form) => bareClosersOf(form) > 0)
 
-  input.target.forEach((form, index) => {
-    const source = counterpart({ ...input, index })
+  const problems = new Set<string>(
+    commentProblems({ source: input.source, target: input.target, exact: input.exactStray }),
+  )
+
+  if (input.strayIntoPlaceholder) {
+    problems.add('A < runs into a placeholder or a linked text, which could finish it as a tag.')
+  }
+
+  target.forEach((form, index) => {
+    const counterpartForm = counterpart({ ...input, source, target, index })
 
     const markup = mismatch({
-      source: htmlMarkupOf(source, { freeValues: input.freeValues }),
+      source: htmlMarkupOf(counterpartForm, { freeValues: input.freeValues }),
       target: htmlMarkupOf(form, { freeValues: input.freeValues }),
     })
 
-    const stray = strayMarkupOf(form).filter(({ markup, closed }) =>
+    const stray = strayMarkupOf(form).filter(({ markup: found, closed }) =>
       input.exactStray
-        ? !sourceSegments.has(markup)
-        : closed || markup.includes('=') || !sourceOpeners.has(strayOpenerOf(markup)),
+        ? !sourceSegments.has(found)
+        : closed || found.includes('=') || !sourceOpeners.has(strayOpenerOf(found)),
     )
 
     if (stray.length > 0) {
-      problems.add(`A tag or comment is left open: ${stray.map(({ markup }) => markup).join(' ')}.`)
+      problems.add(
+        `A tag or comment is left open: ${stray.map(({ markup: found }) => found).join(' ')}.`,
+      )
     }
 
-    if (!markup && htmlTagsNest(source) && !htmlTagsNest(form)) {
+    if (!sourceClosers && bareClosersOf(form) > 0) {
+      problems.add('A > is not in the source text: it could close a tag.')
+    }
+
+    if (!markup && htmlTagsNest(counterpartForm) && !htmlTagsNest(form)) {
       problems.add('The tags close in a different order than they open.')
     }
 
@@ -140,13 +187,19 @@ function markupFailures(input: {
   }
 
   const sourceLinks = new Set(input.links.source)
-
   const refused = input.links.target.filter((link) => !sourceLinks.has(link) && !input.isLink(link))
+  const kept = firstSeen(input.links.target.filter((link) => sourceLinks.has(link)))
+  const expected = firstSeen(input.links.source).filter((link) => kept.includes(link))
 
   if (refused.length > 0) {
     failures.push({
       code: CHECK_CODES.LINKS,
       message: `${input.linkRule} Not allowed: ${refused.join(' ')}.`,
+    })
+  } else if (kept.join('\n') !== expected.join('\n')) {
+    failures.push({
+      code: CHECK_CODES.LINKS,
+      message: `The links must keep the order of the source text: ${expected.join(', ')}.`,
     })
   }
 
@@ -181,6 +234,7 @@ function checkTemplate(input: { source: string; target: string; avoid: string[];
       links: { source: htmlLinksOf(input.source), target: htmlLinksOf(input.target) },
       freeValues: [],
       exactStray: true,
+      strayIntoPlaceholder: false,
       heading: 'The markup and links must match the source text: only a Developer changes them.',
       code: CHECK_CODES.MARKUP,
       isLink: isTemplateLink,
@@ -269,6 +323,9 @@ export function checkText(input: {
       },
       freeValues: Object.values(MESSAGE_LOCALIZED_ATTRIBUTES),
       exactStray: false,
+      strayIntoPlaceholder: renderedForms(target.forms, { written: true }).some(
+        strayRunsIntoPlaceholder,
+      ),
       heading: 'The HTML tags must match the source text.',
       code: CHECK_CODES.HTML_TAGS,
       isLink: isMessageLink,
