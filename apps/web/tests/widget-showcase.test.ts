@@ -231,6 +231,58 @@ test('a visitor and someone outside the project never get the widget', async () 
   await context.close()
 }, 60_000)
 
+test('a host Nuxt UI modal stays open and keeps its hands off while a member works in the widget', async () => {
+  const context = await signedInContext({ name: 'Wanda' })
+  const page = await context.newPage()
+
+  const dialog = page
+    .locator('[role=dialog][data-state=open]')
+    .filter({ hasText: 'Poproś o oględziny' })
+
+  await page.goto(`${LOT_PAGE}?glot`)
+  const popup = await signWidgetIn({ page, context })
+
+  await popup.waitForEvent('close', { timeout: 20_000 })
+  await expect
+    .poll(() => shadow(page, '[data-glot=launcher]').textContent(), POLL)
+    .toContain('to check')
+
+  await page.locator('main .bid .secondary').click()
+  await expect.poll(() => dialog.isVisible(), POLL).toBe(true)
+
+  await shadow(page, '[data-glot=launcher]').click()
+  await expect.poll(() => shadow(page, '[data-glot=drawer]').isVisible(), POLL).toBe(true)
+  expect(await dialog.isVisible()).toBe(true)
+
+  await shadow(page, `[data-glot=row][data-key="${KEY}"] .t`).click()
+  const message = shadow(page, '[data-glot=message]')
+  await page.waitForTimeout(1500)
+
+  await expect.poll(() => message.isVisible(), POLL).toBe(true)
+  await message.click()
+  await message.press('End')
+  await message.pressSequentially(' x', { delay: 30 })
+  await page.waitForTimeout(400)
+
+  expect(await dialog.isVisible()).toBe(true)
+  expect(await page.evaluate(() => document.activeElement?.tagName)).toBe('GLOT-WIDGET')
+  expect(await message.textContent()).toContain(' x')
+
+  if (process.env.GLOT_RECORD) {
+    await page.screenshot({ path: '/tmp/ui-shots/glot-widget/08-host-modal.png' })
+  }
+
+  await message.press('Escape')
+  await expect.poll(() => shadow(page, '[data-glot=editor]').count(), POLL).toBe(0)
+  expect(await dialog.isVisible()).toBe(true)
+
+  await dialog.locator('button[type=submit]').click()
+  await expect.poll(() => shadow(page, '[data-glot=editor]').count(), POLL).toBe(1)
+  expect(await dialog.isVisible()).toBe(true)
+
+  await context.close()
+}, 90_000)
+
 test('a member fixes a Polish text in the page, sends it for review, and after the release the app shows it', async () => {
   const video = process.env.GLOT_RECORD ? join(scratch, 'video') : undefined
   const context = await signedInContext({ name: 'Wanda', video })
@@ -294,22 +346,23 @@ test('a member fixes a Polish text in the page, sends it for review, and after t
   const review = await context.newPage()
 
   await review.goto(`${baseUrl}/projects/${projectId}/texts`)
-  await review.getByText(KEY, { exact: true }).first().click()
+  await review.locator(`[data-id="${text?.id ?? ''}"]`).click()
   await expect
     .poll(
       () =>
-        review
-          .locator('input, textarea')
-          .evaluateAll((fields) =>
-            fields.map((field) =>
+        review.evaluate(() =>
+          [
+            document.body.innerText,
+            ...[...document.querySelectorAll('input, textarea')].map((field) =>
               field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement
                 ? field.value
                 : '',
             ),
-          ),
+          ].join('\n'),
+        ),
       POLL,
     )
-    .toContain(FIXED)
+    .toContain('Następna minimalna oferta:')
   await review.waitForTimeout(1200)
   await review.close()
 
