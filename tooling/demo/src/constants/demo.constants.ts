@@ -5,6 +5,7 @@ export const DEMO_POSTGRES_URL = 'postgres://glot:glot@localhost:54329'
 export const DEMO_PORTS = {
   GLOT: 3100,
   APP: 3200,
+  PREVIEW: 3300,
 } as const
 
 export const DEMO_REPOSITORIES_FOLDER = '.data/demo-repositories'

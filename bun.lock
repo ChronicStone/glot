@@ -217,6 +217,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@glot/database": "workspace:*",
+        "@glot/preview-demo": "workspace:*",
         "@glot/seed": "workspace:*",
         "drizzle-orm": "catalog:",
         "pg": "catalog:",

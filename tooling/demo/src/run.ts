@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
 import { resolve } from 'node:path'
 import { createDatabase } from '@glot/database/server'
+import { startPreviewDemo } from '@glot/preview-demo'
 import { seedDemoRepository } from '@glot/seed/repository'
 import { seedDemo } from '@glot/seed'
 import { migrate } from 'drizzle-orm/node-postgres/migrator'
@@ -42,8 +43,18 @@ await migrate(connection.drizzle, {
   migrationsFolder: resolve(root, 'packages/database/migrations'),
 })
 
-const { project } = await seedDemo(connection.db)
-const { directory } = await seedDemoRepository({ root: repositories, withApp: true })
+const previews = await startPreviewDemo({
+  port: DEMO_PORTS.PREVIEW,
+  onTest: (line) => process.stdout.write(`[preview] ${line}\n`),
+})
+
+const { project } = await seedDemo(connection.db, { previewUrl: previews.url })
+
+const { directory } = await seedDemoRepository({
+  root: repositories,
+  withApp: true,
+  withEmails: true,
+})
 
 await connection.close()
 
@@ -76,9 +87,10 @@ const app = startService({
   },
 })
 
-function stop(code: number) {
+async function stop(code: number) {
   glot.stop()
   app.stop()
+  await previews.close()
   process.exit(code)
 }
 
@@ -87,9 +99,9 @@ process.on('SIGINT', () => stop(0))
 process.on('SIGTERM', () => stop(0))
 
 await Promise.all([waitForUrl(`${glotUrl}/sign-in`), waitForUrl(`${appUrl}/api/locales/fr`)]).catch(
-  (error: unknown) => {
+  async (error: unknown) => {
     process.stderr.write(`${String(error)}\n`)
-    stop(1)
+    await stop(1)
   },
 )
 
@@ -98,6 +110,7 @@ Glot is ready.
 
   Glot          ${glotUrl}
   Demo app      ${appUrl}/pl/lots/48213?glot
+  Emails        ${glotUrl}/projects/${project.id}/emails
   Repository    ${directory}
 
   Owner         ${DEMO_PEOPLE.OWNER}
