@@ -132,3 +132,37 @@ test('missing arguments and unknown commands print the usage with exit code 2', 
     expect(result.stderr).toContain('Usage: glot check --source <pattern>')
   }
 })
+
+test('the source file is read even when the languages leave its language out', async () => {
+  const result = await glot([
+    'check',
+    '--source',
+    PATTERN,
+    '--source-language',
+    'fr',
+    '--languages',
+    'en,de',
+  ])
+
+  expect(result.code).toBe(1)
+  expect(result.stdout.split('\n').at(-2)).toBe('7 texts checked, 2 failures.')
+})
+
+test('a missing source file stops the run with exit code 2, whatever the languages', async () => {
+  await write({ path: 'orphans/en.json', content: { actions: { save: 'Save' } } })
+
+  for (const languages of ['fr,en', 'en']) {
+    const result = await glot([
+      'check',
+      '--source',
+      'orphans/{locale}.json',
+      '--source-language',
+      'fr',
+      '--languages',
+      languages,
+    ])
+
+    expect(result).toMatchObject({ code: 2, stdout: '' })
+    expect(result.stderr).toContain('orphans/fr.json')
+  }
+})

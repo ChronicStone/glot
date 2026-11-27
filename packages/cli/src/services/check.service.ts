@@ -32,16 +32,21 @@ export class CheckService {
 
   async #read(options: { options: CheckArguments; pattern: string }) {
     const files = new Map<string, string>()
+    const { sourceLanguage, languages, root } = options.options
 
     await Promise.all(
-      options.options.languages.map(async (language) => {
+      [...new Set([sourceLanguage, ...languages])].map(async (language) => {
         const path = languagePath({ pattern: options.pattern, language })
 
         try {
-          files.set(path, await readFile(join(options.options.root, path), 'utf8'))
+          files.set(path, await readFile(join(root, path), 'utf8'))
         } catch (error) {
           if (!(error instanceof Error) || !('code' in error) || error.code !== 'ENOENT') {
             throw error
+          }
+
+          if (language === sourceLanguage) {
+            throw new Error(`${path} is missing: it holds the source texts.`)
           }
         }
       }),
