@@ -9,6 +9,7 @@ import { migrate } from 'drizzle-orm/node-postgres/migrator'
 import pg from 'pg'
 import {
   DEMO_DATABASE,
+  DEMO_MAIL,
   DEMO_PEOPLE,
   DEMO_PORTS,
   DEMO_POSTGRES_URL,
@@ -27,7 +28,7 @@ const appUrl = `http://localhost:${DEMO_PORTS.APP + offset}`
 
 const authSecret = process.env.AUTH_SECRET ?? randomBytes(32).toString('hex')
 
-execFileSync('docker', ['compose', '-p', 'glot', 'up', '-d', '--wait', 'postgres'], {
+execFileSync('docker', ['compose', '-p', 'glot', 'up', '-d', '--wait', 'postgres', 'mailpit'], {
   cwd: root,
   stdio: 'inherit',
   env: { ...process.env, AUTH_SECRET: authSecret },
@@ -75,6 +76,8 @@ const glot = startService({
     GLOT_GIT_ROOT: repositories,
     GLOT_CLOCK: 'on',
     WIDGET_ORIGINS: appUrl,
+    SMTP_URL: DEMO_MAIL.SMTP_URL,
+    MAIL_FROM: DEMO_MAIL.FROM,
     GLOT_BUILD_DIR: `.nuxt-demo${suffix}`,
     NUXT_IGNORE_LOCK: '1',
   },
@@ -120,12 +123,13 @@ Glot is ready.
   Glot          ${glotUrl}
   Demo app      ${appUrl}/pl/lots/48213?glot
   Emails        ${glotUrl}/projects/${project.id}/emails
+  Inbox         ${DEMO_MAIL.INBOX}
   Repository    ${directory}
                 Released texts are merged into main within seconds, as a developer would merge the pull request.
 
   Owner         ${DEMO_PEOPLE.OWNER}
   Reviewer      ${DEMO_PEOPLE.REVIEWER} (Polish and German)
 
-Sign in with either address on ${glotUrl}/sign-in: the link prints here.
+Sign in with either address on ${glotUrl}/sign-in: the email lands in the inbox, and the link prints here too.
 Press Ctrl+C to stop.
 `)

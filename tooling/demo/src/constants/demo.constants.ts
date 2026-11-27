@@ -22,3 +22,9 @@ export const DEMO_MERGE = {
   INTO: 'main',
   EVERY_MS: 5000,
 } as const
+
+export const DEMO_MAIL = {
+  SMTP_URL: 'smtp://127.0.0.1:1025',
+  INBOX: 'http://localhost:8025',
+  FROM: 'Glot <glot@glot.test>',
+} as const

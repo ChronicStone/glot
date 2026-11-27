@@ -9,7 +9,7 @@ bun install
 bun run demo
 ```
 
-It takes about a minute. The terminal prints the addresses and, each time someone signs in, their sign-in link.
+It takes about a minute. The terminal prints the addresses. Every email Glot sends, sign-in links included, lands in the inbox at http://localhost:8025 (Mailpit); the terminal prints each sign-in link too.
 
 | Who               | Role                            |
 | ----------------- | ------------------------------- |
@@ -24,7 +24,7 @@ Open http://localhost:3200/pl/lots/48213, an auction lot page in Polish. The bid
 
 ## 2. Fix it where it is
 
-Open http://localhost:3200/pl/lots/48213?glot and click the Glot pill. Sign in as `anna@glot.test` with the link from the terminal.
+Open http://localhost:3200/pl/lots/48213?glot and click the Glot pill. Sign in as `anna@glot.test` with the link from the inbox.
 
 - The page's texts are outlined by state; "On this page" lists them, each with its key.
 - Click the bidding panel's text. The editor opens on `marketplace.bid.nextMinimum`, with `amount` as a chip and the glossary's warning.

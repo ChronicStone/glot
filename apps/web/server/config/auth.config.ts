@@ -1,7 +1,17 @@
 import { createGlotAuth, createSmtpMagicLinkSender } from '@glot/auth'
+import type { SendMagicLinkEmail } from '@glot/auth'
 import { env } from '../env.ts'
 import { database } from './database.config.ts'
 import { mailOptions as mail } from './mail.config.ts'
+
+const smtpSender = mail ? createSmtpMagicLinkSender(mail) : undefined
+
+const sendMagicLinkEmail: SendMagicLinkEmail | undefined = import.meta.dev
+  ? async (message) => {
+      console.warn(`Sign-in link for ${message.to}: ${message.targetUrl}`)
+      await smtpSender?.(message)
+    }
+  : smtpSender
 
 export const auth = createGlotAuth({
   baseURL: env.APP_URL,
@@ -11,14 +21,5 @@ export const auth = createGlotAuth({
   ...(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
     ? { google: { clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET } }
     : {}),
-  ...(mail ? { sendMagicLinkEmail: createSmtpMagicLinkSender(mail) } : {}),
-  ...(import.meta.dev && !mail
-    ? {
-        sendMagicLinkEmail: ({ to, targetUrl }) => {
-          console.warn(`Sign-in link for ${to}: ${targetUrl}`)
-
-          return Promise.resolve()
-        },
-      }
-    : {}),
+  ...(sendMagicLinkEmail ? { sendMagicLinkEmail } : {}),
 })
