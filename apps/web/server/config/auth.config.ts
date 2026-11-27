@@ -1,8 +1,7 @@
 import { createGlotAuth, createSmtpMagicLinkSender } from '@glot/auth'
 import { env } from '../env.ts'
 import { database } from './database.config.ts'
-
-const mail = env.SMTP_URL && env.MAIL_FROM ? { url: env.SMTP_URL, from: env.MAIL_FROM } : undefined
+import { mailOptions as mail } from './mail.config.ts'
 
 export const auth = createGlotAuth({
   baseURL: env.APP_URL,
