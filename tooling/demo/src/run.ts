@@ -43,7 +43,7 @@ await migrate(connection.drizzle, {
 })
 
 const { project } = await seedDemo(connection.db)
-const { directory } = await seedDemoRepository({ root: repositories })
+const { directory } = await seedDemoRepository({ root: repositories, withApp: true })
 
 await connection.close()
 
@@ -66,11 +66,12 @@ const glot = startService({
 const app = startService({
   name: 'app',
   command: ['bunx', 'nuxt', 'dev', '--port', String(DEMO_PORTS.APP)],
-  cwd: resolve(root, 'packages/nuxt/playground'),
+  cwd: resolve(root, 'apps/demo'),
   env: {
     GLOT_URL: glotUrl,
     GLOT_PROJECT: project.repository,
     GLOT_LOCALES_DIR: directory,
+    DEMO_BUILD_DIR: '.nuxt-demo',
     NUXT_IGNORE_LOCK: '1',
   },
 })
@@ -85,7 +86,7 @@ process.on('SIGINT', () => stop(0))
 
 process.on('SIGTERM', () => stop(0))
 
-await Promise.all([waitForUrl(`${glotUrl}/sign-in`), waitForUrl(appUrl)]).catch(
+await Promise.all([waitForUrl(`${glotUrl}/sign-in`), waitForUrl(`${appUrl}/api/locales/fr`)]).catch(
   (error: unknown) => {
     process.stderr.write(`${String(error)}\n`)
     stop(1)
@@ -96,7 +97,7 @@ process.stdout.write(`
 Glot is ready.
 
   Glot          ${glotUrl}
-  Demo app      ${appUrl}
+  Demo app      ${appUrl}/pl/lots/48213?glot
   Repository    ${directory}
 
   Owner         ${DEMO_PEOPLE.OWNER}
