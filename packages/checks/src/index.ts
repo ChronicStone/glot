@@ -16,6 +16,8 @@ export { messageSegments } from './utils/message.utils.ts'
 
 export { smsLength } from './utils/sms.utils.ts'
 
+export { integerPluralCategories } from './utils/plural.utils.ts'
+
 export { SYNTAXES } from './constants/syntax.constants.ts'
 
 export { SMS_ALPHABETS } from './constants/sms.constants.ts'

@@ -55,7 +55,13 @@ const status = ref<string>('')
 const savedValue = ref<string>(value.value)
 
 const typed = computed(() =>
-  checkText({ source: props.text.source.value, target: value.value, avoid: [] }),
+  checkText({
+    source: props.text.source.value,
+    target: value.value,
+    avoid: [],
+    syntax: props.text.syntax,
+    language: props.language,
+  }),
 )
 
 const failures = computed(() =>

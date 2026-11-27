@@ -221,3 +221,45 @@ test('tokens may be reordered or spaced, but never dropped, repeated or invented
     'A ⟦ or ⟧ is left over: a token is broken',
   ])
 })
+
+test('a translation may have as many plural forms as its language uses for whole numbers', () => {
+  const source = '{count} enchère | {count} enchères'
+  const polish = '{count} oferta | {count} oferty | {count} ofert'
+
+  expect(checkText({ source, target: polish, avoid: [], language: 'pl' })).toEqual([])
+  expect(
+    checkText({ source, target: '{count} oferta | {count} ofert', avoid: [], language: 'pl' }),
+  ).toEqual([])
+
+  expect(
+    checkText({ source, target: `${polish} | {count} oferty`, avoid: [], language: 'pl' }),
+  ).toEqual([
+    {
+      code: 'PLURAL_FORMS',
+      message: 'The source text has 2 plural forms and pl uses 3, separated by |. This text has 4.',
+    },
+  ])
+
+  expect(
+    checkText({
+      source,
+      target: '{count} bid | {count} bids | {count} bids',
+      avoid: [],
+      language: 'en',
+    }),
+  ).toEqual([
+    {
+      code: 'PLURAL_FORMS',
+      message: 'The source text has 2 plural forms, separated by |. This text has 3.',
+    },
+  ])
+
+  expect(
+    checkText({
+      source: 'Enregistrer',
+      target: 'Zapisz | Zapisz | Zapisz',
+      avoid: [],
+      language: 'pl',
+    }).map(({ code }) => code),
+  ).toEqual(['PLURAL_FORMS'])
+})

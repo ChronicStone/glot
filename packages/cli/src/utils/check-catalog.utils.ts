@@ -53,6 +53,7 @@ export function checkCatalog(options: {
         target: translated.value,
         avoid: options.avoid[language] ?? [],
         syntax: options.syntax,
+        language,
       })) {
         failures.push({
           path,

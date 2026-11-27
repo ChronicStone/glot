@@ -3,6 +3,7 @@ import { SYNTAXES, TEMPLATE_LINK_PROTOCOLS } from '../constants/syntax.constants
 import type { CheckFailure, Syntax } from '../types/checks.types.ts'
 import { htmlTagsOf } from './html.utils.ts'
 import { parseMessage, placeholdersOf, plainTextOf } from './message.utils.ts'
+import { integerPluralCategories } from './plural.utils.ts'
 import {
   parseTemplate,
   templateLinksOf,
@@ -107,6 +108,7 @@ export function checkText(input: {
   avoid: string[]
   keep?: string[]
   syntax?: Syntax
+  language?: string
 }) {
   if (input.syntax === SYNTAXES.HANDLEBARS_HTML) {
     return checkTemplate({ ...input, keep: input.keep ?? [] })
@@ -134,10 +136,18 @@ export function checkText(input: {
       })
     }
 
-    if (source.forms.length !== target.forms.length) {
+    const languageForms =
+      input.language && source.forms.length > 1
+        ? integerPluralCategories(input.language).length
+        : source.forms.length
+
+    if (target.forms.length !== source.forms.length && target.forms.length !== languageForms) {
       failures.push({
         code: CHECK_CODES.PLURAL_FORMS,
-        message: `The source text has ${source.forms.length} plural ${source.forms.length === 1 ? 'form' : 'forms'}, separated by |. This text has ${target.forms.length}.`,
+        message:
+          languageForms === source.forms.length
+            ? `The source text has ${source.forms.length} plural ${source.forms.length === 1 ? 'form' : 'forms'}, separated by |. This text has ${target.forms.length}.`
+            : `The source text has ${source.forms.length} plural forms and ${input.language} uses ${languageForms}, separated by |. This text has ${target.forms.length}.`,
       })
     }
   }

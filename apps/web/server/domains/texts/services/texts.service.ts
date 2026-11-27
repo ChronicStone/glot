@@ -89,6 +89,7 @@ export class TextsService {
       avoid: options.words.avoid[options.language] ?? [],
       keep: options.words.keep,
       syntax: options.syntax,
+      language: options.language,
     })
   }
 

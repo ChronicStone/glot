@@ -86,6 +86,7 @@ export function buildEntries(options: { project: CatalogProject; files: Map<stri
                     target: translated,
                     avoid: [],
                     syntax: source.kind,
+                    language: target.language,
                   }),
           }
         }),
