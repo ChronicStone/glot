@@ -1,0 +1,346 @@
+import { spawn } from 'node:child_process'
+import type { ChildProcess } from 'node:child_process'
+import { copyFile, mkdir, mkdtemp, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { DRAFT_STATUSES } from '@glot/database/constants/drafts'
+import { GLOSSARY_TERM_STATUSES } from '@glot/database/constants/glossary'
+import { WORKSPACE_ROLES } from '@glot/database/constants/workspaces'
+import { createDatabase } from '@glot/database/server'
+import { createGlotClient } from '@glot/sdk'
+import { seedDemoProject } from '@glot/seed'
+import { seedDemoRepository } from '@glot/seed/repository'
+import { chromium } from 'playwright-core'
+import type { Browser, BrowserContext, Page } from 'playwright-core'
+import { afterAll, beforeAll, expect, inject, test } from 'vite-plus/test'
+import { signInByMagicLink, withCookie } from './support/session.ts'
+
+const baseUrl = inject('baseUrl')
+const demoUrl = inject('playgroundUrl')
+const REPOSITORY = 'glot/showcase'
+const LOT_PAGE = `${demoUrl}/pl/lots/48213`
+const KEY = 'marketplace.bid.nextMinimum'
+const FIXED = 'Następna minimalna oferta: {amount}'
+const POLL = { timeout: 15_000 }
+const RECORDING = '/tmp/ui-shots/glot-widget/showcase.webm'
+
+const PEOPLE = [
+  { name: 'Wanda', role: WORKSPACE_ROLES.WRITER, languages: ['pl'] },
+  { name: 'Rita', role: WORKSPACE_ROLES.REVIEWER, languages: ['pl'] },
+  { name: 'Olivia', role: WORKSPACE_ROLES.OWNER, languages: [] },
+]
+
+const cookies = new Map<string, string>()
+const scratch = await mkdtemp(join(tmpdir(), 'glot-showcase-'))
+let projectId = ''
+let demo: ChildProcess | null = null
+let browser: Browser | null = null
+
+function glot(name: string) {
+  const cookie = cookies.get(name)
+
+  if (!cookie) throw new Error(`${name} is not signed in`)
+
+  return createGlotClient({ url: baseUrl, fetch: withCookie(cookie) })
+}
+
+async function signedInContext(options: { name: string; video?: string | undefined }) {
+  if (!browser) throw new Error('The browser did not start')
+
+  const context = await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+    ...(options.video
+      ? { recordVideo: { dir: options.video, size: { width: 1440, height: 900 } } }
+      : {}),
+  })
+
+  const pairs = (cookies.get(options.name) ?? '').split('; ').filter(Boolean)
+
+  await context.addCookies(
+    pairs.map((pair) => {
+      const [name = '', ...rest] = pair.split('=')
+
+      return { name, value: rest.join('='), url: baseUrl }
+    }),
+  )
+
+  return context
+}
+
+function shadow(page: Page, selector: string) {
+  return page.locator(`glot-widget ${selector}`)
+}
+
+async function heights(page: Page, selector: string) {
+  return shadow(page, selector).evaluateAll((elements) =>
+    elements.map((element) => Math.round(element.getBoundingClientRect().height)),
+  )
+}
+
+async function signWidgetIn(options: { page: Page; context: BrowserContext }) {
+  const [popup] = await Promise.all([
+    options.context.waitForEvent('page'),
+    shadow(options.page, '[data-glot=launcher]').click(),
+  ])
+
+  return popup
+}
+
+async function waitForDemo() {
+  for (let attempt = 0; attempt < 180; attempt += 1) {
+    const ready = await fetch(`${demoUrl}/api/locales/pl`)
+      .then((response) => response.ok)
+      .catch(() => false)
+
+    if (ready) return
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+  }
+
+  throw new Error('The demo app did not start')
+}
+
+beforeAll(async () => {
+  const connection = createDatabase({ connectionString: inject('databaseUrl') })
+
+  const workspace = await connection.db.workspaces.create({
+    data: { name: 'Showcase', slug: 'showcase' },
+  })
+
+  const elsewhere = await connection.db.workspaces.create({
+    data: { name: 'Elsewhere showcase', slug: 'elsewhere-showcase' },
+  })
+
+  for (const person of PEOPLE) {
+    await connection.db.user.create({
+      data: {
+        id: `user-${person.name.toLowerCase()}-showcase`,
+        name: person.name,
+        email: `${person.name.toLowerCase()}@showcase.test`,
+        emailVerified: true,
+      },
+    })
+
+    await connection.db.workspaceMemberships.create({
+      data: {
+        workspaceId: workspace.id,
+        userId: `user-${person.name.toLowerCase()}-showcase`,
+        role: person.role,
+        languages: person.languages,
+      },
+    })
+  }
+
+  await connection.db.user.create({
+    data: {
+      id: 'user-nora-showcase',
+      name: 'Nora',
+      email: 'nora@showcase.test',
+      emailVerified: true,
+    },
+  })
+
+  await connection.db.workspaceMemberships.create({
+    data: { workspaceId: elsewhere.id, userId: 'user-nora-showcase', role: WORKSPACE_ROLES.OWNER },
+  })
+
+  const lot = await connection.db.glossaryConcepts.create({
+    data: {
+      workspaceId: workspace.id,
+      name: 'lot',
+      definition: 'An item sold at auction, never a plot of land.',
+      status: GLOSSARY_TERM_STATUSES.VALIDATED,
+      neverTranslate: false,
+      notes: '',
+    },
+  })
+
+  await connection.db.glossaryConceptTerms.createMany({
+    data: [
+      { conceptId: lot.id, language: 'fr', term: 'lot', plural: 'lots', avoid: [] },
+      { conceptId: lot.id, language: 'pl', term: 'partia', plural: 'partie', avoid: ['działka'] },
+    ],
+  })
+
+  const project = await seedDemoProject(connection.db, {
+    workspaceId: workspace.id,
+    repository: REPOSITORY,
+  })
+
+  await connection.close()
+  projectId = project.id
+
+  const { directory } = await seedDemoRepository({
+    root: inject('repositoriesRoot'),
+    repository: REPOSITORY,
+    withApp: true,
+  })
+
+  for (const name of [...PEOPLE.map((person) => person.name), 'Nora']) {
+    cookies.set(name, await signInByMagicLink(`${name.toLowerCase()}@showcase.test`))
+  }
+
+  demo = spawn('bunx', ['nuxt', 'dev', '--port', new URL(demoUrl).port], {
+    cwd: new URL('../../demo', import.meta.url).pathname,
+    env: {
+      ...Object.fromEntries(
+        Object.entries(process.env).filter(([name]) => !/^(?:VITEST|TEST$|NODE_ENV$)/u.test(name)),
+      ),
+      NUXT_IGNORE_LOCK: '1',
+      DEMO_BUILD_DIR: join(scratch, 'nuxt'),
+      GLOT_URL: baseUrl,
+      GLOT_PROJECT: REPOSITORY,
+      GLOT_LOCALES_DIR: directory,
+    },
+    stdio: 'ignore',
+    detached: true,
+  })
+
+  await waitForDemo()
+  browser = await chromium.launch({ channel: 'chrome', headless: true })
+}, 240_000)
+
+afterAll(async () => {
+  await browser?.close()
+
+  if (demo?.pid) process.kill(-demo.pid, 'SIGTERM')
+
+  await rm(scratch, { recursive: true, force: true })
+})
+
+test('a visitor and someone outside the project never get the widget', async () => {
+  const context = await signedInContext({ name: 'Nora' })
+  const page = await context.newPage()
+
+  await page.goto(LOT_PAGE)
+  await expect
+    .poll(() => page.locator('main').textContent(), POLL)
+    .toContain('Następna minimalna działka')
+  expect(await page.locator('glot-widget').count()).toBe(0)
+
+  await page.goto(`${LOT_PAGE}?glot`)
+  const popup = await signWidgetIn({ page, context })
+
+  await expect.poll(() => popup.textContent('body'), POLL).toContain('No access')
+  await expect
+    .poll(() => shadow(page, '[data-glot=launcher]').textContent(), POLL)
+    .toContain('No access')
+  expect(
+    await page.evaluate(() => Object.keys(localStorage).filter((key) => key.startsWith('glot:'))),
+  ).toEqual([])
+
+  await context.close()
+}, 60_000)
+
+test('a member fixes a Polish text in the page, sends it for review, and after the release the app shows it', async () => {
+  const video = process.env.GLOT_RECORD ? join(scratch, 'video') : undefined
+  const context = await signedInContext({ name: 'Wanda', video })
+  const page = await context.newPage()
+
+  await page.goto(`${LOT_PAGE}?glot`)
+  await expect
+    .poll(() => shadow(page, '[data-glot=launcher]').textContent(), POLL)
+    .toContain('Sign in')
+
+  const popup = await signWidgetIn({ page, context })
+
+  await popup.waitForEvent('close', { timeout: 20_000 })
+  await expect
+    .poll(() => shadow(page, '[data-glot=launcher]').textContent(), POLL)
+    .toContain('1 to fix')
+
+  await shadow(page, '[data-glot=launcher]').click()
+  const row = shadow(page, `[data-glot=row][data-key="${KEY}"]`)
+
+  await expect.poll(() => row.textContent(), POLL).toContain(KEY)
+  await page.waitForTimeout(600)
+
+  const head = await heights(page, '.w-head .right > *')
+  const strip = await heights(page, '.w-sub .seg')
+
+  expect(new Set(head).size).toBe(1)
+  expect(strip[0]).toBe(head[0])
+
+  await page.locator('main .bid > div').first().click()
+  const editor = shadow(page, '[data-glot=editor]')
+
+  await expect
+    .poll(() => editor.locator('[data-glot=key]').getAttribute('data-key'), POLL)
+    .toBe(KEY)
+  await page.waitForTimeout(600)
+
+  const message = shadow(page, '[data-glot=message]')
+
+  await message.press('ControlOrMeta+a')
+  await message.pressSequentially(FIXED, { delay: 25 })
+  await expect
+    .poll(() => page.locator('main .bid > div').first().textContent(), POLL)
+    .toContain('Następna minimalna oferta:')
+
+  const footer = await heights(page, '[data-glot=editor] .row-flex .btn')
+
+  expect(new Set(footer).size).toBe(1)
+
+  await editor.getByRole('button', { name: 'Send for review' }).click()
+  await expect
+    .poll(() => shadow(page, '[data-glot=editor-status]').textContent(), POLL)
+    .toBe('Sent for review')
+  await page.waitForTimeout(800)
+
+  const text = (await glot('Rita').texts.byKeys({ projectId, keys: [KEY] })).items[0]
+  const polish = text?.translations.find((entry) => entry.language === 'pl')
+
+  expect(polish?.draft).toMatchObject({ value: FIXED, status: DRAFT_STATUSES.IN_REVIEW })
+
+  const review = await context.newPage()
+
+  await review.goto(`${baseUrl}/projects/${projectId}/texts`)
+  await review.getByText(KEY, { exact: true }).first().click()
+  await expect
+    .poll(
+      () =>
+        review
+          .locator('input, textarea')
+          .evaluateAll((fields) =>
+            fields.map((field) =>
+              field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement
+                ? field.value
+                : '',
+            ),
+          ),
+      POLL,
+    )
+    .toContain(FIXED)
+  await review.waitForTimeout(1200)
+  await review.close()
+
+  await glot('Rita').reviews.approve({
+    projectId,
+    textId: text?.id ?? '',
+    language: 'pl',
+    draftId: polish?.draft?.id ?? '',
+  })
+  await glot('Olivia').releases.run({ projectId })
+
+  const visitor = await browser?.newPage()
+
+  await visitor?.goto(LOT_PAGE)
+  await expect
+    .poll(() => visitor?.locator('main .bid > div').first().textContent(), POLL)
+    .toContain('Następna minimalna oferta:')
+  await visitor?.close()
+
+  await page.reload()
+  await expect
+    .poll(() => page.locator('main .bid > div').first().textContent(), POLL)
+    .toContain('Następna minimalna oferta:')
+  await page.waitForTimeout(1200)
+
+  const recording = page.video()
+
+  await context.close()
+
+  if (recording) {
+    await mkdir('/tmp/ui-shots/glot-widget', { recursive: true })
+    await copyFile(await recording.path(), RECORDING)
+  }
+}, 120_000)
