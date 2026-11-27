@@ -2,11 +2,9 @@ import { HTML_VOID_ELEMENTS } from '../constants/syntax.constants.ts'
 import type { HtmlTag } from '../types/checks.types.ts'
 
 const HTML_TAG_PATTERN =
-  /<(\/?)([a-zA-Z][a-zA-Z0-9-]*)((?:\s+[^\s"'<>/=]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'<>]+))?)*)\s*(\/?)>/gu
+  /<(\/?)([a-zA-Z][a-zA-Z0-9:-]*)((?:\s+[^\s"'<>/=]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'<>]+))?)*)\s*(\/?)>/gu
 
 const HTML_ATTRIBUTE_PATTERN = /([^\s"'<>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'<>]+)))?/gu
-
-const STRAY_OPENER_PATTERN = /^<(?:\/?[a-zA-Z][a-zA-Z0-9-]*|!|\?|\/)/u
 
 const STRAY_MARKUP_PATTERN = /<(?:\/?[a-zA-Z][a-zA-Z0-9-]*|!|\?|\/)[^<>]*/gu
 
@@ -14,7 +12,9 @@ const HTML_COMMENT_PATTERN = /<!--[\s\S]*?-->/gu
 
 const ABRUPT_COMMENT_PATTERN = /--!>|<!--->|<!-->/u
 
-const COMMENT_TEXT_PATTERN = />[^<]*</gu
+const COMMENT_DIRECTIVE_PATTERN = /\[[^\]]*\]/gu
+
+const EQUALS_TOKEN_PATTERN = /([A-Za-z0-9_-]*)\s*=/gu
 
 const VOID_ELEMENTS = new Set<string>(Object.values(HTML_VOID_ELEMENTS))
 
@@ -87,10 +87,6 @@ export function strayMarkupOf(message: string) {
   )
 }
 
-export function strayOpenerOf(markup: string) {
-  return STRAY_OPENER_PATTERN.exec(markup)?.[0] ?? markup
-}
-
 export function htmlCommentsOf(message: string) {
   return [...message.matchAll(HTML_COMMENT_PATTERN)].map((match) => match[0])
 }
@@ -99,8 +95,14 @@ export function withoutHtmlComments(message: string) {
   return message.replace(HTML_COMMENT_PATTERN, ' ')
 }
 
-export function equalsOutsideTagsOf(message: string) {
-  return withoutHtmlTags(message).split('=').length - 1
+export function equalsTokensOf(message: string) {
+  return [...withoutHtmlTags(message).matchAll(EQUALS_TOKEN_PATTERN)].map(
+    (match) => match[1]?.toLowerCase() ?? '',
+  )
+}
+
+export function bareClosersOf(message: string) {
+  return withoutHtmlTags(message).split('>').length - 1
 }
 
 export function hasAbruptComment(message: string) {
@@ -108,5 +110,16 @@ export function hasAbruptComment(message: string) {
 }
 
 export function commentMarkupOf(comment: string) {
-  return comment.replaceAll(COMMENT_TEXT_PATTERN, '><')
+  return [
+    ...[...comment.matchAll(HTML_TAG_PATTERN)].map((match) => match[0]),
+    ...(comment.match(COMMENT_DIRECTIVE_PATTERN) ?? []),
+  ].join('')
+}
+
+export function markedFreeValuesOf(message: string, options: { freeValues: readonly string[] }) {
+  return htmlTagsOf(message).flatMap((tag) =>
+    tag.attributes.flatMap(({ name, value }) =>
+      options.freeValues.includes(name) && /[<>]/u.test(value) ? [value] : [],
+    ),
+  )
 }

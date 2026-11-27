@@ -7,24 +7,19 @@ import {
 } from '../constants/syntax.constants.ts'
 import type { CheckCode, CheckFailure, Syntax } from '../types/checks.types.ts'
 import {
+  bareClosersOf,
   commentMarkupOf,
-  equalsOutsideTagsOf,
+  equalsTokensOf,
   hasAbruptComment,
   htmlCommentsOf,
   htmlLinksOf,
   htmlMarkupOf,
   htmlTagsNest,
+  markedFreeValuesOf,
   strayMarkupOf,
-  strayOpenerOf,
   withoutHtmlComments,
 } from './html.utils.ts'
-import {
-  parseMessage,
-  placeholdersOf,
-  plainTextOf,
-  renderedForms,
-  strayRunsIntoPlaceholder,
-} from './message.utils.ts'
+import { parseMessage, placeholdersOf, plainTextOf, renderedForms } from './message.utils.ts'
 import { integerPluralCategories } from './plural.utils.ts'
 import { parseTemplate, templatePlainText, templateRendered } from './template.utils.ts'
 import { wordFailures } from './words.utils.ts'
@@ -84,6 +79,10 @@ function markupKey(form: string, freeValues: readonly string[]) {
   ].join('\n')
 }
 
+function sequence(links: string[], keep: Set<string>) {
+  return links.filter((link) => keep.has(link)).join('\n')
+}
+
 function counterpartIndex(input: {
   source: string[]
   target: string[]
@@ -106,7 +105,7 @@ function markupFailures(input: {
   links: { source: string[][]; target: string[][] }
   freeValues: readonly string[]
   exactStray: boolean
-  strayIntoPlaceholder: boolean
+  proseRules: boolean
   heading: string
   code: CheckCode
   isLink: (link: string) => boolean
@@ -117,13 +116,14 @@ function markupFailures(input: {
   const target = input.target.map(withoutHtmlComments)
   const sourceStray = source.flatMap(strayMarkupOf)
   const sourceSegments = new Set(sourceStray.map(({ markup }) => markup))
-  const sourceOpeners = new Set(sourceStray.map(({ markup }) => strayOpenerOf(markup)))
-  const sourceEquals = Math.max(0, ...source.map(equalsOutsideTagsOf))
-  const problems = new Set<string>()
+  const sourceClosers = Math.max(0, ...source.map(bareClosersOf))
+  const sourceTokens = source.flatMap(equalsTokensOf)
 
-  if (input.strayIntoPlaceholder) {
-    problems.add('A < runs into a placeholder or a linked text, which could finish it as a tag.')
-  }
+  const sourceMarked = new Set(
+    input.source.flatMap((form) => markedFreeValuesOf(form, { freeValues: input.freeValues })),
+  )
+
+  const problems = new Set<string>()
 
   if (input.target.some(hasAbruptComment) && !input.source.some(hasAbruptComment)) {
     problems.add('A comment is closed in a way that lets markup out of it.')
@@ -152,20 +152,35 @@ function markupFailures(input: {
       target: htmlCommentsOf(input.target[index] ?? '').map(commentMarkupOf),
     })
 
-    const stray = strayMarkupOf(form).filter(({ markup: found, closed }) =>
-      input.exactStray
-        ? !sourceSegments.has(found)
-        : closed || found.includes('=') || !sourceOpeners.has(strayOpenerOf(found)),
+    const stray = strayMarkupOf(form).filter(
+      ({ markup: found }) => !input.exactStray || !sourceSegments.has(found),
     )
 
     if (stray.length > 0) {
       problems.add(
-        `A tag or comment is left open: ${stray.map(({ markup: found }) => found).join(' ')}.`,
+        `A tag or comment is left open: ${stray.map(({ markup: found }) => found).join(' ')}.${input.exactStray ? '' : ' Write &lt; for a less-than sign.'}`,
       )
     }
 
-    if (stray.length === 0 && equalsOutsideTagsOf(form) > sourceEquals) {
-      problems.add('A = outside a tag is not in the source text: it could add an attribute.')
+    if (
+      markedFreeValuesOf(form, { freeValues: input.freeValues }).some(
+        (value) => !sourceMarked.has(value),
+      )
+    ) {
+      problems.add('A title, alt or label cannot hold < or >.')
+    }
+
+    if (input.proseRules && bareClosersOf(form) > sourceClosers) {
+      problems.add(
+        'A > is not in the source text: it could close a tag. Use › or the sign the source uses.',
+      )
+    }
+
+    if (
+      input.proseRules &&
+      difference({ from: equalsTokensOf(form), without: sourceTokens }).length > 0
+    ) {
+      problems.add('A = is not where the source has it: it could add an attribute.')
     }
 
     if (comments) {
@@ -195,11 +210,12 @@ function markupFailures(input: {
     const kept = links.filter((link) => sourceLinks.has(link))
     const present = new Set(kept)
 
-    const expected = (input.links.source[counterparts[index] ?? 0] ?? []).filter((link) =>
-      present.has(link),
-    )
+    const candidates =
+      input.links.source.length === input.links.target.length
+        ? [input.links.source[index] ?? []]
+        : input.links.source
 
-    return kept.join('\n') !== expected.join('\n')
+    return !candidates.some((candidate) => sequence(candidate, present) === kept.join('\n'))
   })
 
   if (refused.length > 0) {
@@ -245,7 +261,7 @@ function checkTemplate(input: { source: string; target: string; avoid: string[];
       links: { source: [htmlLinksOf(input.source)], target: [htmlLinksOf(input.target)] },
       freeValues: [],
       exactStray: true,
-      strayIntoPlaceholder: false,
+      proseRules: false,
       heading: 'The markup and links must match the source text: only a Developer changes them.',
       code: CHECK_CODES.MARKUP,
       isLink: isTemplateLink,
@@ -334,9 +350,7 @@ export function checkText(input: {
       },
       freeValues: Object.values(MESSAGE_LOCALIZED_ATTRIBUTES),
       exactStray: false,
-      strayIntoPlaceholder: renderedForms(target.forms, { written: true }).some(
-        strayRunsIntoPlaceholder,
-      ),
+      proseRules: true,
       heading: 'The HTML tags must match the source text.',
       code: CHECK_CODES.HTML_TAGS,
       isLink: isMessageLink,

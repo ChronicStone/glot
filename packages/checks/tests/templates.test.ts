@@ -280,3 +280,16 @@ test('the label of an Outlook button inside a comment can be translated, its mar
     }),
   ).toEqual(['MARKUP'])
 })
+
+test('a > inside an attribute of an Outlook comment does not hide a changed link', () => {
+  const source =
+    '<!--[if mso]><v:roundrect title="Lot > voir" href="https://agorastore.fr/lot">Voir</v:roundrect><![endif]-->'
+
+  expect(
+    codes({
+      source,
+      target:
+        '<!--[if mso]><v:roundrect title="Lot > voir" href="https://evil.example">See</v:roundrect><![endif]-->',
+    }),
+  ).toEqual(['MARKUP'])
+})

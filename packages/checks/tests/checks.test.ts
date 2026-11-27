@@ -276,13 +276,13 @@ test('a vue-i18n text with a tag left open fails the HTML tags check', () => {
   ).toEqual(['HTML_TAGS'])
 })
 
-test('a vue-i18n translation may localize a link but never hide a tag behind a quoted >', () => {
+test('a vue-i18n translation may localize a link and reword its title, never hide markup in it', () => {
   const source = 'J’accepte les <a title="CGU" href="/cgu">conditions</a>'
 
   expect(
     checkText({
       source,
-      target: 'I accept the <a title=">" href="/en/terms">terms</a>',
+      target: 'I accept the <a title="Terms" href="/en/terms">terms</a>',
       avoid: [],
     }),
   ).toEqual([])
@@ -331,7 +331,7 @@ test('a vue-i18n link that is not in the source must be https, mailto, a path or
   }
 })
 
-test('a vue-i18n text cannot open a comment, a declaration or a broken closing tag the source does not have', () => {
+test('a vue-i18n text cannot leave a tag, a comment or a declaration open, even as its source does', () => {
   for (const target of [
     'See <!-- the rest',
     'See <![CDATA[ the rest',
@@ -341,7 +341,7 @@ test('a vue-i18n text cannot open a comment, a declaration or a broken closing t
     expect(codes({ source: 'Voir la suite', target })).toEqual(['HTML_TAGS'])
   }
 
-  expect(codes({ source: 'Prix x<y', target: 'Price x<y' })).toEqual([])
+  expect(codes({ source: 'Prix x<y', target: 'Price x<y' })).toEqual(['HTML_TAGS'])
   expect(codes({ source: 'Moins de 3 <3', target: 'Under 3 <3' })).toEqual([])
 })
 
@@ -385,8 +385,9 @@ test('a vue-i18n literal or placeholder cannot build a tag or a link the check d
   expect(codes({ source: "Prix {'<'} {max}", target: "Price {'<'} {max}" })).toEqual([])
 })
 
-test('a stray < the source has is kept with the words after it translated', () => {
-  expect(codes({ source: 'Si a<b alors', target: 'If a<b then' })).toEqual([])
+test('a stray < fails even when the source has one: a less-than is written &lt;', () => {
+  expect(codes({ source: 'Si a<b alors', target: 'If a<b then' })).toEqual(['HTML_TAGS'])
+  expect(codes({ source: 'Si a &lt; b alors', target: 'If a &lt; b then' })).toEqual([])
   expect(codes({ source: 'Si a<b alors', target: 'If a<c then' })).toEqual(['HTML_TAGS'])
 })
 
@@ -486,7 +487,7 @@ test('a failure names a placeholder as the translator wrote it', () => {
 })
 
 test('a linked text cannot finish a stray < of another text, in either order', () => {
-  expect(codes({ source: 'x<i', target: 'x<i' })).toEqual([])
+  expect(codes({ source: 'x<i', target: 'x<i' })).toEqual(['HTML_TAGS'])
 
   expect(
     codes({
@@ -569,15 +570,57 @@ test('links keep their whole order in every plural form', () => {
   ).toEqual(['LINKS'])
 })
 
-test('a > or a comment in prose is fine when the source has its own way of saying it', () => {
+test('a > or a comment the source has can be kept in prose', () => {
+  expect(
+    codes({ source: 'Paramètres > Notifications', target: 'Settings > Notifications' }),
+  ).toEqual([])
+
   expect(
     codes({ source: 'Paramètres › Notifications', target: 'Settings > Notifications' }),
-  ).toEqual([])
+  ).toEqual(['HTML_TAGS'])
 
   expect(
     checkText({
       source: '<!-- 1 --> {n} lot | <!-- 2 --> {n} lots',
       target: '<!-- 1 --> {n} partia | <!-- 2 --> {n} partie | <!-- 2 --> {n} partii',
+      avoid: [],
+      language: 'pl',
+    }),
+  ).toEqual([])
+})
+
+test('a title cannot hide markup, and text beside a linked text cannot add a > or a = the source does not have', () => {
+  expect(
+    codes({
+      source: '@:heart <a href="/aide" title="Aide">aide</a>',
+      target: '@:heart <a href="/aide" title="><img src=x onerror=alert(1)>">help</a>',
+    }),
+  ).toEqual(['HTML_TAGS'])
+
+  expect(
+    codes({
+      source: '@:ineq <b>vrai</b> si a = b',
+      target: '@:ineq onmouseover=alert(1) <b>true</b> if a equals b',
+    }),
+  ).toEqual(['HTML_TAGS'])
+
+  expect(
+    codes({ source: '@:tag ici <b>maintenant</b>', target: '@:tag > here <b>now</b>' }),
+  ).toEqual(['HTML_TAGS'])
+
+  expect(codes({ source: '1 € vaut 100 points', target: '1 € = 100 points' })).toEqual([
+    'HTML_TAGS',
+  ])
+  expect(codes({ source: '1 € = 100 points', target: '1 € = 100 punktów' })).toEqual([])
+  expect(codes({ source: '@:brand si a = b', target: '@:brand if a = b' })).toEqual([])
+})
+
+test('plural forms may each keep their own link', () => {
+  expect(
+    checkText({
+      source: '<a href="/un">{n} lot</a> | <a href="/plusieurs">{n} lots</a>',
+      target:
+        '<a href="/un">{n} partia</a> | <a href="/plusieurs">{n} partie</a> | <a href="/plusieurs">{n} partii</a>',
       avoid: [],
       language: 'pl',
     }),
