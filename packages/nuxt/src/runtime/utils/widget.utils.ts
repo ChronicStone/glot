@@ -2,13 +2,24 @@ import { createApp } from 'vue'
 import type { App } from 'vue'
 import type { Composer } from 'vue-i18n'
 import { CSS_PROPERTY_RULE } from '../../constants/module.constants.ts'
+import { HOST_EVENTS } from '../constants/widget.constants.ts'
 import GlotWidget from '../components/GlotWidget.vue'
 import type { KeyLog, WidgetOptions } from '../types/widget.types.ts'
 
-function stopHostShortcuts(host: HTMLElement) {
-  for (const name of ['keydown', 'keyup', 'keypress'] as const) {
+function isolateEvents(host: HTMLElement) {
+  for (const name of Object.values(HOST_EVENTS)) {
     host.addEventListener(name, (event) => event.stopPropagation())
   }
+
+  window.addEventListener(
+    'focusout',
+    (event) => {
+      if (event.relatedTarget === host) {
+        event.stopImmediatePropagation()
+      }
+    },
+    true,
+  )
 }
 
 function followColorScheme(host: HTMLElement) {
@@ -42,7 +53,7 @@ export function mountWidget(options: {
   host.setAttribute('popover', 'manual')
   document.body.append(host)
   host.showPopover?.()
-  stopHostShortcuts(host)
+  isolateEvents(host)
   followColorScheme(host)
 
   createApp(GlotWidget, {

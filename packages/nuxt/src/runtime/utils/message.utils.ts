@@ -1,3 +1,5 @@
+import { CARET_STOP } from '../constants/widget.constants.ts'
+
 export function nestMessage(options: { path: string[]; value: unknown }) {
   return options.path
     .toReversed()
@@ -36,6 +38,7 @@ export function serializeEditable(root: Node): string {
       return child instanceof HTMLElement ? serializeEditable(child) : (child.textContent ?? '')
     })
     .join('')
+    .replaceAll(CARET_STOP, '')
 }
 
 export function placeholderToken(value: string) {

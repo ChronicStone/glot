@@ -40,3 +40,19 @@ export const STATE_BADGES = {
   TO_CHECK: '?',
   NEEDS_FIX: '!',
 } as const
+
+export const HOST_EVENTS = {
+  POINTER_DOWN: 'pointerdown',
+  POINTER_UP: 'pointerup',
+  MOUSE_DOWN: 'mousedown',
+  MOUSE_UP: 'mouseup',
+  TOUCH_START: 'touchstart',
+  CLICK: 'click',
+  FOCUS_IN: 'focusin',
+  FOCUS_OUT: 'focusout',
+  KEY_DOWN: 'keydown',
+  KEY_UP: 'keyup',
+  KEY_PRESS: 'keypress',
+} as const
+
+export const CARET_STOP = '\u200B'

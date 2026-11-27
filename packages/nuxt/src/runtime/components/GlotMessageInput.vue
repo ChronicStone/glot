@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { messageSegments } from '@glot/checks'
 import { onMounted, useTemplateRef, watch } from 'vue'
+import { CARET_STOP } from '../constants/widget.constants.ts'
 import { placeholderToken, serializeEditable } from '../utils/message.utils.ts'
 
 const model = defineModel<string>({ required: true })
@@ -13,8 +14,10 @@ function render(value: string) {
     return
   }
 
+  const segments = messageSegments(value)
+
   root.replaceChildren(
-    ...messageSegments(value).map((segment) => {
+    ...segments.map((segment) => {
       if (!segment.placeholder) {
         return document.createTextNode(segment.value)
       }
@@ -28,6 +31,7 @@ function render(value: string) {
 
       return chip
     }),
+    document.createTextNode(segments.at(-1)?.placeholder ? CARET_STOP : ''),
   )
 }
 
