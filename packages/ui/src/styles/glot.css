@@ -1451,6 +1451,10 @@
   white-space: nowrap;
   border-bottom: 1px solid var(--glot-line);
 }
+.tbl-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
 .tbl .th-cell {
   height: var(--glot-control-h-xs);
   display: inline-flex;
@@ -2821,9 +2825,6 @@
   }
   .side {
     display: none;
-  }
-  .main {
-    padding: 0;
   }
   .ph-row {
     flex-wrap: wrap;
@@ -4408,7 +4409,7 @@
 
 @media (max-width: 760px) {
   .main {
-    padding: 0 !important;
+    padding: 0 8px 8px !important;
     overflow: auto !important;
   }
   .m-top {
@@ -4498,7 +4499,7 @@
   display: none;
   align-items: center;
   gap: 10px;
-  padding: 14px 16px 6px;
+  padding: 14px 8px 6px;
 }
 .m-prog {
   display: none;

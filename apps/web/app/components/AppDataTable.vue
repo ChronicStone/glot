@@ -19,61 +19,65 @@ defineSlots<
 </script>
 
 <template>
-  <table class="tbl">
-    <thead>
-      <tr v-for="group in table.getHeaderGroups()" :key="group.id">
-        <th v-for="header in group.headers" :key="header.id" scope="col">
-          <button
-            v-if="header.column.getCanSort()"
-            type="button"
-            class="th-cell"
-            @click="header.column.toggleSorting()"
-          >
-            <slot :name="`header-${header.column.id}`"><FlexRender :header="header" /></slot>
-            <UIcon
-              v-if="header.column.getIsSorted()"
-              :name="
-                header.column.getIsSorted() === 'asc' ? 'i-lucide-arrow-up' : 'i-lucide-arrow-down'
-              "
-              class="ic-13"
-            />
-          </button>
-          <span v-else-if="!header.isPlaceholder" class="th-cell">
-            <slot :name="`header-${header.column.id}`"><FlexRender :header="header" /></slot>
-          </span>
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      <template v-if="loading">
-        <tr v-for="line in [56, 44, 62]" :key="line">
-          <td v-for="column in table.getAllLeafColumns()" :key="column.id">
-            <div class="sk" :style="{ height: '12px', width: `${line}%` }" />
+  <div class="tbl-scroll">
+    <table class="tbl">
+      <thead>
+        <tr v-for="group in table.getHeaderGroups()" :key="group.id">
+          <th v-for="header in group.headers" :key="header.id" scope="col">
+            <button
+              v-if="header.column.getCanSort()"
+              type="button"
+              class="th-cell"
+              @click="header.column.toggleSorting()"
+            >
+              <slot :name="`header-${header.column.id}`"><FlexRender :header="header" /></slot>
+              <UIcon
+                v-if="header.column.getIsSorted()"
+                :name="
+                  header.column.getIsSorted() === 'asc'
+                    ? 'i-lucide-arrow-up'
+                    : 'i-lucide-arrow-down'
+                "
+                class="ic-13"
+              />
+            </button>
+            <span v-else-if="!header.isPlaceholder" class="th-cell">
+              <slot :name="`header-${header.column.id}`"><FlexRender :header="header" /></slot>
+            </span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <template v-if="loading">
+          <tr v-for="line in [56, 44, 62]" :key="line">
+            <td v-for="column in table.getAllLeafColumns()" :key="column.id">
+              <div class="sk" :style="{ height: '12px', width: `${line}%` }" />
+            </td>
+          </tr>
+        </template>
+        <tr v-else-if="table.getRowModel().rows.length === 0">
+          <td :colspan="table.getAllLeafColumns().length">
+            <div class="empty"><p>{{ empty }}</p></div>
           </td>
         </tr>
-      </template>
-      <tr v-else-if="table.getRowModel().rows.length === 0">
-        <td :colspan="table.getAllLeafColumns().length">
-          <div class="empty"><p>{{ empty }}</p></div>
-        </td>
-      </tr>
-      <tr
-        v-for="row in table.getRowModel().rows"
-        v-else
-        :key="row.id"
-        :class="{ on: row.id === selectedId }"
-        @click="emit('select', row.id)"
-      >
-        <td
-          v-for="cell in row.getAllCells()"
-          :key="cell.id"
-          :class="{ r: cell.column.id === 'actions' }"
+        <tr
+          v-for="row in table.getRowModel().rows"
+          v-else
+          :key="row.id"
+          :class="{ on: row.id === selectedId }"
+          @click="emit('select', row.id)"
         >
-          <slot :name="`cell-${cell.column.id}`" :row="row.original">
-            <FlexRender :cell="cell" />
-          </slot>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+          <td
+            v-for="cell in row.getAllCells()"
+            :key="cell.id"
+            :class="{ r: cell.column.id === 'actions' }"
+          >
+            <slot :name="`cell-${cell.column.id}`" :row="row.original">
+              <FlexRender :cell="cell" />
+            </slot>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </template>
