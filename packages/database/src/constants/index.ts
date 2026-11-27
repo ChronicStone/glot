@@ -15,3 +15,5 @@ export * from './glossary.constants.ts'
 export * from './releases.constants.ts'
 
 export * from './jobs.constants.ts'
+
+export * from './ai.constants.ts'

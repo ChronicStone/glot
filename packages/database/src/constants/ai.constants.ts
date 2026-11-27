@@ -1,0 +1,25 @@
+export const AI_PROVIDERS = {
+  ANTHROPIC: 'ANTHROPIC',
+  OPENAI: 'OPENAI',
+} as const
+
+export const AI_DEFAULT_PROVIDER = AI_PROVIDERS.ANTHROPIC
+
+export const AI_DEFAULT_MODELS = {
+  [AI_PROVIDERS.ANTHROPIC]: 'claude-sonnet-5-5',
+  [AI_PROVIDERS.OPENAI]: 'gpt-6.2-sol',
+} as const
+
+export const AI_DEFAULT_MONTHLY_BUDGET_MICROS = 10_000_000
+
+export const AI_USAGE_KINDS = {
+  SUGGEST: 'SUGGEST',
+  FILL: 'FILL',
+} as const
+
+export const AI_FILL_STOP_REASONS = {
+  BUDGET_REACHED: 'BUDGET_REACHED',
+  NO_KEY: 'NO_KEY',
+  PROVIDER_ERROR: 'PROVIDER_ERROR',
+  TEXTS_REJECTED: 'TEXTS_REJECTED',
+} as const

@@ -1,5 +1,14 @@
 import { sql } from 'drizzle-orm'
-import { index, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core'
+import {
+  boolean,
+  index,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core'
 import { DRAFT_STATUSES } from '../../constants/drafts.constants.ts'
 import { projects } from '../projects/projects.schema.ts'
 import { user } from '../users/users.schema.ts'
@@ -20,6 +29,7 @@ export const drafts = pgTable(
     value: text().notNull(),
     baseSourceHash: text(),
     baseTargetHash: text(),
+    aiWritten: boolean().notNull().default(false),
     authorId: text()
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),

@@ -21,3 +21,5 @@ export type * from './glossary.types.ts'
 export type * from './releases.types.ts'
 
 export type * from './jobs.types.ts'
+
+export type * from './ai.types.ts'

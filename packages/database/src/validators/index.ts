@@ -15,3 +15,5 @@ export * from './glossary.validator.ts'
 export * from './users.validator.ts'
 
 export * from './releases.validator.ts'
+
+export * from './ai.validator.ts'
