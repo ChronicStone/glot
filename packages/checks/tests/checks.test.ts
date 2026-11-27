@@ -856,7 +856,7 @@ test('a comment is removed where it stands, not where its text first appears', (
   expect(
     codes({
       source: '<i title="&lt;!-- x --&gt;">a</i> <!-- x -->',
-      target: '<i title="<!-- x -->">a</i> <!-- x --> <b',
+      target: '<i title="<!-- x -->">a</i> <!-- x -->',
     }),
   ).toContain('HTML_TAGS')
 })
