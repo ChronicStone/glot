@@ -1,0 +1,16 @@
+{
+  "name": "@glot/demo-app",
+  "private": true,
+  "description": "An auction site in five languages whose texts come from the Glot demo repository, with the in-app widget.",
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build"
+  },
+  "dependencies": {
+    "@glot/nuxt": "workspace:*",
+    "@nuxtjs/i18n": "10.7.0",
+    "nuxt": "catalog:",
+    "vue": "catalog:"
+  }
+}

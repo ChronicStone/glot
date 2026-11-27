@@ -1,0 +1,32 @@
+export const LOTS = {
+  48213: {
+    id: 48213,
+    title: 'Renault Kangoo 2017 · 112 000 km',
+    startingPrice: 4500,
+    highestBid: 5250,
+    step: 50,
+    fees: 662.5,
+    endsAt: '2026-11-28T14:00:00+01:00',
+    tone: '#a9b0bd',
+  },
+  48214: {
+    id: 48214,
+    title: 'Peugeot Partner 2019 · 86 400 km',
+    startingPrice: 6200,
+    highestBid: 7100,
+    step: 100,
+    fees: 887.5,
+    endsAt: '2026-11-29T10:30:00+01:00',
+    tone: '#b9a993',
+  },
+  48215: {
+    id: 48215,
+    title: 'Citroën Berlingo 2016 · 143 900 km',
+    startingPrice: 3100,
+    highestBid: 3450,
+    step: 50,
+    fees: 431.25,
+    endsAt: '2026-11-30T16:00:00+01:00',
+    tone: '#93a7b9',
+  },
+} as const

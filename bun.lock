@@ -19,6 +19,15 @@
         "vite-plus": "catalog:",
       },
     },
+    "apps/demo": {
+      "name": "@glot/demo-app",
+      "dependencies": {
+        "@glot/nuxt": "workspace:*",
+        "@nuxtjs/i18n": "10.7.0",
+        "nuxt": "catalog:",
+        "vue": "catalog:",
+      },
+    },
     "apps/web": {
       "name": "@glot/web",
       "version": "0.0.0",
@@ -466,6 +475,8 @@
     "@glot/database": ["@glot/database@workspace:packages/database"],
 
     "@glot/demo": ["@glot/demo@workspace:tooling/demo"],
+
+    "@glot/demo-app": ["@glot/demo-app@workspace:apps/demo"],
 
     "@glot/nuxt": ["@glot/nuxt@workspace:packages/nuxt"],
 
