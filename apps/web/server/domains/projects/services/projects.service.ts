@@ -4,6 +4,7 @@ import { ORPCError } from '@orpc/server'
 import type { RequestContext } from '../../../types/context.types.ts'
 import { actorUserId } from '../../../utils/actor.utils.ts'
 import { WorkspaceAccessService } from '../../people/services/workspace-access.service.ts'
+import { sourcesWithinLanguages } from '../utils/project-languages.utils.ts'
 
 export class ProjectsService {
   readonly #context: RequestContext
@@ -83,7 +84,8 @@ export class ProjectsService {
       throw new ORPCError('CONFLICT')
     }
 
-    const { sources, ...fields } = input
+    const { sources: requested, ...fields } = input
+    const sources = sourcesWithinLanguages({ languages: input.languages, sources: requested })
 
     const project = await this.#context.db.transaction(async (tx) => {
       const created = await tx.projects.create({ data: fields })
@@ -105,7 +107,8 @@ export class ProjectsService {
       workspaceId: project.workspaceId,
     })
 
-    const { projectId, sources, ...fields } = input
+    const { projectId, sources: requested, ...fields } = input
+    const sources = sourcesWithinLanguages({ languages: input.languages, sources: requested })
     const kept = new Set(sources.map(({ name }) => name))
 
     await this.#context.db.transaction(async (tx) => {

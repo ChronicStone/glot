@@ -167,3 +167,25 @@ test('a source path stays inside the repository and names a JSON file per langua
     ).rejects.toMatchObject({ code: 'BAD_REQUEST' })
   }
 })
+
+test('a source only keeps the languages the project has', async () => {
+  const owner = createGlotClient({ url: baseUrl, fetch: withCookie(ownerCookie) })
+  const narrow = { ...project, repository: 'glot/narrow', languages: ['fr', 'pl'] }
+  const wide = { ...project.sources[0], languages: ['fr', 'pl', 'de'] }
+
+  const created = await owner.projects.create({ workspaceId, ...narrow, sources: [wide] })
+
+  expect(created.sources[0]?.languages).toEqual(['fr', 'pl'])
+
+  const updated = await owner.projects.update({
+    projectId: created.id,
+    name: narrow.name,
+    defaultBranch: 'main',
+    sourceLanguage: 'fr',
+    languages: ['fr'],
+    sources: [wide],
+  })
+
+  expect(updated.languages).toEqual(['fr'])
+  expect(updated.sources[0]?.languages).toEqual(['fr'])
+})
