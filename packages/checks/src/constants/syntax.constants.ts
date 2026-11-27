@@ -8,6 +8,36 @@ export const TEMPLATE_LINK_PROTOCOLS = {
   MAILTO: 'mailto:',
 } as const
 
+export const MESSAGE_LINK_PREFIXES = {
+  HTTPS: 'https:',
+  MAILTO: 'mailto:',
+  ANCHOR: '#',
+  PATH: '/',
+} as const
+
+export const MESSAGE_LOCALIZED_ATTRIBUTES = {
+  HREF: 'href',
+  TITLE: 'title',
+  ALT: 'alt',
+  ARIA_LABEL: 'aria-label',
+} as const
+
+export const HTML_VOID_ELEMENTS = {
+  AREA: 'area',
+  BASE: 'base',
+  BR: 'br',
+  COL: 'col',
+  EMBED: 'embed',
+  HR: 'hr',
+  IMG: 'img',
+  INPUT: 'input',
+  LINK: 'link',
+  META: 'meta',
+  SOURCE: 'source',
+  TRACK: 'track',
+  WBR: 'wbr',
+} as const
+
 export const TEMPLATE_UNMATCHED_PROBLEM =
   'A {{, }}, [[ or ]] is left on its own: placeholders are written {{name}}.'
 

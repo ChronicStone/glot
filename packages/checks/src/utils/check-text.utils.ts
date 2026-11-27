@@ -1,16 +1,15 @@
 import { CHECK_CODES } from '../constants/checks.constants.ts'
-import { SYNTAXES, TEMPLATE_LINK_PROTOCOLS } from '../constants/syntax.constants.ts'
-import type { CheckFailure, Syntax } from '../types/checks.types.ts'
-import { htmlTagsOf, openHtmlTagsOf } from './html.utils.ts'
+import {
+  MESSAGE_LINK_PREFIXES,
+  MESSAGE_LOCALIZED_ATTRIBUTES,
+  SYNTAXES,
+  TEMPLATE_LINK_PROTOCOLS,
+} from '../constants/syntax.constants.ts'
+import type { CheckCode, CheckFailure, Syntax } from '../types/checks.types.ts'
+import { htmlLinksOf, htmlMarkupOf, htmlTagsNest, strayMarkupOf } from './html.utils.ts'
 import { parseMessage, placeholdersOf, plainTextOf } from './message.utils.ts'
 import { integerPluralCategories } from './plural.utils.ts'
-import {
-  parseTemplate,
-  templateLinksOf,
-  templateMarkupOf,
-  templateOpenTagsOf,
-  templatePlainText,
-} from './template.utils.ts'
+import { parseTemplate, templatePlainText, templateStrayMarkupOf } from './template.utils.ts'
 import { wordFailures } from './words.utils.ts'
 
 function difference(options: { from: string[]; without: string[] }) {
@@ -39,7 +38,7 @@ function mismatch(options: { source: string[]; target: string[] }) {
   ].join(' ')
 }
 
-function isAllowedLink(link: string) {
+function isTemplateLink(link: string) {
   return (
     link.startsWith('{{') ||
     link.startsWith('[[') ||
@@ -47,6 +46,63 @@ function isAllowedLink(link: string) {
       link.toLowerCase().startsWith(protocol),
     )
   )
+}
+
+function isMessageLink(link: string) {
+  return (
+    !link.startsWith('//') &&
+    !link.startsWith('/\\') &&
+    Object.values(MESSAGE_LINK_PREFIXES).some((prefix) => link.toLowerCase().startsWith(prefix))
+  )
+}
+
+function markupFailures(input: {
+  source: string
+  target: string
+  stray: string[]
+  sourceStray: string[]
+  freeValues: readonly string[]
+  heading: string
+  code: CheckCode
+  isLink: (link: string) => boolean
+  linkRule: string
+}) {
+  const failures: CheckFailure[] = []
+
+  const markup = mismatch({
+    source: htmlMarkupOf(input.source, { freeValues: input.freeValues }),
+    target: htmlMarkupOf(input.target, { freeValues: input.freeValues }),
+  })
+
+  const stray = difference({ from: input.stray, without: input.sourceStray })
+  const nesting = !markup && htmlTagsNest(input.source) && !htmlTagsNest(input.target)
+
+  if (markup || stray.length > 0 || nesting) {
+    failures.push({
+      code: input.code,
+      message: [
+        input.heading,
+        ...(stray.length > 0 ? [`A tag or comment is left open: ${stray.join(' ')}.`] : []),
+        ...(nesting ? ['The tags close in a different order than they open.'] : []),
+        ...(markup ? [markup] : []),
+      ].join(' '),
+    })
+  }
+
+  const sourceLinks = new Set(htmlLinksOf(input.source))
+
+  const refused = htmlLinksOf(input.target).filter(
+    (link) => !sourceLinks.has(link) && !input.isLink(link),
+  )
+
+  if (refused.length > 0) {
+    failures.push({
+      code: CHECK_CODES.LINKS,
+      message: `${input.linkRule} Not allowed: ${refused.join(' ')}.`,
+    })
+  }
+
+  return failures
 }
 
 function checkTemplate(input: { source: string; target: string; avoid: string[]; keep: string[] }) {
@@ -70,36 +126,19 @@ function checkTemplate(input: { source: string; target: string; avoid: string[];
     }
   }
 
-  const markup = mismatch({
-    source: templateMarkupOf(input.source),
-    target: templateMarkupOf(input.target),
-  })
-
-  const open = templateOpenTagsOf(input.target)
-
-  if (markup || open.length > 0) {
-    failures.push({
+  failures.push(
+    ...markupFailures({
+      source: input.source,
+      target: input.target,
+      stray: templateStrayMarkupOf(input.target),
+      sourceStray: templateStrayMarkupOf(input.source),
+      freeValues: [],
+      heading: 'The markup and links must match the source text: only a Developer changes them.',
       code: CHECK_CODES.MARKUP,
-      message: [
-        'The markup and links must match the source text: only a Developer changes them.',
-        ...(open.length > 0 ? [`A tag is left open: ${open.join(' ')}.`] : []),
-        ...(markup ? [markup] : []),
-      ].join(' '),
-    })
-  }
-
-  const sourceLinks = new Set(templateLinksOf(input.source))
-
-  const refused = templateLinksOf(input.target).filter(
-    (link) => !sourceLinks.has(link) && !isAllowedLink(link),
+      isLink: isTemplateLink,
+      linkRule: 'A link must start with https:// or mailto:.',
+    }),
   )
-
-  if (refused.length > 0) {
-    failures.push({
-      code: CHECK_CODES.LINKS,
-      message: `A link must start with https:// or mailto:. Not allowed: ${refused.join(' ')}.`,
-    })
-  }
 
   failures.push(
     ...wordFailures({
@@ -163,19 +202,19 @@ export function checkText(input: {
     }
   }
 
-  const tags = mismatch({ source: htmlTagsOf(input.source), target: htmlTagsOf(input.target) })
-  const openTags = openHtmlTagsOf(input.target)
-
-  if (tags || openTags.length > 0) {
-    failures.push({
+  failures.push(
+    ...markupFailures({
+      source: input.source,
+      target: input.target,
+      stray: strayMarkupOf(input.target),
+      sourceStray: strayMarkupOf(input.source),
+      freeValues: Object.values(MESSAGE_LOCALIZED_ATTRIBUTES),
+      heading: 'The HTML tags must match the source text.',
       code: CHECK_CODES.HTML_TAGS,
-      message: [
-        'The HTML tags must match the source text.',
-        ...(openTags.length > 0 ? [`A tag is left open: ${openTags.join(' ')}.`] : []),
-        ...(tags ? [tags] : []),
-      ].join(' '),
-    })
-  }
+      isLink: isMessageLink,
+      linkRule: 'A link must start with https://, mailto:, / or #.',
+    }),
+  )
 
   failures.push(
     ...wordFailures({

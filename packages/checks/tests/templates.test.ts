@@ -151,7 +151,7 @@ test('a tag left open is refused: it would turn the rest of the email into a lin
     {
       code: 'MARKUP',
       message:
-        'The markup and links must match the source text: only a Developer changes them. A tag is left open: <a href="https://evil.example/login".',
+        'The markup and links must match the source text: only a Developer changes them. A tag or comment is left open: <a href="https://evil.example/login".',
     },
   ])
 
@@ -171,4 +171,52 @@ test("a link the source already has is the developers' to fix, not each translat
       target: 'Manage my <a href="http://agorastore.fr/notifications">notifications</a>',
     }),
   ).toEqual([])
+})
+
+test('a quoted > inside an attribute does not hide a changed link', () => {
+  const source = 'Voir <a href="https://glot.dev/lot">le lot</a>'
+
+  expect(
+    codes({ source, target: 'See <a title=">" href="https://evil.example/login">the lot</a>' }),
+  ).toEqual(['MARKUP'])
+
+  expect(codes({ source, target: "See <a href='https://glot.dev/lot'>the lot</a>" })).toEqual([])
+
+  expect(codes({ source, target: 'See <a title=">the lot' })).toEqual(['MARKUP'])
+})
+
+test('an attribute cannot smuggle a link or a style past the markup check', () => {
+  const source = '<a href="https://agorastore.fr/aide">ici</a>'
+
+  for (const target of [
+    `<a data-x='href="https://agorastore.fr/aide">' href="https://evil.example/login">here</a>`,
+    '<a title=">" style="position:fixed;inset:0" href="https://agorastore.fr/aide">here</a>',
+    '<a href="https://agorastore.fr/aide" hidden>here</a>',
+  ]) {
+    expect(codes({ source, target })).toEqual(['MARKUP'])
+  }
+})
+
+test('an email text cannot open a comment or a declaration, but keeps a < its source has', () => {
+  for (const target of [
+    'Pay <!-- the rest',
+    'Pay <![CDATA[ the rest',
+    'Pay <?x the rest',
+    'Pay </1 the rest',
+  ]) {
+    expect(codes({ source: 'Payez la suite', target })).toEqual(['MARKUP'])
+  }
+
+  expect(
+    codes({ source: 'Prix {{min}}<{{max}} et x<y', target: 'Price {{min}}<{{max}} and x<y' }),
+  ).toEqual([])
+})
+
+test('email tags close in the order they open', () => {
+  expect(
+    codes({
+      source: '<b><a href="{{url}}">Voir</a></b>',
+      target: '<b><a href="{{url}}">See</b></a>',
+    }),
+  ).toEqual(['MARKUP'])
 })

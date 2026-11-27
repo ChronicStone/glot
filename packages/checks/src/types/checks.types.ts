@@ -14,3 +14,10 @@ export interface TextSegment {
   placeholder: boolean
   value: string
 }
+
+export interface HtmlTag {
+  closing: boolean
+  name: string
+  selfClosing: boolean
+  attributes: { name: string; value: string }[]
+}

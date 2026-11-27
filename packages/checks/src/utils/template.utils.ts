@@ -1,15 +1,9 @@
 import { TEMPLATE_UNMATCHED_PROBLEM } from '../constants/syntax.constants.ts'
 import type { TextSegment } from '../types/checks.types.ts'
-import { openHtmlTagsOf, withoutHtmlTags } from './html.utils.ts'
+import { strayMarkupOf, withoutHtmlTags } from './html.utils.ts'
 
 const TEMPLATE_TOKEN_PATTERN = /\{\{\{[\s\S]*?\}\}\}|\{\{[\s\S]*?\}\}|\[\[[\s\S]*?\]\]/gu
 const TEMPLATE_LEFTOVER_PATTERN = /\{\{|\}\}|\[\[|\]\]/u
-const TEMPLATE_TAG_PATTERN = /<\/?[a-zA-Z][a-zA-Z0-9-]*\b[^<>]*?\/?>/gu
-
-const TEMPLATE_ATTRIBUTE_PATTERN =
-  /([a-zA-Z_:][a-zA-Z0-9_.:-]*)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))/gu
-
-const TEMPLATE_HREF_PATTERN = /\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))/giu
 
 function tokenName(token: string) {
   const inner = token.startsWith('{{{') ? token.slice(3, -3) : token.slice(2, -2)
@@ -68,28 +62,6 @@ export function templateSegments(message: string): TextSegment[] {
   return segments
 }
 
-function normalizedTag(tag: string) {
-  const name = /^<(\/?)([a-zA-Z][a-zA-Z0-9-]*)/u.exec(tag)
-
-  const attributes = [...tag.matchAll(TEMPLATE_ATTRIBUTE_PATTERN)]
-    .map((match) => `${match[1]?.toLowerCase()}="${match[2] ?? match[3] ?? match[4] ?? ''}"`)
-    .toSorted()
-
-  return `<${name?.[1] ?? ''}${name?.[2]?.toLowerCase() ?? ''}${attributes.map((attribute) => ` ${attribute}`).join('')}>`
-}
-
-export function templateMarkupOf(message: string) {
-  return [...message.matchAll(TEMPLATE_TAG_PATTERN)]
-    .map((match) => normalizedTag(match[0]))
-    .toSorted()
-}
-
-export function templateLinksOf(message: string) {
-  return [...message.matchAll(TEMPLATE_HREF_PATTERN)].map(
-    (match) => match[1] ?? match[2] ?? match[3] ?? '',
-  )
-}
-
-export function templateOpenTagsOf(message: string) {
-  return openHtmlTagsOf(message.replace(TEMPLATE_TOKEN_PATTERN, ' '))
+export function templateStrayMarkupOf(message: string) {
+  return strayMarkupOf(message.replace(TEMPLATE_TOKEN_PATTERN, ' '))
 }

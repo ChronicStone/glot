@@ -85,7 +85,11 @@ test('HTML tags must be the same as in the source', () => {
 
   expect(codes({ source, target: 'I accept the <a href="/en/terms">terms</a>' })).toEqual([])
 
-  const failures = checkText({ source, target: 'I accept the <a>terms', avoid: [] })
+  const failures = checkText({
+    source,
+    target: 'I accept the <a href="/en/terms">terms',
+    avoid: [],
+  })
 
   expect(failures).toEqual([
     {
@@ -270,4 +274,87 @@ test('a vue-i18n text with a tag left open fails the HTML tags check', () => {
       ({ code }) => code,
     ),
   ).toEqual(['HTML_TAGS'])
+})
+
+test('a vue-i18n translation may localize a link but never hide a tag behind a quoted >', () => {
+  const source = 'J’accepte les <a title="CGU" href="/cgu">conditions</a>'
+
+  expect(
+    checkText({
+      source,
+      target: 'I accept the <a title=">" href="/en/terms">terms</a>',
+      avoid: [],
+    }),
+  ).toEqual([])
+
+  expect(
+    checkText({ source, target: 'I accept the <a title=">terms', avoid: [] }).map(
+      ({ code }) => code,
+    ),
+  ).toEqual(['HTML_TAGS'])
+})
+
+test('a vue-i18n translation may reword a title or localize a link, never add or change anything else', () => {
+  const source = 'Voir <a href="/aide" title="Aide" class="link">l’aide</a>'
+
+  expect(
+    codes({ source, target: 'See <a class="link" href="/de/hilfe" title="Hilfe">die Hilfe</a>' }),
+  ).toEqual([])
+
+  for (const target of [
+    'See <a href="/de/hilfe" title="Hilfe" class="link" onclick="steal()">help</a>',
+    'See <a href="/de/hilfe" title="Hilfe" class="link" hidden>help</a>',
+    'See <a href="/de/hilfe" title="Hilfe" class="cta">help</a>',
+    `See <a data-x='href="/aide">' href="/de/hilfe" title="Hilfe" class="link">help</a>`,
+  ]) {
+    expect(codes({ source, target })).toEqual(['HTML_TAGS'])
+  }
+})
+
+test('a vue-i18n link that is not in the source must be https, mailto, a path or an anchor', () => {
+  const source = 'Voir <a href="/aide">l’aide</a>'
+
+  for (const href of ['https://glot.dev/help', "mailto:help{'@'}glot.dev", '/en/help', '#help']) {
+    expect(codes({ source, target: `See <a href="${href}">help</a>` })).toEqual([])
+  }
+
+  for (const href of [
+    'javascript:alert(1)',
+    'JavaScript:alert(1)',
+    '&#106;avascript:alert(1)',
+    ' javascript:alert(1)',
+    '//evil.example',
+    '/\\evil.example',
+    'data:text/html,x',
+  ]) {
+    expect(codes({ source, target: `See <a href="${href}">help</a>` })).toEqual(['LINKS'])
+  }
+})
+
+test('a vue-i18n text cannot open a comment, a declaration or a broken closing tag the source does not have', () => {
+  for (const target of [
+    'See <!-- the rest',
+    'See <![CDATA[ the rest',
+    'See <?x the rest',
+    'See </1 the rest',
+  ]) {
+    expect(codes({ source: 'Voir la suite', target })).toEqual(['HTML_TAGS'])
+  }
+
+  expect(codes({ source: 'Prix x<y', target: 'Price x<y' })).toEqual([])
+  expect(codes({ source: 'Moins de 3 <3', target: 'Under 3 <3' })).toEqual([])
+})
+
+test('vue-i18n tags close in the order they open', () => {
+  expect(
+    checkText({ source: '<b><i>Vite</i></b>', target: '<b><i>Fast</b></i>', avoid: [] }),
+  ).toEqual([
+    {
+      code: 'HTML_TAGS',
+      message:
+        'The HTML tags must match the source text. The tags close in a different order than they open.',
+    },
+  ])
+
+  expect(codes({ source: '<b>Vite</b><br>', target: '<b>Fast</b><br/>' })).toEqual(['HTML_TAGS'])
 })
