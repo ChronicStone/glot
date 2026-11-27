@@ -64,6 +64,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
+        "@glot/preview-demo": "workspace:*",
         "@glot/seed": "workspace:*",
         "@types/node": "catalog:",
         "@types/pg": "catalog:",

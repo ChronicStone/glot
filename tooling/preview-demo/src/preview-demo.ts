@@ -76,8 +76,11 @@ export function startPreviewDemo(options: { port: number; onTest?: (line: string
 
   return new Promise<{ url: string; close: () => Promise<void> }>((resolve) => {
     server.listen(options.port, () => {
+      const address = server.address()
+      const port = typeof address === 'object' && address ? address.port : options.port
+
       resolve({
-        url: `http://localhost:${options.port}`,
+        url: `http://localhost:${port}`,
         close: () => new Promise((done) => server.close(() => done())),
       })
     })
