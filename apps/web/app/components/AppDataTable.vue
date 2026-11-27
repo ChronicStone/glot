@@ -26,8 +26,7 @@ defineSlots<
           <button
             v-if="header.column.getCanSort()"
             type="button"
-            class="row-flex"
-            style="gap: 4px"
+            class="th-cell"
             @click="header.column.toggleSorting()"
           >
             <slot :name="`header-${header.column.id}`"><FlexRender :header="header" /></slot>
@@ -39,9 +38,9 @@ defineSlots<
               class="ic-13"
             />
           </button>
-          <slot v-else-if="!header.isPlaceholder" :name="`header-${header.column.id}`">
-            <FlexRender :header="header" />
-          </slot>
+          <span v-else-if="!header.isPlaceholder" class="th-cell">
+            <slot :name="`header-${header.column.id}`"><FlexRender :header="header" /></slot>
+          </span>
         </th>
       </tr>
     </thead>

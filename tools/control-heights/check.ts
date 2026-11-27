@@ -5,6 +5,8 @@ import { writeFile } from 'node:fs/promises'
 import { chromium } from 'playwright-core'
 import type { BrowserContext, Page } from 'playwright-core'
 
+import { RELEASE_FIXTURES } from './fixtures.ts'
+
 const BASE_URL = process.env.GLOT_URL ?? 'http://localhost:3000'
 const COOKIE = process.env.GLOT_COOKIE ?? ''
 const REPORT_PATH = process.env.GLOT_CHECK_REPORT
@@ -44,6 +46,17 @@ const SCREENS = [
   { name: 'Texts · language filter', path: '/projects/{project}/texts', click: 'All languages' },
   { name: 'Review', path: '/projects/{project}/review' },
   { name: 'Releases', path: '/projects/{project}/releases' },
+  {
+    name: 'Releases · held back',
+    path: '/projects/{project}/releases',
+    fixtures: 'heldBack',
+  },
+  {
+    name: 'Releases · undo',
+    path: '/projects/{project}/releases',
+    fixtures: 'undo',
+    row: '3 texts',
+  },
   { name: 'Emails & documents', path: '/projects/{project}/emails' },
   { name: 'People', path: '/settings/people' },
   { name: 'People · invite', path: '/settings/people', click: 'Invite' },
@@ -180,7 +193,43 @@ async function projectId(page: Page) {
   return href?.split('/')[2] ?? ''
 }
 
+async function serve(page: Page, fixtures: keyof typeof RELEASE_FIXTURES) {
+  for (const [procedure, fixture] of Object.entries(RELEASE_FIXTURES[fixtures])) {
+    const dates = 'dates' in fixture ? fixture.dates : []
+
+    await page.route(`**/rpc/${procedure}`, (route) =>
+      route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify({ json: fixture.json, meta: dates.map((path) => ['date', ...path]) }),
+      }),
+    )
+  }
+}
+
+async function visit(options: { page: Page; screen: Screen; path: string }) {
+  if (!('fixtures' in options.screen)) {
+    await options.page.goto(`${BASE_URL}${options.path}`)
+
+    return
+  }
+
+  await serve(options.page, options.screen.fixtures)
+  await options.page.goto(`${BASE_URL}/`)
+  await options.page.waitForSelector('#__nuxt')
+  await options.page.evaluate(async (path) => {
+    const app = Reflect.get(Object(document.querySelector('#__nuxt')), '__vue_app__')
+    const properties = Reflect.get(Object(Reflect.get(Object(app), 'config')), 'globalProperties')
+    const router = Object(Reflect.get(Object(properties), '$router'))
+
+    await Reflect.apply(Reflect.get(router, 'push'), router, [path])
+  }, options.path)
+}
+
 async function open(page: Page, screen: Screen) {
+  if ('row' in screen) {
+    await page.locator('[role="button"]', { hasText: screen.row }).first().click()
+  }
+
   if ('click' in screen) {
     const trigger = page.getByRole('button', { name: screen.click }).first()
 
@@ -216,7 +265,7 @@ async function check({
   await page.setViewportSize(VIEWPORTS[viewport])
 
   try {
-    await page.goto(`${BASE_URL}${screen.path.replace('{project}', project)}`)
+    await visit({ page, screen, path: screen.path.replace('{project}', project) })
     await page.waitForTimeout(SETTLE_MS)
 
     if (!(await open(page, screen))) {

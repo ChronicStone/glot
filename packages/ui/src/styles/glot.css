@@ -1447,9 +1447,15 @@
   font-size: var(--glot-t-12);
   font-weight: 500;
   color: var(--glot-ink-3);
-  padding: 0 12px 10px;
+  padding: 0 12px 7px;
   white-space: nowrap;
   border-bottom: 1px solid var(--glot-line);
+}
+.tbl .th-cell {
+  height: var(--glot-control-h-xs);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 .tbl td {
   padding: 12px;
