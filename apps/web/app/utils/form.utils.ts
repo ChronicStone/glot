@@ -18,6 +18,10 @@ export function errorMessage(errors: readonly unknown[]) {
     return 'Required.'
   }
 
+  if (first && typeof first === 'object' && 'format' in first && first.format === 'url') {
+    return 'Write a full address, such as https://previews.example.com.'
+  }
+
   return first && typeof first === 'object' && 'message' in first ? String(first.message) : ''
 }
 

@@ -51,9 +51,10 @@ const repositoryError = ref<string>('')
 
 const defaultValues: Omit<ProjectUpdateInput, 'projectId'> = {
   name: project?.name ?? '',
-  defaultBranch: '',
+  defaultBranch: project?.defaultBranch ?? '',
   sourceLanguage,
   languages,
+  previewUrl: project?.previewUrl ?? null,
   sources: project?.sources.map((source) => ({ ...source })) ?? [
     {
       name: 'shared-base',
@@ -271,6 +272,27 @@ function addSource() {
           </div>
         </form.Field>
       </div>
+      <form.Field
+        v-slot="{ field }"
+        name="previewUrl"
+        :validators="{ onSubmit: projectCreateInputSchema.shape.previewUrl }"
+      >
+        <div class="field">
+          <span class="label">Preview adapter address</span>
+          <label :class="{ 'is-error': errorMessage(field.state.meta.errors) }" class="input"
+            ><UIcon name="i-lucide-mail" /><input
+              :value="field.state.value ?? ''"
+              class="mono"
+              placeholder="https://previews.example.com"
+              aria-label="Preview adapter address"
+              @input="field.handleChange(inputValue($event).trim() || null)"
+          /></label>
+          <span v-if="errorMessage(field.state.meta.errors)" class="hint err"
+            ><UIcon name="i-lucide-circle-alert" />{{ errorMessage(field.state.meta.errors) }}</span
+          >
+          <span v-else class="hint">Optional. Shows the project’s emails, documents and SMS.</span>
+        </div>
+      </form.Field>
       <form.Field v-slot="{ field }" name="sources" mode="array">
         <div class="field">
           <span class="row-flex"
