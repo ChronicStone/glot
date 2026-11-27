@@ -6,11 +6,11 @@ import { useMutation } from '@tanstack/vue-query'
 
 const open = defineModel<boolean>('open', { required: true })
 
-const { concept, workspaceId, languages, editable, details } = defineProps<{
+const { concept, workspaceId, languages, mayChange, details } = defineProps<{
   concept?: GlossaryTerm | undefined
   workspaceId: string
   languages: string[]
-  editable: string[]
+  mayChange: (language: string) => boolean
   details: boolean
 }>()
 
@@ -19,10 +19,12 @@ const { $api, $queryClient } = useNuxtApp()
 const toast = useToast()
 const serverError = ref<string>('')
 const rowLanguages = [...new Set([...languages, ...Object.keys(concept?.terms ?? {})])]
-const locked = rowLanguages.some((language) => !editable.includes(language))
+const locked = computed(() => rowLanguages.some((language) => !mayChange(language)))
 
-const yours = new Intl.ListFormat('en', { type: 'conjunction' }).format(
-  rowLanguages.flatMap((language) => (editable.includes(language) ? [languageName(language)] : [])),
+const yours = computed(() =>
+  new Intl.ListFormat('en', { type: 'conjunction' }).format(
+    rowLanguages.flatMap((language) => (mayChange(language) ? [languageName(language)] : [])),
+  ),
 )
 
 async function saved(result: GlossaryTerm) {
@@ -175,19 +177,19 @@ const submitting = form.useSelector((state) => state.isSubmitting)
           <div v-for="(language, index) in rowLanguages" :key="language" class="term-row">
             <span class="lc plain">{{ language }}</span>
             <form.Field v-slot="{ field }" :name="`rows[${index}].term`">
-              <label :class="{ 'is-disabled': !editable.includes(language) }" class="input"
+              <label :class="{ 'is-disabled': !mayChange(language) }" class="input"
                 ><input
                   :value="field.state.value"
-                  :disabled="!editable.includes(language)"
+                  :disabled="!mayChange(language)"
                   :aria-label="`${languageName(language)} word`"
                   @input="field.handleChange(inputValue($event))"
               /></label>
             </form.Field>
             <form.Field v-slot="{ field }" :name="`rows[${index}].plural`">
-              <label :class="{ 'is-disabled': !editable.includes(language) }" class="input"
+              <label :class="{ 'is-disabled': !mayChange(language) }" class="input"
                 ><input
                   :value="field.state.value"
-                  :disabled="!editable.includes(language)"
+                  :disabled="!mayChange(language)"
                   :aria-label="`${languageName(language)} plural`"
                   @input="field.handleChange(inputValue($event))"
               /></label>
@@ -196,7 +198,7 @@ const submitting = form.useSelector((state) => state.isSubmitting)
               <AppTagInput
                 :model-value="field.state.value"
                 :label="`${languageName(language)} words to avoid`"
-                :disabled="!editable.includes(language)"
+                :disabled="!mayChange(language)"
                 placeholder="Type and press Enter"
                 @update:model-value="field.handleChange"
               />

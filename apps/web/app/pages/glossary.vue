@@ -8,7 +8,7 @@ import { GLOSSARY_FILTERS, GLOSSARY_STATUS_PILLS } from '../constants/glossary.c
 const { $api, $queryClient } = useNuxtApp()
 const toast = useToast()
 const { workspace } = useCurrentWorkspace()
-const { suggests, languages: mine, decides } = useGlossaryRights()
+const { suggests, anyLanguage, languages: mine, mayChange, decides } = useGlossaryRights()
 const { projects } = useCurrentProject()
 const search = ref<string>('')
 const filter = ref<string>(GLOSSARY_FILTERS.ALL)
@@ -291,12 +291,12 @@ function edit(concept: GlossaryTerm | undefined) {
 
     <GlossaryConceptEditor
       v-if="workspace"
-      :key="editing?.id ?? 'new'"
+      :key="[editing?.id ?? 'new', anyLanguage, ...mine, '|', ...languages].join(',')"
       v-model:open="editorOpen"
       :concept="editing"
       :workspace-id="workspace.id"
       :languages="languages"
-      :editable="mine"
+      :may-change="mayChange"
       :details="!editing || decides(editing)"
       @saved="selectedId = $event"
     />

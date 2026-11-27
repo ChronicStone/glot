@@ -158,6 +158,24 @@ test('a Polish reviewer suggests concepts and changes the Polish term, the other
   })
 }, 120_000)
 
+test('right after the page loads, New concept opens the Polish row to a Polish reviewer and keeps the others locked', async () => {
+  const page = await glossaryAs('Rita')
+
+  await page.getByRole('button', { name: 'New concept' }).first().click()
+
+  const polish = page.getByRole('textbox', { name: 'Polish word', exact: true })
+
+  await polish.waitFor(POLL)
+  await expect(polish.isEditable()).resolves.toBe(true)
+  await expect(
+    page.getByRole('textbox', { name: 'German word', exact: true }).isEditable(),
+  ).resolves.toBe(false)
+  await expect(
+    page.getByRole('textbox', { name: 'Concept', exact: true }).isEditable(),
+  ).resolves.toBe(true)
+  await expect(page.getByText('You change Polish only.').isVisible()).resolves.toBe(true)
+}, 120_000)
+
 test('a writer reads the glossary without the buttons that change it', async () => {
   const page = await glossaryAs('Gina')
 

@@ -11,14 +11,16 @@ export function useGlossaryRights() {
   }))
 
   const suggests = computed(() => rights.data.value?.suggest ?? false)
+  const anyLanguage = computed(() => rights.data.value?.anyLanguage ?? false)
   const languages = computed(() => rights.data.value?.languages ?? [])
 
-  function decides(concept: GlossaryTerm) {
-    return (
-      suggests.value &&
-      Object.keys(concept.terms).every((language) => languages.value.includes(language))
-    )
+  function mayChange(language: string) {
+    return suggests.value && (anyLanguage.value || languages.value.includes(language))
   }
 
-  return { suggests, languages, decides }
+  function decides(concept: GlossaryTerm) {
+    return suggests.value && Object.keys(concept.terms).every(mayChange)
+  }
+
+  return { suggests, anyLanguage, languages, mayChange, decides }
 }
