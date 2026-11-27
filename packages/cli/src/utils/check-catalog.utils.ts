@@ -1,4 +1,4 @@
-import { checkText, flattenMessages, parseJsonFile } from '@glot/checks'
+import { checkSource, checkText, flattenMessages, parseJsonFile } from '@glot/checks'
 import type { Syntax } from '@glot/checks'
 import { LOCALE_TOKEN } from '../constants/cli.constants.ts'
 import type { AvoidWords, CatalogFailure } from '../types/cli.types.ts'
@@ -32,7 +32,18 @@ export function checkCatalog(options: {
     path: languagePath({ pattern: options.pattern, language: options.sourceLanguage }),
   })
 
-  const failures: CatalogFailure[] = []
+  const sourcePath = languagePath({ pattern: options.pattern, language: options.sourceLanguage })
+
+  const failures: CatalogFailure[] = [...(source ?? new Map()).values()].flatMap((text) =>
+    checkSource({ source: text.value, syntax: options.syntax }).map((failure) => ({
+      path: sourcePath,
+      key: text.path.join('.'),
+      language: options.sourceLanguage,
+      code: failure.code,
+      message: failure.message,
+    })),
+  )
+
   let checked = 0
 
   for (const language of options.languages.filter((code) => code !== options.sourceLanguage)) {

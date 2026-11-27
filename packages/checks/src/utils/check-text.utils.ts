@@ -418,3 +418,28 @@ export function checkText(input: {
 
   return failures
 }
+
+export function checkSource(input: { source: string; syntax?: Syntax }) {
+  if (input.syntax === SYNTAXES.HANDLEBARS_HTML) {
+    return []
+  }
+
+  const failures = checkText({
+    source: input.source,
+    target: input.source,
+    avoid: [],
+    syntax: input.syntax ?? SYNTAXES.VUE_I18N,
+  })
+
+  return [
+    ...failures.filter(({ code }) => code === CHECK_CODES.HTML_TAGS),
+    ...(hasAbruptComment(input.source)
+      ? [
+          {
+            code: CHECK_CODES.HTML_TAGS,
+            message: 'A comment is closed in a way that lets markup out of it.',
+          },
+        ]
+      : []),
+  ]
+}

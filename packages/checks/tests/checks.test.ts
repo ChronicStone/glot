@@ -1,5 +1,12 @@
 import { expect, test } from 'vite-plus/test'
-import { checkText, checkWords, countWords, protectMessage, restoreMessage } from '../src/index.ts'
+import {
+  checkSource,
+  checkText,
+  checkWords,
+  countWords,
+  protectMessage,
+  restoreMessage,
+} from '../src/index.ts'
 
 function codes(input: { source: string; target: string; avoid?: string[] }) {
   return checkText({ avoid: [], ...input }).map((failure) => failure.code)
@@ -728,4 +735,19 @@ test('glue hidden behind an empty literal or a space before = is still glue', ()
   expect(codes({ source: 'Contact : aide@agorastore.fr', target: 'Contact: @:k' })).toContain(
     'PLACEHOLDERS',
   )
+})
+
+test('a source text that leaves markup open is reported, so a broken source never reaches the app', () => {
+  for (const source of ['Si x<i alors', 'Moins que <', 'Note <!--> fin', 'I </3 it']) {
+    expect(checkSource({ source }).map(({ code }) => code)).toContain('HTML_TAGS')
+  }
+
+  for (const source of [
+    'Prix &lt; 10 €',
+    'Voir <a href="/aide">l’aide</a>',
+    'a < b',
+    '1 € = 100 points',
+  ]) {
+    expect(checkSource({ source })).toEqual([])
+  }
 })

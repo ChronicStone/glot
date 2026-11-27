@@ -232,3 +232,23 @@ test('email texts are checked with --syntax handlebars-html: their placeholders 
   expect(unknown.code).toBe(2)
   expect(unknown.stderr).toContain('Expected one of')
 })
+
+test('a source text that leaves markup open fails, since any text can be linked into another', async () => {
+  await write({
+    path: 'broken/fr.json',
+    content: { ineq: 'Si x<i alors', fine: 'Prix &lt; 10 €' },
+  })
+
+  const result = await glot([
+    'check',
+    'broken/{locale}.json',
+    '--source-language',
+    'fr',
+    '--languages',
+    'fr,en',
+  ])
+
+  expect(result.code).toBe(1)
+  expect(result.stdout).toContain('broken/fr.json  ineq  HTML_TAGS')
+  expect(result.stdout).not.toContain('fine')
+})
