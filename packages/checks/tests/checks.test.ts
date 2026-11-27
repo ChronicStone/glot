@@ -787,3 +787,34 @@ test('a source with a comment in a quoted attribute, a raw-text element or an un
     checkSource({ source: '<a href="mailto:aide@agorastore.fr">' }).map(({ code }) => code),
   ).toContain('SYNTAX')
 })
+
+test('a linked text’s name cannot swallow markup, and a < cannot open a tag on a linked text', () => {
+  for (const source of [
+    'Voir @:b<i title=""',
+    'Note @:b<!--',
+    'Voir @:aide<br> ici',
+    "Voir <@:{'b'}/> ici",
+  ]) {
+    expect(checkSource({ source }).map(({ code }) => code)).toContain('HTML_TAGS')
+  }
+
+  expect(checkSource({ source: 'Voir @:aide <br> ici' })).toEqual([])
+})
+
+test('a raw-text element spelled with literals is still found', () => {
+  expect(
+    checkSource({ source: "{'<'}textarea>x{'<'}/textarea>" }).map(({ code }) => code),
+  ).toContain('HTML_TAGS')
+})
+
+test('a linked text in a comment is not inside a tag, and a source failure reads as one', () => {
+  expect(checkSource({ source: 'Voir <!-- @:b --> ici' })).toEqual([])
+
+  const [failure] = checkSource({ source: 'Voir <i @:b > ici' })
+
+  expect(failure?.message.startsWith('The source text leaves markup open:')).toBe(true)
+  expect(failure?.message).not.toContain('must match the source text')
+  expect(checkSource({ source: 'Voir @:common.save! ici' }).map(({ code }) => code)).toContain(
+    'HTML_TAGS',
+  )
+})

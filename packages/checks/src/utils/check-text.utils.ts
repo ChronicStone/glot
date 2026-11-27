@@ -27,6 +27,7 @@ import {
   gluedLinksOf,
   hasLinks,
   linkMarkedForms,
+  markupInLinkKeys,
   parseMessage,
   placeholdersOf,
   plainTextOf,
@@ -380,7 +381,17 @@ export function checkText(input: {
     )
   })
 
-  if (linkMarkedForms(target.forms).some((form) => linksInsideTags(form) > 0)) {
+  if (markupInLinkKeys(target.forms)) {
+    failures.push({
+      code: CHECK_CODES.HTML_TAGS,
+      message:
+        'A linked text’s name runs into markup (@:key<…): vue-i18n reads it as part of the name. Leave a space after the name.',
+    })
+  }
+
+  if (
+    linkMarkedForms(target.forms).some((form) => linksInsideTags(withoutHtmlComments(form)) > 0)
+  ) {
     failures.push({
       code: CHECK_CODES.HTML_TAGS,
       message:
@@ -456,7 +467,7 @@ export function checkSource(input: { source: string; syntax?: Syntax }) {
         syntax: SYNTAXES.VUE_I18N,
       })
         .filter(({ code }) => code === CHECK_CODES.HTML_TAGS)
-        .map(({ message }) => message.replace(/^The HTML tags must match the source text\. ?/u, ''))
+        .map(({ message }) => message.replaceAll('The HTML tags must match the source text. ', ''))
 
   const problems = [
     ...markup,
@@ -466,7 +477,7 @@ export function checkSource(input: { source: string; syntax?: Syntax }) {
     ...(forms.some((form) => !htmlTagsNest(withoutHtmlComments(form)))
       ? ['A tag is not closed, or closes out of order.']
       : []),
-    ...rawTextElementsOf(input.source).map(
+    ...[...new Set(forms.flatMap(rawTextElementsOf))].map(
       (name) => `<${name}> holds raw text, not a message: keep it out of translated texts.`,
     ),
   ]

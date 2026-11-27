@@ -148,6 +148,17 @@ export function hasLinks(forms: MessageNode[]) {
   return forms.some((form) => form.items.some((item) => item.type === MESSAGE_NODE_TYPES.LINKED))
 }
 
+const MARKUP_IN_KEY_PATTERN = /[<>"'=/`!?&\s]/u
+
+export function markupInLinkKeys(forms: MessageNode[]) {
+  return forms.some((form) =>
+    form.items.some(
+      (item) =>
+        item.type === MESSAGE_NODE_TYPES.LINKED && MARKUP_IN_KEY_PATTERN.test(linkedKey(item.key)),
+    ),
+  )
+}
+
 export function linkMarkedForms(forms: MessageNode[]) {
   return forms.map((form) =>
     form.items

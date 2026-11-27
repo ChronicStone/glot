@@ -161,8 +161,13 @@ export function markedFreeValuesOf(message: string, options: { freeValues: reado
 }
 
 export function linksInsideTags(message: string) {
-  return [
-    ...[...message.matchAll(HTML_TAG_PATTERN)].map((match) => match[0]),
-    ...strayMarkupOf(message).map(({ markup }) => markup),
-  ].filter((markup) => markup.includes(LINK_MARK)).length
+  const opened = message.split(`<${LINK_MARK}`).length + message.split(`</${LINK_MARK}`).length - 2
+
+  return (
+    opened +
+    [
+      ...[...message.matchAll(HTML_TAG_PATTERN)].map((match) => match[0]),
+      ...strayMarkupOf(message).map(({ markup }) => markup),
+    ].filter((markup) => markup.includes(LINK_MARK)).length
+  )
 }
