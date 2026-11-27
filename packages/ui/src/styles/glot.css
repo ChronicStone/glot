@@ -2825,6 +2825,17 @@
   .main {
     padding: 0;
   }
+  .ph-row {
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
+  .ph-row h1 {
+    font-size: var(--glot-t-26);
+    line-height: 32px;
+  }
+  .ph-meta {
+    row-gap: 6px;
+  }
 }
 .dirbar {
   left: 12px;
@@ -5490,6 +5501,22 @@
 .split {
   grid-template-columns: minmax(0, 1fr) 380px;
 }
+@media (max-width: 760px) {
+  .split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .toolbar {
+    flex-wrap: wrap;
+  }
+  .toolbar .input {
+    width: 100%;
+  }
+  .toolbar .seg {
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+}
 .em {
   grid-template-columns: 224px minmax(0, 1fr) 360px;
 }
@@ -5655,6 +5682,7 @@
 }
 .gd .actions-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   align-items: center;
 }

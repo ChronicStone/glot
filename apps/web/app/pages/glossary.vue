@@ -67,9 +67,24 @@ const targets = computed(() =>
   languages.value.filter((code) => !sources.value.includes(code)).slice(0, 4),
 )
 
+const wide = useMediaQuery('(min-width: 761px)')
+
 const selected = computed(
-  () => shown.value.find(({ id }) => id === selectedId.value) ?? shown.value[0],
+  () =>
+    shown.value.find(({ id }) => id === selectedId.value) ??
+    (wide.value ? shown.value[0] : undefined),
 )
+
+const sheetOpen = computed({
+  get: () => Boolean(selected.value) && !wide.value,
+  set: (open: boolean) => {
+    if (!open) {
+      selectedId.value = undefined
+    }
+  },
+})
+
+const [DefineDetail, UseDetail] = createReusableTemplate()
 
 const helper = createAppColumnHelper<GlossaryTerm>()
 
@@ -121,6 +136,73 @@ function edit(concept: GlossaryTerm | undefined) {
 </script>
 
 <template>
+  <DefineDetail>
+    <div v-if="selected" class="pane-scroll">
+      <div class="gd">
+        <div class="actions-row">
+          <AppSegmented
+            v-if="managesPeople"
+            :model-value="selected.status"
+            :items="
+              statuses.map((status) => ({
+                label: GLOSSARY_STATUS_PILLS[status].label,
+                value: status,
+              }))
+            "
+            small
+            @update:model-value="setStatus.mutate({ conceptId: selected.id, status: $event })"
+          />
+          <span class="g-grow" />
+          <button
+            v-if="managesPeople"
+            type="button"
+            class="btn btn-ghost btn-sm"
+            @click="edit(selected)"
+          >
+            <UIcon name="i-lucide-pencil" />Edit
+          </button>
+          <button
+            v-if="managesPeople"
+            type="button"
+            class="btn btn-ghost btn-sm btn-icon"
+            aria-label="Remove the concept"
+            @click="remove.mutate({ conceptId: selected.id })"
+          >
+            <UIcon name="i-lucide-trash-2" />
+          </button>
+        </div>
+        <h2>
+          {{ selected.name
+          }}<span :class="GLOSSARY_STATUS_PILLS[selected.status].tone" class="pill"
+            ><UIcon :name="GLOSSARY_STATUS_PILLS[selected.status].icon" />{{
+              GLOSSARY_STATUS_PILLS[selected.status].label
+            }}</span
+          >
+        </h2>
+        <div class="def">{{ selected.definition }}</div>
+        <div v-if="selected.neverTranslate" class="banner info">
+          <UIcon name="i-lucide-lock" /><span
+            >Never translated: it stays as written in every language.</span
+          >
+        </div>
+        <div>
+          <div class="sec-t">Terms<span class="meta">singular · plural · never use</span></div>
+          <div class="tterms">
+            <div v-for="(words, language) in selected.terms" :key="language" class="t">
+              <span class="lc plain">{{ language }}</span
+              ><span class="w"
+                >{{ words.term }}<small v-if="words.plural">{{ words.plural }}</small></span
+              ><span class="avoid"><s v-for="word in words.avoid" :key="word">{{ word }}</s></span>
+            </div>
+          </div>
+        </div>
+        <div v-if="selected.notes">
+          <div class="sec-t">Notes</div>
+          <div class="well" style="font-size: 13px">{{ selected.notes }}</div>
+        </div>
+      </div>
+    </div>
+  </DefineDetail>
   <AppPage title="Glossary">
     <template #pill>
       <span class="pill plain pill-lg"
@@ -202,75 +284,7 @@ function edit(concept: GlossaryTerm | undefined) {
         </div>
       </section>
 
-      <aside v-if="selected" class="panel">
-        <div class="pane-scroll">
-          <div class="gd">
-            <div class="actions-row">
-              <AppSegmented
-                v-if="managesPeople"
-                :model-value="selected.status"
-                :items="
-                  statuses.map((status) => ({
-                    label: GLOSSARY_STATUS_PILLS[status].label,
-                    value: status,
-                  }))
-                "
-                small
-                @update:model-value="setStatus.mutate({ conceptId: selected.id, status: $event })"
-              />
-              <span class="g-grow" />
-              <button
-                v-if="managesPeople"
-                type="button"
-                class="btn btn-ghost btn-sm"
-                @click="edit(selected)"
-              >
-                <UIcon name="i-lucide-pencil" />Edit
-              </button>
-              <button
-                v-if="managesPeople"
-                type="button"
-                class="btn btn-ghost btn-sm btn-icon"
-                aria-label="Remove the concept"
-                @click="remove.mutate({ conceptId: selected.id })"
-              >
-                <UIcon name="i-lucide-trash-2" />
-              </button>
-            </div>
-            <h2>
-              {{ selected.name
-              }}<span :class="GLOSSARY_STATUS_PILLS[selected.status].tone" class="pill"
-                ><UIcon :name="GLOSSARY_STATUS_PILLS[selected.status].icon" />{{
-                  GLOSSARY_STATUS_PILLS[selected.status].label
-                }}</span
-              >
-            </h2>
-            <div class="def">{{ selected.definition }}</div>
-            <div v-if="selected.neverTranslate" class="banner info">
-              <UIcon name="i-lucide-lock" /><span
-                >Never translated: it stays as written in every language.</span
-              >
-            </div>
-            <div>
-              <div class="sec-t">Terms<span class="meta">singular · plural · never use</span></div>
-              <div class="tterms">
-                <div v-for="(words, language) in selected.terms" :key="language" class="t">
-                  <span class="lc plain">{{ language }}</span
-                  ><span class="w"
-                    >{{ words.term }}<small v-if="words.plural">{{ words.plural }}</small></span
-                  ><span class="avoid"
-                    ><s v-for="word in words.avoid" :key="word">{{ word }}</s></span
-                  >
-                </div>
-              </div>
-            </div>
-            <div v-if="selected.notes">
-              <div class="sec-t">Notes</div>
-              <div class="well" style="font-size: 13px">{{ selected.notes }}</div>
-            </div>
-          </div>
-        </div>
-      </aside>
+      <aside v-if="selected && wide" class="panel"><UseDetail /></aside>
     </div>
 
     <GlossaryConceptEditor
@@ -282,5 +296,8 @@ function edit(concept: GlossaryTerm | undefined) {
       :languages="languages"
       @saved="selectedId = $event"
     />
+    <UDrawer v-model:open="sheetOpen" :ui="{ content: 'panel h-[88dvh]' }">
+      <template #content><UseDetail /></template>
+    </UDrawer>
   </AppPage>
 </template>
