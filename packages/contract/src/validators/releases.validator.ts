@@ -2,7 +2,7 @@ import { releaseChangeSelectSchema, releaseSelectSchema } from '@glot/database/v
 import * as z from 'zod'
 import { CONFLICT_REASONS, CONFLICT_RESOLUTIONS } from '../constants/contract.constants.ts'
 import { draftRefInputSchema, draftSchema } from './drafts.validator.ts'
-import { textSearchInputSchema } from './texts.validator.ts'
+import { textSchema, textSearchInputSchema } from './texts.validator.ts'
 
 export const conflictReasonSchema = z.enum(CONFLICT_REASONS)
 
@@ -39,6 +39,14 @@ export const releasePageSchema = z.object({
   nextCursor: z.string().nullable(),
 })
 
+export const nextReleaseItemSchema = releaseChangeSelectSchema
+  .pick({ textId: true, language: true, value: true })
+  .extend({
+    key: textSchema.shape.key,
+    syntax: textSchema.shape.syntax,
+    authorName: z.string().nullable(),
+  })
+
 export const nextReleaseSchema = z.object({
   open: releaseSchema
     .nullable()
@@ -46,6 +54,15 @@ export const nextReleaseSchema = z.object({
   ready: z.object({
     changes: z.number().int().describe('Approved texts the next release writes.'),
     approvals: z.number().int().describe('Approvals the next release adds to the repository.'),
+    languages: z
+      .array(
+        z.object({ language: releaseChangeSelectSchema.shape.language, changes: z.number().int() }),
+      )
+      .describe('Approved texts per language, the most first.'),
+    sources: z.array(z.string()).describe('The sources whose files the next release changes.'),
+    items: z
+      .array(nextReleaseItemSchema)
+      .describe('The first approved texts the next release writes, oldest approval first.'),
   }),
   conflicts: z.number().int().describe('Approved changes held back until their author decides.'),
   nextRunAt: z.date().describe('When the clock releases next.'),

@@ -19,7 +19,7 @@ import { WorkspaceAccessService } from '../../people/services/workspace-access.s
 import { RightsService } from '../../reviews/services/rights.service.ts'
 import type { GlossaryWords } from '../../glossary/types/glossary.types.ts'
 import { TextsService } from '../../texts/services/texts.service.ts'
-import { RELEASE_ROLES } from '../constants/releases.constants.ts'
+import { RELEASE_NEXT_ITEMS, RELEASE_ROLES } from '../constants/releases.constants.ts'
 import { approvedKeys, draftConflict } from '../utils/release-conflict.utils.ts'
 import { nextRunAt } from '../utils/release-schedule.utils.ts'
 import { releaseChangeView, releaseView } from '../utils/release-view.utils.ts'
@@ -43,11 +43,34 @@ export class ReleasesService {
       include: { startedBy: true },
     })
 
+    const first = plan.changes.slice(0, RELEASE_NEXT_ITEMS)
+
+    const authors = await this.#context.db.user.findMany({
+      where: { id: { in: first.flatMap(({ draft }) => (draft.authorId ? [draft.authorId] : [])) } },
+    })
+
+    const perLanguage = Map.groupBy(plan.changes, ({ draft }) => draft.language)
+
     return {
       open: open
         ? releaseView({ release: open, startedByName: open.startedBy?.name ?? null })
         : null,
-      ready: { changes: plan.changes.length, approvals: plan.lines.length },
+      ready: {
+        changes: plan.changes.length,
+        approvals: plan.lines.length,
+        languages: [...perLanguage]
+          .map(([language, changes]) => ({ language, changes: changes.length }))
+          .toSorted((a, b) => b.changes - a.changes),
+        sources: [...new Set(plan.changes.map(({ entry }) => entry.key.source))].toSorted(),
+        items: first.map(({ draft, entry }) => ({
+          textId: draft.textId,
+          language: draft.language,
+          value: draft.value,
+          key: entry.key,
+          syntax: entry.syntax,
+          authorName: authors.find(({ id }) => id === draft.authorId)?.name ?? null,
+        })),
+      },
       conflicts: plan.conflicts.length,
       nextRunAt: nextRunAt(new Date()),
     }

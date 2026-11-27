@@ -290,11 +290,29 @@ test('approved drafts and approvals make one commit on the release branch, untou
 
   await as('Lena').reviews.approve({ projectId, textId: outbid.id, language: 'pl' })
 
-  await expect(as('Vic').releases.next({ projectId })).resolves.toMatchObject({
+  const next = await as('Vic').releases.next({ projectId })
+
+  expect(next).toMatchObject({
     open: null,
-    ready: { changes: 2, approvals: 3 },
+    ready: { changes: 2, approvals: 3, languages: [{ language: 'pl', changes: 2 }] },
     conflicts: 0,
   })
+
+  expect(next.ready.sources).toHaveLength(1)
+
+  expect(
+    next.ready.items.map(({ key, language, value, syntax }) => ({
+      key: key.path.join('.'),
+      language,
+      value,
+      syntax,
+    })),
+  ).toEqual([
+    { key: save.key.path.join('.'), language: 'pl', value: 'Zapisz', syntax: 'vue-i18n' },
+    { key: remove.key.path.join('.'), language: 'pl', value: 'Usuń', syntax: 'vue-i18n' },
+  ])
+
+  expect(next.ready.items[1]?.authorName).toBe('Lena')
 
   const release = await as('Dave').releases.run({ projectId })
 

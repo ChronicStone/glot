@@ -19,3 +19,5 @@ export const RELEASE_CLOCK = {
 } as const
 
 export const RELEASE_TITLE = 'Release translations'
+
+export const RELEASE_NEXT_ITEMS = 3
