@@ -1,5 +1,5 @@
 export default defineNuxtRouteMiddleware(async (to) => {
-  if (to.path === '/sign-in' || to.path === '/setup') {
+  if (to.path === '/sign-in' || to.path === '/setup' || to.path.startsWith('/widget/')) {
     return
   }
 

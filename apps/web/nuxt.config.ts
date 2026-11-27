@@ -21,5 +21,10 @@ export default defineNuxtConfig({
       ],
     },
   },
+  routeRules: {
+    '/widget/**': {
+      headers: { 'x-frame-options': 'DENY', 'content-security-policy': "frame-ancestors 'none'" },
+    },
+  },
   vite: { optimizeDeps: { exclude: ['@tanstack/vue-table'] } },
 })
