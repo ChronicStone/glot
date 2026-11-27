@@ -21,6 +21,8 @@ export const projectSchema = projectSelectSchema
     id: true,
     workspaceId: true,
     name: true,
+    repository: true,
+    defaultBranch: true,
     sourceLanguage: true,
     languages: true,
     previewUrl: true,
