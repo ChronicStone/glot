@@ -23,3 +23,5 @@ export type * from './widget.types.ts'
 export type * from './ai.types.ts'
 
 export type * from './templates.types.ts'
+
+export type * from './preview-adapter.types.ts'

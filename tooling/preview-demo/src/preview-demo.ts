@@ -2,7 +2,10 @@ import { createServer } from 'node:http'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { PREVIEW_DEMO_PATHS } from './constants/preview-demo.constants.ts'
 import { demoCatalog, renderDemo } from './utils/render.utils.ts'
-import { renderRequestSchema, sendTestRequestSchema } from './validators/preview-demo.validator.ts'
+import {
+  previewAdapterRenderRequestSchema,
+  previewAdapterSendTestRequestSchema,
+} from '@glot/contract/validators'
 
 async function readJson(request: IncomingMessage): Promise<unknown> {
   const chunks: Buffer[] = []
@@ -33,7 +36,7 @@ async function handle(options: {
   }
 
   if (request.method === 'POST' && request.url === PREVIEW_DEMO_PATHS.RENDER) {
-    const parsed = renderRequestSchema.safeParse(await readJson(request))
+    const parsed = previewAdapterRenderRequestSchema.safeParse(await readJson(request))
     const rendered = parsed.success ? renderDemo(parsed.data) : null
 
     send({
@@ -46,7 +49,7 @@ async function handle(options: {
   }
 
   if (request.method === 'POST' && request.url === PREVIEW_DEMO_PATHS.SEND_TEST) {
-    const parsed = sendTestRequestSchema.safeParse(await readJson(request))
+    const parsed = previewAdapterSendTestRequestSchema.safeParse(await readJson(request))
     const rendered = parsed.success ? renderDemo(parsed.data) : null
 
     if (!parsed.success || !rendered) {

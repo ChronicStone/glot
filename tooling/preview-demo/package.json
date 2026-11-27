@@ -13,8 +13,8 @@
     "typecheck": "tsrs --noEmit"
   },
   "dependencies": {
-    "handlebars": "catalog:",
-    "zod": "catalog:"
+    "@glot/contract": "workspace:*",
+    "handlebars": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:"

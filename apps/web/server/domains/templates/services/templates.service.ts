@@ -1,5 +1,7 @@
 import { ACTOR_KINDS } from '@glot/auth'
 import type {
+  PreviewAdapterBrand,
+  PreviewAdapterTemplate,
   TemplateList,
   TemplateListInput,
   TemplatePreviewInput,
@@ -11,7 +13,6 @@ import { ORPCError } from '@orpc/server'
 import type { RequestContext } from '../../../types/context.types.ts'
 import { ProjectsService } from '../../projects/services/projects.service.ts'
 import { TextsService } from '../../texts/services/texts.service.ts'
-import type { AdapterBrand, AdapterTemplate } from '../types/templates.types.ts'
 import { templateTexts, valueIn, worstState } from '../utils/template-texts.utils.ts'
 
 export class TemplatesService {
@@ -82,8 +83,8 @@ export class TemplatesService {
   }
 
   #request(options: {
-    template: AdapterTemplate
-    brand: AdapterBrand
+    template: PreviewAdapterTemplate
+    brand: PreviewAdapterBrand
     texts: Text[]
     languages: string[]
     language: string

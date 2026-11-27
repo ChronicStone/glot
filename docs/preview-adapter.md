@@ -2,7 +2,7 @@
 
 Glot shows emails, documents and SMS as your product renders them. It does not hold your templates: a small HTTP service of yours, the preview adapter, renders them from the texts Glot sends. Set its address in a project's settings (`previewUrl`). `tooling/preview-demo` is a complete adapter to copy from.
 
-The adapter answers JSON on three routes under its address. Glot waits 8 seconds for each answer.
+The adapter answers JSON on three routes under its address. Glot waits 8 seconds for each answer, never follows a redirect, reads at most 5 MB, and refuses an address with a `?` or a `#`. The request and answer shapes are the `previewAdapter*` schemas of `@glot/contract/validators`: an adapter written in TypeScript can validate with them.
 
 ## `GET /templates`
 

@@ -25,3 +25,5 @@ export * from './widget.validator.ts'
 export * from './ai.validator.ts'
 
 export * from './templates.validator.ts'
+
+export * from './preview-adapter.validator.ts'

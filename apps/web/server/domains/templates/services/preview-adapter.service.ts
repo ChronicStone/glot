@@ -1,14 +1,18 @@
 import { ORPCError } from '@orpc/server'
 import { PREVIEW_ADAPTER } from '../constants/templates.constants.ts'
-import type { AdapterCatalog, AdapterRenderRequest } from '../types/templates.types.ts'
+import type {
+  PreviewAdapterCatalog,
+  PreviewAdapterRenderRequest,
+  PreviewAdapterSendTestRequest,
+} from '@glot/contract'
 import {
-  adapterCatalogSchema,
-  adapterRenderSchema,
-  adapterSendTestSchema,
-} from '../validators/preview-adapter.validator.ts'
+  previewAdapterCatalogSchema,
+  previewAdapterRenderSchema,
+  previewAdapterSendTestSchema,
+} from '@glot/contract/validators'
 
 export class PreviewAdapterService {
-  readonly #known = new Map<string, AdapterCatalog>()
+  readonly #known = new Map<string, PreviewAdapterCatalog>()
   readonly #timeoutMs: number
 
   constructor(options: { timeoutMs: number }) {
@@ -17,7 +21,7 @@ export class PreviewAdapterService {
 
   async catalog(url: string) {
     try {
-      const catalog = adapterCatalogSchema.parse(
+      const catalog = previewAdapterCatalogSchema.parse(
         await this.#call({ url, path: PREVIEW_ADAPTER.TEMPLATES_PATH }),
       )
 
@@ -35,9 +39,9 @@ export class PreviewAdapterService {
     }
   }
 
-  async render(options: { url: string; request: AdapterRenderRequest }) {
+  async render(options: { url: string; request: PreviewAdapterRenderRequest }) {
     try {
-      return adapterRenderSchema.parse(
+      return previewAdapterRenderSchema.parse(
         await this.#call({
           url: options.url,
           path: PREVIEW_ADAPTER.RENDER_PATH,
@@ -49,9 +53,9 @@ export class PreviewAdapterService {
     }
   }
 
-  async sendTest(options: { url: string; request: AdapterRenderRequest & { to: string } }) {
+  async sendTest(options: { url: string; request: PreviewAdapterSendTestRequest }) {
     try {
-      adapterSendTestSchema.parse(
+      previewAdapterSendTestSchema.parse(
         await this.#call({
           url: options.url,
           path: PREVIEW_ADAPTER.SEND_TEST_PATH,
@@ -68,14 +72,28 @@ export class PreviewAdapterService {
       method: options.body === undefined ? 'GET' : 'POST',
       headers: { 'content-type': 'application/json', accept: 'application/json' },
       body: options.body === undefined ? null : JSON.stringify(options.body),
+      redirect: 'error',
       signal: AbortSignal.timeout(this.#timeoutMs),
     })
 
-    if (!response.ok) {
+    if (!response.ok || !response.body) {
       throw new Error(`The preview adapter answered ${response.status}`)
     }
 
-    const payload: unknown = await response.json()
+    const chunks: Uint8Array[] = []
+    let size = 0
+
+    for await (const chunk of response.body) {
+      size += chunk.byteLength
+
+      if (size > PREVIEW_ADAPTER.MAX_RESPONSE_BYTES) {
+        throw new Error('The preview adapter answered more than allowed')
+      }
+
+      chunks.push(chunk)
+    }
+
+    const payload: unknown = JSON.parse(Buffer.concat(chunks).toString('utf8'))
 
     return payload
   }

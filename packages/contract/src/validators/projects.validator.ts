@@ -71,6 +71,7 @@ export const projectCreateInputSchema = projectInsertSchema
     sources: z.array(projectSourceInputSchema).min(1),
     previewUrl: z
       .url({ protocol: /^https?$/u })
+      .refine((url) => !url.includes('?') && !url.includes('#'), 'Without ? or #')
       .nullable()
       .optional()
       .describe(

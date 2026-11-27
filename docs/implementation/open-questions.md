@@ -15,3 +15,5 @@ Do not answer these questions by inference. Ask the owner.
 | Should undo remove a text that had no text before its release?                                                          | Refused: undo restores a previous text only.                 |
 | When does the daily digest arrive: 07:00 UTC, or the morning of each person?                                            | 07:00 UTC (D-059).                                           |
 | Should drafts written by an AI fill belong to the person who asked, or to a system author that anyone may approve?      | The person who asked (D-066).                                |
+
+- Should self-hosters be able to restrict preview adapter hosts (an allowlist variable like `WIDGET_ORIGINS`)? Glot already refuses redirects, queries and fragments and caps the answer at 5 MB (D-075).

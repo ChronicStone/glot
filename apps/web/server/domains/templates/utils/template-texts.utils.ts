@@ -1,16 +1,15 @@
-import type { Text } from '@glot/contract'
+import type { PreviewAdapterBrand, PreviewAdapterTemplate, Text } from '@glot/contract'
 import type { TextState } from '@glot/database/types/texts'
 import { TEXT_STATES } from '@glot/database/constants/texts'
 import { TEXT_STATE_SEVERITY } from '../constants/templates.constants.ts'
-import type { AdapterBrand, AdapterTemplate } from '../types/templates.types.ts'
 
 function keyOf(options: { source: string; path: string[] }) {
   return JSON.stringify([options.source, ...options.path])
 }
 
 export function templateTexts(options: {
-  template: AdapterTemplate
-  brand: AdapterBrand
+  template: PreviewAdapterTemplate
+  brand: PreviewAdapterBrand
   texts: Text[]
 }) {
   const byKey = new Map(options.texts.map((text) => [keyOf(text.key), text]))

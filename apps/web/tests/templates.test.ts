@@ -308,6 +308,26 @@ test('unknown templates, brands and languages are not found', async () => {
   ).rejects.toMatchObject({ code: 'NOT_FOUND' })
 })
 
+test('a preview adapter address with a query or a fragment is refused', async () => {
+  const [project] = (await as('Tess').projects.list()).filter(({ id }) => id === projectId)
+
+  if (!project) throw new Error('No project')
+
+  for (const previewUrl of ['http://localhost:9/?x=1', 'http://localhost:9/#x']) {
+    await expect(
+      as('Tess').projects.update({
+        projectId,
+        name: project.name,
+        defaultBranch: 'main',
+        sourceLanguage: project.sourceLanguage,
+        languages: project.languages,
+        sources: project.sources,
+        previewUrl,
+      }),
+    ).rejects.toMatchObject({ code: 'BAD_REQUEST' })
+  }
+})
+
 test('a project without a preview adapter says so', async () => {
   await expect(as('Tess').templates.list({ projectId: bareProjectId })).rejects.toMatchObject({
     code: 'CONFLICT',

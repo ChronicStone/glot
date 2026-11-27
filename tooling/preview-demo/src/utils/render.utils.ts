@@ -6,7 +6,8 @@ import {
   PREVIEW_DEMO_SAMPLE,
   PREVIEW_DEMO_TEMPLATES,
 } from '../constants/preview-demo.constants.ts'
-import type { DemoBrand, DemoTemplate, RenderRequest } from '../types/preview-demo.types.ts'
+import type { PreviewAdapterCatalog, PreviewAdapterRenderRequest } from '@glot/contract'
+import type { DemoBrand, DemoTemplate } from '../types/preview-demo.types.ts'
 
 function escapeHtml(value: string) {
   return value
@@ -25,7 +26,7 @@ function templatePaths(template: DemoTemplate) {
   ]
 }
 
-export function demoCatalog() {
+export function demoCatalog(): PreviewAdapterCatalog {
   return {
     brands: Object.values(PREVIEW_DEMO_BRANDS).map(({ id, name, sources }) => ({
       id,
@@ -51,7 +52,7 @@ function findBrand(id: string) {
   return Object.values(PREVIEW_DEMO_BRANDS).find((brand) => brand.id === id)
 }
 
-function renderer(options: { request: RenderRequest; brand: DemoBrand }) {
+function renderer(options: { request: PreviewAdapterRenderRequest; brand: DemoBrand }) {
   const texts = new Map(options.request.texts.map((text) => [JSON.stringify(text.path), text]))
   const language = options.request.language
 
@@ -135,7 +136,7 @@ ${template.body.map((path) => `<p>${texts.marked(path)}</p>`).join('\n')}
 </div></body></html>`
 }
 
-export function renderDemo(request: RenderRequest) {
+export function renderDemo(request: PreviewAdapterRenderRequest) {
   const template = findTemplate(request.template)
   const brand = findBrand(request.brand)
 
