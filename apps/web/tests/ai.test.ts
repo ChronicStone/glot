@@ -595,6 +595,19 @@ test('a suggestion is not saved, costs what the model reported and shows in the 
   expect(after.spentUsd - before.spentUsd).toBeCloseTo(SONNET_COST_PER_1000_IN_500_OUT, 6)
   expect((pl(after)?.texts ?? 0) - (pl(before)?.texts ?? 0)).toBe(1)
   expect(after.budgetUsd).toBe(25.5)
+
+  const today = new Date().toISOString().slice(0, 10)
+  const day = (usage: typeof after) => usage.days.find(({ date }) => date === today)
+  const suggestions = (usage: typeof after) => usage.kinds.find(({ kind }) => kind === 'SUGGEST')
+
+  expect(after.days).toHaveLength(new Date().getUTCDate())
+  expect(after.days[0]?.date).toBe(`${after.month}-01`)
+  expect((day(after)?.costUsd ?? 0) - (day(before)?.costUsd ?? 0)).toBeCloseTo(
+    SONNET_COST_PER_1000_IN_500_OUT,
+    6,
+  )
+  expect((suggestions(after)?.texts ?? 0) - (suggestions(before)?.texts ?? 0)).toBe(1)
+  expect(after.kinds.map(({ kind }) => kind)).toEqual(['SUGGEST', 'FILL'])
   expect(after.remainingUsd).toBeCloseTo(25.5 - after.spentUsd, 6)
   expect(await connection.db.drafts.count({ where: { projectId: mainProjectId } })).toBe(0)
 })

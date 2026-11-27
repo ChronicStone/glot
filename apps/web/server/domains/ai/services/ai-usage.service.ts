@@ -1,11 +1,19 @@
 import type { AiUsageView, WorkspaceRefInput } from '@glot/contract'
-import { AI_FILL_STOP_REASONS } from '@glot/database/constants/ai'
+import { AI_FILL_STOP_REASONS, AI_USAGE_KINDS } from '@glot/database/constants/ai'
 import type { AiProvider, AiUsageKind } from '@glot/database/types/ai'
 import { ORPCError } from '@orpc/server'
 import type { RequestContext } from '../../../types/context.types.ts'
 import { actorUserId } from '../../../utils/actor.utils.ts'
 import { WorkspaceAccessService } from '../../people/services/workspace-access.service.ts'
-import { costMicros, monthEnd, monthKey, monthStart, usdOf } from '../utils/ai-cost.utils.ts'
+import {
+  costMicros,
+  dayKey,
+  monthDays,
+  monthEnd,
+  monthKey,
+  monthStart,
+  usdOf,
+} from '../utils/ai-cost.utils.ts'
 import { AiSettingsService } from './ai-settings.service.ts'
 
 export class AiUsageService {
@@ -38,6 +46,24 @@ export class AiUsageService {
 
         return {
           language,
+          texts: own.reduce((sum, row) => sum + row.texts, 0),
+          costUsd: usdOf(own.reduce((sum, row) => sum + row.costMicros, 0)),
+        }
+      }),
+      days: monthDays(now).map((date) => {
+        const own = rows.filter((row) => dayKey(row.createdAt) === date)
+
+        return {
+          date,
+          texts: own.reduce((sum, row) => sum + row.texts, 0),
+          costUsd: usdOf(own.reduce((sum, row) => sum + row.costMicros, 0)),
+        }
+      }),
+      kinds: Object.values(AI_USAGE_KINDS).map((kind) => {
+        const own = rows.filter((row) => row.kind === kind)
+
+        return {
+          kind,
           texts: own.reduce((sum, row) => sum + row.texts, 0),
           costUsd: usdOf(own.reduce((sum, row) => sum + row.costMicros, 0)),
         }

@@ -36,3 +36,15 @@ export function monthEnd(now: Date) {
 export function monthKey(now: Date) {
   return now.toISOString().slice(0, 7)
 }
+
+export function dayKey(date: Date) {
+  return date.toISOString().slice(0, 10)
+}
+
+export function monthDays(now: Date) {
+  const start = monthStart(now)
+
+  return Array.from({ length: now.getUTCDate() }, (_, index) =>
+    dayKey(new Date(start.getTime() + index * 86_400_000)),
+  )
+}

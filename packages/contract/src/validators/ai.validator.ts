@@ -3,6 +3,7 @@ import {
   aiFillSelectSchema,
   aiProviderSchema,
   aiSettingsSelectSchema,
+  aiUsageKindSchema,
 } from '@glot/database/validators/ai'
 import { userSelectSchema } from '@glot/database/validators/users'
 import * as z from 'zod'
@@ -120,4 +121,18 @@ export const aiUsageSchema = z.object({
       costUsd: z.number().min(0),
     }),
   ),
+  days: z
+    .array(
+      z.object({
+        date: z.string().describe('A day of the month in UTC, such as 2026-11-27.'),
+        texts: z.number().int(),
+        costUsd: z.number().min(0),
+      }),
+    )
+    .describe('Every day of the month up to today, the days without AI included.'),
+  kinds: z
+    .array(
+      z.object({ kind: aiUsageKindSchema, texts: z.number().int(), costUsd: z.number().min(0) }),
+    )
+    .describe('What the month went to: suggestions on one text, or fills of missing texts.'),
 })
