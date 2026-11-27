@@ -1497,7 +1497,8 @@
   font-size: 11.5px;
   letter-spacing: 0;
   color: var(--glot-ink-2);
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 .insp-key {
   display: inline-flex;
@@ -1512,13 +1513,17 @@
 }
 .insp-key .key {
   font-size: 12.5px;
+  line-height: 18px;
   color: var(--glot-ink);
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .insp-h .insp-key {
-  margin-right: auto;
-  max-width: 220px;
+  grid-area: key;
+  gap: 6px;
+  justify-self: start;
+  max-width: 100%;
+  height: auto;
+  min-height: 28px;
+  padding-block: 4px;
 }
 .rv-lbl .key {
   font-size: 12px;
@@ -3129,6 +3134,10 @@
   white-space: nowrap;
   overflow: hidden;
 }
+.tx-row .sub > .key {
+  flex: none;
+  max-width: 100%;
+}
 .tx-row .sub .iconify {
   width: 12px;
   height: 12px;
@@ -3191,9 +3200,20 @@
 }
 .insp-h {
   padding: 18px 20px 0;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'key close'
+    'tabs tabs';
   align-items: center;
   gap: 10px;
+}
+.insp-h > .seg {
+  grid-area: tabs;
+  justify-self: start;
+}
+.insp-h > .btn {
+  grid-area: close;
 }
 .insp-h .ctx {
   font-size: var(--glot-t-13);
@@ -3201,9 +3221,6 @@
   display: flex;
   align-items: center;
   gap: 6px;
-}
-.insp-h .seg {
-  margin-left: auto;
 }
 .insp-fr {
   padding: 14px 20px 0;
@@ -5424,9 +5441,7 @@
 .keywell span {
   flex: 1;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 .empty {
   padding: 56px 24px 60px;

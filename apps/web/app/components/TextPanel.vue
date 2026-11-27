@@ -190,6 +190,7 @@ defineShortcuts({
       :working="translation.language === working?.language"
       :editable="canWrite || canApprove"
       :own-draft="own && translation.language === working?.language"
+      :field-error="translation.language === working?.language ? error : undefined"
       @select="chosen = translation.language"
     >
       <template #editor><UseEditor /></template>
@@ -230,6 +231,7 @@ defineShortcuts({
         :working="translation.language === working?.language"
         :editable="canWrite || canApprove"
         :own-draft="false"
+        :field-error="translation.language === working?.language ? error : undefined"
         @select="chosen = translation.language"
       >
         <template #editor><UseEditor /></template>

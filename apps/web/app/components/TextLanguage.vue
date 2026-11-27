@@ -10,6 +10,7 @@ const { translation } = defineProps<{
   working: boolean
   editable: boolean
   ownDraft: boolean
+  fieldError?: string | undefined
 }>()
 
 const emit = defineEmits<{ select: [] }>()
@@ -59,7 +60,11 @@ const byline = computed(() => {
     <div v-else class="val muted" style="font-size: 13px">
       No {{ languageName(translation.language) }} text yet.
     </div>
-    <div v-for="failure in translation.failures" :key="failure.code" class="check-fail">
+    <div
+      v-for="failure in translation.failures.filter(({ message }) => message !== fieldError)"
+      :key="failure.code"
+      class="check-fail"
+    >
       <UIcon name="i-lucide-triangle-alert" />
       <div>
         <b>{{ failure.message }}</b>

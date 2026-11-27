@@ -170,7 +170,7 @@ defineExpose({
             </template>
           </div>
           <div class="pop-f">
-            <span>{{ hovered?.text.key.path.join('.') }}</span>
+            <span class="key">{{ hovered?.text.key.path.join('.') }}</span>
             <span>{{ languageName(hoveredTranslation.language) }}</span>
           </div>
         </template>
