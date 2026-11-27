@@ -6,6 +6,7 @@ export const PREVIEW_ADAPTER = {
   RENDER_PATH: '/render',
   SEND_TEST_PATH: '/send-test',
   MAX_RESPONSE_BYTES: 5_000_000,
+  KNOWN_CATALOGS: 200,
 } as const
 
 export const TEXT_STATE_SEVERITY = {

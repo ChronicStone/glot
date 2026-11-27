@@ -25,7 +25,12 @@ export class PreviewAdapterService {
         await this.#call({ url, path: PREVIEW_ADAPTER.TEMPLATES_PATH }),
       )
 
+      this.#known.delete(url)
       this.#known.set(url, catalog)
+
+      if (this.#known.size > PREVIEW_ADAPTER.KNOWN_CATALOGS) {
+        this.#known.delete(this.#known.keys().next().value ?? url)
+      }
 
       return { catalog, available: true }
     } catch (error) {

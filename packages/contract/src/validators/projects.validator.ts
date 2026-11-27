@@ -72,6 +72,10 @@ export const projectCreateInputSchema = projectInsertSchema
     previewUrl: z
       .url({ protocol: /^https?$/u })
       .refine((url) => !url.includes('?') && !url.includes('#'), 'Without ? or #')
+      .refine(
+        (url) => !URL.parse(url)?.username && !URL.parse(url)?.password,
+        'Without credentials',
+      )
       .nullable()
       .optional()
       .describe(

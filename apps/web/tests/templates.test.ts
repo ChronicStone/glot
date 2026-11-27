@@ -6,6 +6,8 @@ import { createGlotClient } from '@glot/sdk'
 import { seedDemoProject } from '@glot/seed'
 import { seedDemoRepository } from '@glot/seed/repository'
 import { afterAll, beforeAll, expect, inject, test } from 'vite-plus/test'
+import { PreviewAdapterService } from '../server/domains/templates/services/preview-adapter.service.ts'
+import { startHostileAdapter } from './support/hostile-adapter.ts'
 import { signInByMagicLink, withCookie } from './support/session.ts'
 
 const baseUrl = inject('baseUrl')
@@ -308,12 +310,16 @@ test('unknown templates, brands and languages are not found', async () => {
   ).rejects.toMatchObject({ code: 'NOT_FOUND' })
 })
 
-test('a preview adapter address with a query or a fragment is refused', async () => {
+test('a preview adapter address with a query, a fragment or credentials is refused', async () => {
   const [project] = (await as('Tess').projects.list()).filter(({ id }) => id === projectId)
 
   if (!project) throw new Error('No project')
 
-  for (const previewUrl of ['http://localhost:9/?x=1', 'http://localhost:9/#x']) {
+  for (const previewUrl of [
+    'http://localhost:9/?x=1',
+    'http://localhost:9/#x',
+    'http://glot:secret@localhost:9/',
+  ]) {
     await expect(
       as('Tess').projects.update({
         projectId,
@@ -332,6 +338,25 @@ test('a project without a preview adapter says so', async () => {
   await expect(as('Tess').templates.list({ projectId: bareProjectId })).rejects.toMatchObject({
     code: 'CONFLICT',
   })
+})
+
+test('an adapter that redirects, answers too much or drips its answer is unavailable, never followed or waited on', async () => {
+  const hostile = await startHostileAdapter({ redirectTo: adapter?.url ?? '' })
+  const previews = new PreviewAdapterService({ timeoutMs: 1000 })
+
+  try {
+    for (const behaviour of ['redirect', 'huge', 'drip'] as const) {
+      const started = Date.now()
+
+      await expect(previews.catalog(hostile.url(behaviour))).rejects.toMatchObject({
+        code: 'BAD_GATEWAY',
+      })
+
+      expect(Date.now() - started).toBeLessThan(3000)
+    }
+  } finally {
+    await hostile.close()
+  }
 })
 
 test('when the adapter stops answering, the last list stays and previews fail as unavailable', async () => {
