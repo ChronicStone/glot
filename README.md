@@ -4,6 +4,17 @@ Glot is where a team writes, translates, reviews and ships the words of its prod
 
 It is open source and self-hostable: one Nuxt server and PostgreSQL.
 
+## Try it
+
+Requirements: bun 1.4, Docker, Node 22.18 or later.
+
+```sh
+bun install
+bun run demo
+```
+
+One command starts PostgreSQL, a fresh demo workspace, Glot on http://localhost:3100, an auction site in five languages with the in-app editor on http://localhost:3200, and a preview adapter for its emails. Sign in as `marie@glot.test` (owner) or `anna@glot.test` (Polish and German reviewer): the sign-in link prints in the terminal.
+
 ## What is in the box
 
 | Part                                                                                                                  | Package                                       |
@@ -12,12 +23,14 @@ It is open source and self-hostable: one Nuxt server and PostgreSQL.
 | Typed clients for the API                                                                                             | `@glot/sdk`                                   |
 | The API contract                                                                                                      | `@glot/contract`                              |
 | The Nuxt module that lets members edit texts in a running app                                                         | `@glot/nuxt`                                  |
+| The checks on texts (placeholders, plural forms, markup, links, glossary words) and SMS length                        | `@glot/checks`                                |
+| `glot check` for a repository's own CI                                                                                | `@glot/cli`                                   |
 | Tokens, theme and components                                                                                          | `@glot/ui`                                    |
 | Database, auth, shared types                                                                                          | `@glot/database`, `@glot/auth`, `@glot/utils` |
 
-## Run it
+The packages are not on npm yet: use them from this repository.
 
-Requirements: bun 1.4, Docker, Node 22.18 or later.
+## Run it for development
 
 ```sh
 bun install
@@ -38,7 +51,7 @@ docker compose --profile app up -d --build --wait
 docker compose logs glot | grep "first administrator"   # open the link
 ```
 
-Requirements, environment variables, upgrades and backups: [docs/self-hosting.md](docs/self-hosting.md).
+Requirements, environment variables, upgrades and backups: [docs/self-hosting.md](docs/self-hosting.md). To preview your emails, documents and SMS in Glot, run a [preview adapter](docs/preview-adapter.md) next to your renderer.
 
 ## Use the API
 
@@ -54,6 +67,14 @@ const page = await glot.texts.search({ projectId, state: 'NEEDS_FIX', language: 
 
 Agents connect to `https://glot.example.com/mcp` with the same token. Tokens read, draft and ask for fills; only a signed-in person approves.
 
+In a repository's CI, `glot check` fails the build on a broken placeholder, plural form, tag or link:
+
+```sh
+glot check 'locales/{locale}.json' --source-language fr --languages fr,en,de
+glot check 'emails/agorastore/{locale}.json' 'emails/_common/{locale}.json' \
+  --syntax handlebars-html --source-language fr --languages fr,en,de
+```
+
 ## Develop
 
 ```sh
@@ -65,4 +86,4 @@ Read [AGENTS.md](AGENTS.md) and [the architecture](docs/architecture.md) before 
 
 ## Licence
 
-The server (`apps/web`) is under the [AGPL-3.0](LICENSE). The packages a host app embeds (`@glot/contract`, `@glot/sdk`, `@glot/ui`, `@glot/nuxt`, `@glot/utils`) are under the MIT licence.
+The server (`apps/web`) is under the [AGPL-3.0](LICENSE). The packages a host app or a CI embeds (`@glot/contract`, `@glot/sdk`, `@glot/ui`, `@glot/nuxt`, `@glot/checks`, `@glot/cli`, `@glot/utils`) are under the MIT licence.
