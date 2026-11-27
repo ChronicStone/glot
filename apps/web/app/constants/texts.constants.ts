@@ -17,3 +17,5 @@ export const TEXT_PANEL_TABS = {
   HISTORY: 'History',
   DETAILS: 'Details',
 } as const
+
+export const AI_FILL_POLL_MS = 1500

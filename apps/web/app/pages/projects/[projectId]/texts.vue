@@ -12,6 +12,7 @@ const toast = useToast()
 const { project } = useCurrentProject()
 const reviewTotal = useReviewTotal()
 const counts = useTextStateCounts()
+const { write } = useRights()
 const words = ref<string>('')
 const query = refDebounced(words, 200)
 const state = ref<TextState | undefined>()
@@ -266,6 +267,16 @@ defineShortcuts({
             placeholder="All languages"
             search="Filter languages"
             @update:model-value="language = $event === ALL_LANGUAGES ? undefined : $event"
+          />
+          <AiFillMissing
+            v-if="project && language && write.includes(language)"
+            :project-id="project.id"
+            :language="language"
+            :missing="
+              counts.byLanguage.find((row) => row.language === language)?.counts[
+                TEXT_STATES.MISSING
+              ] ?? 0
+            "
           />
         </div>
         <div class="tx-chips">

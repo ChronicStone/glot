@@ -3431,6 +3431,13 @@
 .ai-sug-off .iconify.spark {
   color: var(--glot-ink-3);
 }
+.btn.btn-ai.is-filling {
+  background: var(--glot-ai-bg);
+  color: var(--glot-ai);
+  box-shadow: none;
+  cursor: progress;
+  font-variant-numeric: tabular-nums;
+}
 .ai-ask {
   margin-top: 8px;
   align-self: flex-start;
