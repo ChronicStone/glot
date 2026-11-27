@@ -1,4 +1,5 @@
 import { checkText, flattenMessages, parseJsonFile } from '@glot/checks'
+import type { Syntax } from '@glot/checks'
 import { LOCALE_TOKEN } from '../constants/cli.constants.ts'
 import type { AvoidWords, CatalogFailure } from '../types/cli.types.ts'
 
@@ -24,6 +25,7 @@ export function checkCatalog(options: {
   sourceLanguage: string
   languages: string[]
   avoid: AvoidWords
+  syntax: Syntax
 }) {
   const source = messagesOf({
     files: options.files,
@@ -50,6 +52,7 @@ export function checkCatalog(options: {
         source: text.value,
         target: translated.value,
         avoid: options.avoid[language] ?? [],
+        syntax: options.syntax,
       })) {
         failures.push({
           path,

@@ -20,6 +20,7 @@ export class CheckService {
           sourceLanguage: options.sourceLanguage,
           languages: options.languages,
           avoid,
+          syntax: options.syntax,
         }),
       ),
     )

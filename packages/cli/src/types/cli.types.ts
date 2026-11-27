@@ -1,3 +1,4 @@
+import type { Syntax } from '@glot/checks'
 import type * as z from 'zod'
 import type { avoidWordsSchema } from '../validators/avoid.validator.ts'
 
@@ -9,6 +10,7 @@ export interface CheckArguments {
   languages: string[]
   avoidFile: string | undefined
   root: string
+  syntax: Syntax
 }
 
 export interface CatalogFailure {

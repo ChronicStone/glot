@@ -1,3 +1,4 @@
+import { SYNTAXES } from '@glot/checks'
 import { defineCommand } from 'citty'
 import { CLI_EXIT } from '../constants/cli.constants.ts'
 import { CheckService } from '../services/check.service.ts'
@@ -31,6 +32,13 @@ export const checkCommand = defineCommand({
       valueHint: 'file',
       description: 'A JSON file of words to avoid per language: {"de": ["Grundstück"]}.',
     },
+    syntax: {
+      type: 'enum',
+      options: Object.values(SYNTAXES),
+      default: SYNTAXES.VUE_I18N,
+      description:
+        'How placeholders are written: vue-i18n {name}, or handlebars-html {{name}} for email, document and SMS texts.',
+    },
     root: {
       type: 'string',
       default: '.',
@@ -54,6 +62,7 @@ export const checkCommand = defineCommand({
       languages,
       avoidFile: args.avoid,
       root: args.root,
+      syntax: args.syntax,
     })
 
     const lines = failures.map(

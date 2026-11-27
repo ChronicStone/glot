@@ -204,3 +204,31 @@ test('a key with a dot and a nested key are two texts', async () => {
   ).toHaveLength(2)
   expect(result.stdout.split('\n').at(-2)).toBe('2 texts checked, 2 failures.')
 })
+
+test('email texts are checked with --syntax handlebars-html: their placeholders pass, a changed link fails', async () => {
+  await write({
+    path: 'mails/fr.json',
+    content: { hi: 'Bonjour {{firstName}}', manage: 'Gérer <a href="https://glot.dev/n">ici</a>' },
+  })
+  await write({
+    path: 'mails/en.json',
+    content: {
+      hi: 'Hello {{firstName}}',
+      manage: 'Manage <a href="https://evil.example/n">here</a>',
+    },
+  })
+
+  const args = ['check', 'mails/{locale}.json', '--source-language', 'fr', '--languages', 'fr,en']
+  const templates = await glot([...args, '--syntax', 'handlebars-html'])
+
+  expect(templates.code).toBe(1)
+  expect(templates.stdout.split('\n').slice(0, -1)).toEqual([
+    'mails/en.json  manage  MARKUP  The markup and links must match the source text: only a Developer changes them. Missing from this text: <a href="https://glot.dev/n">. Not in the source text: <a href="https://evil.example/n">.',
+    '2 texts checked, 1 failure.',
+  ])
+
+  const unknown = await glot([...args, '--syntax', 'mustache'])
+
+  expect(unknown.code).toBe(2)
+  expect(unknown.stderr).toContain('Expected one of')
+})
