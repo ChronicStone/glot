@@ -75,7 +75,14 @@ export class AiTranslatorService {
           texts: 0,
         })
 
-        throw new ORPCError('BAD_GATEWAY', { message: AI_STOP_MESSAGES[completion.stopped] })
+        const message = AI_STOP_MESSAGES[completion.stopped]
+
+        if (accepted.size === 0) {
+          throw new ORPCError('BAD_GATEWAY', { message })
+        }
+
+        pending = pending.map((item) => ({ ...item, problems: [message] }))
+        break
       }
 
       const answers = parseAnswers(completion.text)

@@ -186,10 +186,18 @@ export async function startAiSink() {
         : {
             id: 'resp_recorded',
             object: 'response',
-            status: 'completed',
+            status: step.stopReason === 'max_tokens' ? 'incomplete' : 'completed',
             model: body.model,
             output: [
-              { type: 'message', role: 'assistant', content: [{ type: 'output_text', text }] },
+              {
+                type: 'message',
+                role: 'assistant',
+                content: [
+                  step.stopReason === 'refusal'
+                    ? { type: 'refusal', refusal: 'Recorded refusal' }
+                    : { type: 'output_text', text },
+                ],
+              },
             ],
             usage: { input_tokens: input, output_tokens: output },
           },

@@ -1,4 +1,5 @@
 import { AI_PROVIDERS } from '@glot/database/constants/ai'
+import type { AiStop } from '../types/ai.types.ts'
 
 export const AI_DEFAULT_BASE_URLS = {
   [AI_PROVIDERS.ANTHROPIC]: 'https://api.anthropic.com',
@@ -20,6 +21,11 @@ export const AI_STOPS = {
   REFUSED: 'REFUSED',
   CUT_SHORT: 'CUT_SHORT',
 } as const
+
+export const AI_ANTHROPIC_STOPS: Record<string, AiStop> = {
+  refusal: AI_STOPS.REFUSED,
+  max_tokens: AI_STOPS.CUT_SHORT,
+}
 
 export const AI_STOP_MESSAGES = {
   [AI_STOPS.REFUSED]: 'The AI provider declined to answer',

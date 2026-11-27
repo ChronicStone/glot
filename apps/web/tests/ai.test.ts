@@ -1,5 +1,6 @@
 import { ACTOR_KINDS, createGlotAuth } from '@glot/auth'
 import { AI_FILL_STATUSES } from '@glot/contract'
+import { AI_USAGE_KINDS } from '@glot/database/constants/ai'
 import { DRAFT_STATUSES } from '@glot/database/constants/drafts'
 import { JOB_KINDS } from '@glot/database/constants/jobs'
 import { TEXT_STATES } from '@glot/database/constants/texts'
@@ -16,6 +17,7 @@ import { LocalGitReader } from '../server/domains/catalogs/services/local-git-re
 import { AiFillJobsService } from '../server/domains/ai/services/ai-fill-jobs.service.ts'
 import { AiService } from '../server/domains/ai/services/ai.service.ts'
 import { AiSettingsService } from '../server/domains/ai/services/ai-settings.service.ts'
+import { AiTranslatorService } from '../server/domains/ai/services/ai-translator.service.ts'
 import type { RequestContext } from '../server/types/context.types.ts'
 import { testAiRuntime } from './support/ai-runtime.ts'
 import { scriptSink, sinkRequests } from './support/ai-sink.ts'
@@ -769,6 +771,22 @@ test('OpenAI is called through the Responses API with its own key and model', as
   expect(recorded?.body.instructions).toContain('numbered tokens')
   expect(JSON.parse(recorded?.body.input).texts[0].source).toBe('Fin le ⟦1⟧')
 
+  const input = { projectId: mainProjectId, textId: ended.id, language: 'pl' }
+
+  await scriptSink({ url: sink, key: OPENAI_KEY, steps: [{ stopReason: 'max_tokens' }] })
+
+  await expect(as('Paul').ai.suggest(input)).rejects.toMatchObject({
+    code: 'BAD_GATEWAY',
+    message: 'The AI answer was cut short',
+  })
+
+  await scriptSink({ url: sink, key: OPENAI_KEY, steps: [{ stopReason: 'refusal' }] })
+
+  await expect(as('Paul').ai.suggest(input)).rejects.toMatchObject({
+    code: 'BAD_GATEWAY',
+    message: 'The AI provider declined to answer',
+  })
+
   await setKeyAndBudget({
     name: 'Olga',
     workspaceId: mainWorkspaceId,
@@ -1168,6 +1186,52 @@ test('a text whose answer breaks a token twice is left out and counted, the othe
   expect(JSON.parse(requests[1]?.body.messages[0].content).texts[0].previousProblems).toEqual([
     '⟦99⟧ does not exist in the source text',
   ])
+})
+
+test('a retry the provider refuses keeps what the first answer wrote, and fails only when nothing was', async () => {
+  const translator = new AiTranslatorService(await personContext('user-ai-olga'))
+
+  const texts = [
+    await textBySource({ name: 'Olga', project: mainProjectId, source: 'Fin le {date}' }),
+    await textBySource({ name: 'Olga', project: mainProjectId, source: 'Enregistrer' }),
+  ]
+
+  const project = { id: mainProjectId, workspaceId: mainWorkspaceId, sourceLanguage: 'fr' }
+
+  await scriptSink({
+    url: sink,
+    key: MAIN_KEY,
+    steps: [{ times: 1, corrupt: [{ id: 1, mode: 'drop' }] }, { stopReason: 'refusal' }],
+  })
+
+  const translated = await translator.translate({
+    project,
+    language: 'pl',
+    texts,
+    glossary: [],
+    kind: AI_USAGE_KINDS.FILL,
+  })
+
+  expect(translated.results.map(({ value, problems }) => ({ value, problems }))).toEqual([
+    { value: null, problems: ['The AI provider declined to answer'] },
+    { value: '[pl] Enregistrer', problems: [] },
+  ])
+
+  await scriptSink({
+    url: sink,
+    key: MAIN_KEY,
+    steps: [{ times: 1, corrupt: [{ id: 1, mode: 'drop' }] }, { stopReason: 'refusal' }],
+  })
+
+  await expect(
+    translator.translate({
+      project,
+      language: 'pl',
+      texts: texts.slice(0, 1),
+      glossary: [],
+      kind: AI_USAGE_KINDS.FILL,
+    }),
+  ).rejects.toMatchObject({ code: 'BAD_GATEWAY', message: 'The AI provider declined to answer' })
 })
 
 test.skipIf(!process.env.ANTHROPIC_API_KEY)(

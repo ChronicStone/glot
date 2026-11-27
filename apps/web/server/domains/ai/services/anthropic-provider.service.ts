@@ -1,10 +1,5 @@
-import { AI_ANTHROPIC_VERSION, AI_STOPS } from '../constants/ai.constants.ts'
-import type {
-  AiCompletion,
-  AiCompletionRequest,
-  AiProviderClient,
-  AiStop,
-} from '../types/ai.types.ts'
+import { AI_ANTHROPIC_STOPS, AI_ANTHROPIC_VERSION } from '../constants/ai.constants.ts'
+import type { AiCompletion, AiCompletionRequest, AiProviderClient } from '../types/ai.types.ts'
 import { anthropicResponseSchema } from '../validators/ai-answer.validator.ts'
 import { AiHttpService } from './ai-http.service.ts'
 
@@ -29,13 +24,8 @@ export class AnthropicProvider implements AiProviderClient {
       }),
     )
 
-    const stops: Record<string, AiStop> = {
-      refusal: AI_STOPS.REFUSED,
-      max_tokens: AI_STOPS.CUT_SHORT,
-    }
-
     return {
-      stopped: stops[response.stop_reason ?? ''] ?? null,
+      stopped: AI_ANTHROPIC_STOPS[response.stop_reason ?? ''] ?? null,
       text: response.content
         .flatMap((block) => (block.type === 'text' ? [block.text ?? ''] : []))
         .join(''),
