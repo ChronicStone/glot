@@ -65,9 +65,11 @@ function postWidget(options: { token: string; origin: string; path: string; body
 
 beforeAll(async () => {
   const connection = createDatabase({ connectionString: inject('databaseUrl') })
+
   const workspace = await connection.db.workspaces.create({
     data: { name: 'Widget', slug: 'widget' },
   })
+
   const elsewhere = await connection.db.workspaces.create({
     data: { name: 'Elsewhere', slug: 'elsewhere' },
   })
@@ -287,10 +289,12 @@ test('a token works only from its origin, unaltered, for its project and the wid
 test('the widget renews its token, and signing out of Glot signs it out', async () => {
   const cookie = await signInByMagicLink('wanda@widget.test')
   const person = createGlotClient({ url: baseUrl, fetch: withCookie(cookie) })
+
   const first = await person.widget.token({
     origin: WIDGET_TEST_ORIGINS.UAT,
     repository: REPOSITORY,
   })
+
   const client = widget({ token: first.token, origin: WIDGET_TEST_ORIGINS.UAT })
 
   const renewed = await client.widget.token({
