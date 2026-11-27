@@ -19,6 +19,10 @@ const languages = useWorkspaceLanguages()
 
 const roles = Object.values(WORKSPACE_ROLES).filter((role) => role !== WORKSPACE_ROLES.OWNER)
 
+function failed(error: Error) {
+  toast.add({ title: error.message, color: 'error', icon: 'i-lucide-circle-alert' })
+}
+
 async function saved(message: string) {
   await $queryClient.invalidateQueries({ queryKey: $api.people.key() })
   toast.add({ title: message, color: 'success', icon: 'i-lucide-check' })
@@ -28,15 +32,19 @@ async function saved(message: string) {
 const invite = useMutation(
   $api.people.invite.mutationOptions({
     onSuccess: (invited) => saved(`Sign-in link sent to ${invited.user.email}`),
+    onError: failed,
   }),
 )
 
 const update = useMutation(
-  $api.people.update.mutationOptions({ onSuccess: () => saved('Access changed') }),
+  $api.people.update.mutationOptions({ onSuccess: () => saved('Access changed'), onError: failed }),
 )
 
 const remove = useMutation(
-  $api.people.remove.mutationOptions({ onSuccess: () => saved('Removed from the workspace') }),
+  $api.people.remove.mutationOptions({
+    onSuccess: () => saved('Removed from the workspace'),
+    onError: failed,
+  }),
 )
 
 const defaultValues: PersonInviteInput = {
@@ -52,13 +60,15 @@ const form = useForm({
   validators: { onSubmit: personInviteInputSchema },
   onSubmit: ({ value }) =>
     person
-      ? update.mutateAsync({
-          membershipId: person.id,
-          role: value.role,
-          languages: value.languages,
-          expiresAt: value.expiresAt ?? null,
-        })
-      : invite.mutateAsync(value),
+      ? update
+          .mutateAsync({
+            membershipId: person.id,
+            role: value.role,
+            languages: value.languages,
+            expiresAt: value.expiresAt ?? null,
+          })
+          .catch(() => undefined)
+      : invite.mutateAsync(value).catch(() => undefined),
 })
 
 const submitting = form.useSelector((state) => state.isSubmitting)

@@ -21,8 +21,10 @@ async function saved(message: string) {
   open.value = false
 }
 
+const serverError = ref<string>('')
+
 function failed(error: Error) {
-  toast.add({ title: error.message, color: 'error', icon: 'i-lucide-circle-alert' })
+  serverError.value = error.message
 }
 
 const create = useMutation(
@@ -65,8 +67,10 @@ const form = useForm({
   defaultValues,
   validators: { onSubmit: projectUpdateInputSchema.omit({ projectId: true }) },
   onSubmit: ({ value }) => {
+    serverError.value = ''
+
     if (project) {
-      return update.mutateAsync({ ...value, projectId: project.id })
+      return update.mutateAsync({ ...value, projectId: project.id }).catch(() => undefined)
     }
 
     const checked = projectCreateInputSchema.shape.repository.safeParse(repository.value)
@@ -74,7 +78,9 @@ const form = useForm({
     repositoryError.value = checked.success ? '' : 'Write it as owner/name.'
 
     return checked.success
-      ? create.mutateAsync({ ...value, workspaceId, repository: checked.data })
+      ? create
+          .mutateAsync({ ...value, workspaceId, repository: checked.data })
+          .catch(() => undefined)
       : undefined
   },
 })
@@ -248,6 +254,9 @@ function codes(input: string) {
           >
         </div>
       </form.Field>
+      <div v-if="serverError" class="banner fix">
+        <UIcon name="i-lucide-triangle-alert" /><span>{{ serverError }}</span>
+      </div>
       <div v-if="project" class="field">
         <span class="label">Apps found in the builds</span>
         <div class="toggles">
