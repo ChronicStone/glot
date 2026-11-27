@@ -53,6 +53,9 @@ Open it, enter the workspace name, your name and your email. Glot creates the ad
 | `GLOT_CLOCK`                               | no       | `on` or `off`: the twice-a-day release. On in the image, off in development unless set.                                                                                      |
 | `GLOT_REPOSITORIES`                        | no       | Host folder compose mounts at `/repositories`. Default `./repositories`. Releases commit to a branch there, so it must be writable.                                          |
 | `GLOT_PORT`                                | no       | Port published by compose. Default `3100`.                                                                                                                                   |
+| `WIDGET_ORIGINS`                           | no       | Comma-separated addresses of the apps that run the in-app editor (`@glot/nuxt`), for example `https://uat.acme.com,https://acme.com`. Other origins get no widget.           |
+| `WIDGET_PRODUCTION_ORIGINS`                | no       | Those of `WIDGET_ORIGINS` that are production: members whose access has an end date are refused there.                                                                       |
+| `ANTHROPIC_BASE_URL`, `OPENAI_BASE_URL`    | no       | Addresses of the AI providers, for a proxy or a gateway. Defaults: the providers' own APIs.                                                                                  |
 
 Sign-in links reach people by SMTP. Without `SMTP_URL` a production server cannot send them: invitations fail, and everyone, the setup administrator included once their session ends after 14 days, can sign in only with Google. Set SMTP or Google before inviting anyone. Google sign-in never creates an account: a person must be invited first.
 
