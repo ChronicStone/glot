@@ -363,6 +363,7 @@ onBeforeUnmount(() => {
     :glot-url="`${options.url}/projects/${session.project.id}/texts`"
     :unreachable="unreachable"
     :side="drawerSide"
+    :docked="layout.dock.value"
     @close="
       drawerOpen = false;
       editing = null

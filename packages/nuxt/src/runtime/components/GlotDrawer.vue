@@ -21,6 +21,7 @@ const props = defineProps<{
   glotUrl: string
   unreachable: boolean
   side: DockSide | null
+  docked: DockSide
 }>()
 
 const emit = defineEmits<{
@@ -143,11 +144,11 @@ function jump(id: string) {
           type="button"
           class="btn btn-ghost btn-sm btn-icon"
           data-glot="dock"
-          :aria-label="side === DOCK_SIDES.LEFT ? 'Dock to the right' : 'Dock to the left'"
-          :title="side === DOCK_SIDES.LEFT ? 'Dock to the right' : 'Dock to the left'"
-          @click="emit('dock', otherSide(side))"
+          :aria-label="docked === DOCK_SIDES.LEFT ? 'Dock to the right' : 'Dock to the left'"
+          :title="docked === DOCK_SIDES.LEFT ? 'Dock to the right' : 'Dock to the left'"
+          @click="emit('dock', otherSide(docked))"
         >
-          <GlotIcon :name="side === DOCK_SIDES.LEFT ? 'panel-right' : 'panel-left'" />
+          <GlotIcon :name="docked === DOCK_SIDES.LEFT ? 'panel-right' : 'panel-left'" />
         </button>
         <button
           type="button"
