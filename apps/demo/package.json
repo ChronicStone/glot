@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "nuxt dev",
     "build": "nuxt build",
+    "postinstall": "nuxt prepare",
+    "typecheck": "tsrs -p tsconfig.typecheck.json --noEmit --runExternalCode && tsrs -p .nuxt/tsconfig.server.json --noEmit",
     "test": "vp test run"
   },
   "dependencies": {

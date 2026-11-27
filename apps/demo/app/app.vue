@@ -5,8 +5,11 @@ const localePath = useLocalePath()
 
 async function change(event: Event) {
   const code = event.target instanceof HTMLSelectElement ? event.target.value : locale.value
+  const target = locales.value.find((item) => item.code === code)?.code
 
-  await navigateTo(switchLocalePath(code))
+  if (target) {
+    await navigateTo(switchLocalePath(target))
+  }
 }
 </script>
 

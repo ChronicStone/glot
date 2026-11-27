@@ -1,4 +1,11 @@
-const POLISH_FORMS = { one: 0, few: 1, many: 2, other: 2 } as const
+const POLISH_FORMS: Record<Intl.LDMLPluralRule, number> = {
+  zero: 2,
+  one: 0,
+  two: 2,
+  few: 1,
+  many: 2,
+  other: 2,
+}
 
 const polish = new Intl.PluralRules('pl')
 
