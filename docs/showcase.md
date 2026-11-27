@@ -9,7 +9,7 @@ bun install
 bun run demo
 ```
 
-It takes about a minute. The terminal prints the addresses. Every email Glot sends, sign-in links included, lands in the inbox at http://localhost:8025 (Mailpit); the terminal prints each sign-in link too.
+It takes about a minute. The terminal prints the addresses. Every email Glot sends, sign-in links included, lands in the inbox at http://localhost:8026 (Mailpit); the terminal prints each sign-in link too.
 
 | Who               | Role                            |
 | ----------------- | ------------------------------- |

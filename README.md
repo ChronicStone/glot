@@ -13,7 +13,7 @@ bun install
 bun run demo
 ```
 
-One command starts PostgreSQL, a fresh demo workspace, Glot on http://localhost:3100, an auction site in five languages with the in-app editor on http://localhost:3200, and a preview adapter for its emails. Sign in as `marie@glot.test` (owner) or `anna@glot.test` (Polish and German reviewer): the sign-in emails land in Mailpit on http://localhost:8025, and the terminal prints each link too. [docs/showcase.md](docs/showcase.md) walks through it in ten minutes: a wrong word fixed in the page, reviewed, released and live.
+One command starts PostgreSQL, a fresh demo workspace, Glot on http://localhost:3100, an auction site in five languages with the in-app editor on http://localhost:3200, and a preview adapter for its emails. Sign in as `marie@glot.test` (owner) or `anna@glot.test` (Polish and German reviewer): the sign-in emails land in Mailpit on http://localhost:8026, and the terminal prints each link too. [docs/showcase.md](docs/showcase.md) walks through it in ten minutes: a wrong word fixed in the page, reviewed, released and live.
 
 ## What is in the box
 
@@ -34,14 +34,14 @@ The packages are not on npm yet: use them from this repository.
 
 ```sh
 bun install
-bun run infra:up            # PostgreSQL 18 on localhost:54329, Mailpit on localhost:8025
+bun run infra:up            # PostgreSQL 18 on localhost:54329, Mailpit on localhost:8026
 cp .env.example .env        # then set AUTH_SECRET
 bun run db:migrate
 bun run db:seed             # a demo workspace, project and reviewer (anna@glot.test)
 bun run dev                 # http://localhost:3100
 ```
 
-Sign in with `anna@glot.test`: in development the sign-in link is printed in the server output. With `SMTP_URL=smtp://127.0.0.1:1025` and a `MAIL_FROM` in `.env`, every email Glot sends also lands in Mailpit.
+Sign in with `anna@glot.test`: in development the sign-in link is printed in the server output. With `SMTP_URL=smtp://127.0.0.1:1026` and a `MAIL_FROM` in `.env`, every email Glot sends also lands in Mailpit.
 
 ## Self-host
 

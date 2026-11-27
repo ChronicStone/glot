@@ -20,8 +20,8 @@ services:
     image: axllent/mailpit:v1.33.1
     restart: unless-stopped
     ports:
-      - '127.0.0.1:${GLOT_MAILPIT_PORT:-8025}:8025'
-      - '127.0.0.1:${GLOT_SMTP_PORT:-1025}:1025'
+      - '127.0.0.1:${GLOT_MAILPIT_PORT:-8026}:8025'
+      - '127.0.0.1:${GLOT_SMTP_PORT:-1026}:1025'
 
   glot:
     profiles: ['app']
