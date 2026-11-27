@@ -94,6 +94,12 @@ function renderedItem(item: MessageNode['items'][number], options: { written: bo
   return options.written ? '{}' : placeholderStandIn('')
 }
 
+const GLUED_LINK_PATTERN = /[A-Za-z0-9_-]@[.:]/gu
+
+export function gluedLinksOf(written: string) {
+  return written.match(GLUED_LINK_PATTERN)?.length ?? 0
+}
+
 export function renderedForms(forms: MessageNode[], options: { written: boolean }) {
   return forms.map((form) => form.items.map((item) => renderedItem(item, options)).join(''))
 }

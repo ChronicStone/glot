@@ -658,3 +658,24 @@ test('no text can carry a script attribute in a comment or at its start, and tra
     expect(codes({ source: source ?? '', target: target ?? '' })).toEqual([])
   }
 })
+
+test('a word glued to a linked text fails, so two texts cannot spell an attribute together', () => {
+  expect(codes({ source: '@:d @:k', target: '@:d on@:k' })).toEqual(['HTML_TAGS'])
+  expect(codes({ source: 'Voir @:brand', target: 'See @:brand' })).toEqual([])
+})
+
+test('an attribute name cannot be split across texts', () => {
+  expect(codes({ source: '@:d @:k <b>ok</b>', target: '@:d on@:k <b>ok</b>' })).toEqual([
+    'HTML_TAGS',
+  ])
+
+  expect(codes({ source: '@:d @:k <b>ok</b>', target: '@:d st@:k <b>ok</b>' })).toEqual([
+    'HTML_TAGS',
+  ])
+
+  expect(codes({ source: '@:d @:e <b>ok</b> = 1', target: '@:d st@:e =noop <b>ok</b>' })).toEqual([
+    'HTML_TAGS',
+  ])
+
+  expect(codes({ source: 'Data = {date}', target: 'Data = {date}' })).toEqual([])
+})

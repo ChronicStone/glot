@@ -21,7 +21,13 @@ import {
   strayMarkupOf,
   withoutHtmlComments,
 } from './html.utils.ts'
-import { parseMessage, placeholdersOf, plainTextOf, renderedForms } from './message.utils.ts'
+import {
+  gluedLinksOf,
+  parseMessage,
+  placeholdersOf,
+  plainTextOf,
+  renderedForms,
+} from './message.utils.ts'
 import { integerPluralCategories } from './plural.utils.ts'
 import { parseTemplate, templatePlainText, templateRendered } from './template.utils.ts'
 import { wordFailures } from './words.utils.ts'
@@ -347,6 +353,21 @@ export function checkText(input: {
             : `The source text has ${source.forms.length} plural forms and ${input.language} uses ${languageForms}, separated by |. This text has ${target.forms.length}.`,
       })
     }
+  }
+
+  const glued = renderedForms(target.forms, { written: true }).map(gluedLinksOf)
+
+  const sourceGlued = Math.max(
+    0,
+    ...(source.problem ? [] : renderedForms(source.forms, { written: true }).map(gluedLinksOf)),
+  )
+
+  if (glued.some((count) => count > sourceGlued)) {
+    failures.push({
+      code: CHECK_CODES.HTML_TAGS,
+      message:
+        'A word is glued to a linked text: together they could name an attribute. Leave a space as the source does.',
+    })
   }
 
   failures.push(

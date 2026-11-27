@@ -35,8 +35,6 @@ export const ACTIVE_ATTRIBUTES = {
   XLINK_HREF: 'xlink:href',
   POSTER: 'poster',
   BACKGROUND: 'background',
-  DATA: 'data',
-  IS: 'is',
 } as const
 
 export const EVENT_ATTRIBUTE_PREFIX = 'on'
