@@ -109,7 +109,11 @@ export default defineConfig({
         },
       },
       {
-        files: ['apps/web/app/plugins/2.api.ts', 'apps/web/server/**'],
+        files: [
+          'apps/web/app/plugins/2.api.ts',
+          'packages/nuxt/src/runtime/composables/use-widget-session.ts',
+          'apps/web/server/**',
+        ],
         rules: {
           'no-restricted-imports': ['error', { paths: restrictedImports }],
         },

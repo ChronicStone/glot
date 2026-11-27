@@ -11,7 +11,13 @@
     "typecheck": "tsrs -p tsconfig.typecheck.json --noEmit --runExternalCode"
   },
   "dependencies": {
+    "@glot/checks": "workspace:*",
+    "@glot/contract": "workspace:*",
+    "@glot/database": "workspace:*",
+    "@glot/sdk": "workspace:*",
     "@glot/ui": "workspace:*",
+    "@glot/utils": "workspace:*",
+    "@iconify-json/lucide": "catalog:",
     "@nuxt/kit": "catalog:",
     "@tailwindcss/node": "catalog:",
     "@tailwindcss/oxide": "catalog:",

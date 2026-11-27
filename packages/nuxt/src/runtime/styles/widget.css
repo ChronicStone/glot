@@ -1,9 +1,31 @@
-@import 'tailwindcss';
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
 @import '@glot/ui/theme.css';
+@import '@glot/ui/glot.css';
 
 :host {
   all: initial;
-  font-family: var(--font-sans);
-  font-size: 13px;
+  display: block;
+  position: fixed;
+  inset: 0;
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 2147483647;
+  font-family: var(--glot-font-sans);
+  font-size: var(--glot-t-14);
+  line-height: 1.45;
+  color: var(--glot-ink);
   -webkit-font-smoothing: antialiased;
+}
+
+.glot-w {
+  pointer-events: auto;
 }
