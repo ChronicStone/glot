@@ -25,4 +25,5 @@ export const WIDGET_ICONS = {
   PERSON: 'user',
   OPEN: 'arrow-up-right',
   GLOSSARY: 'book-open-text',
+  FITS: 'ruler',
 } as const

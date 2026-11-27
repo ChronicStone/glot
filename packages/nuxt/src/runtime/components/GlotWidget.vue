@@ -156,14 +156,14 @@ const hoverLabel = computed(() => {
 
 const editedText = computed(() => (editing.value ? texts.value.get(editing.value.key) : undefined))
 
-const anchor = computed(() => {
+const anchored = computed(() => {
   const current = editing.value
 
   if (!current) return null
 
   const exact = placed.value.find(({ hit }) => hit.id === current.hitId)
 
-  return (exact ?? placed.value.find(({ hit }) => hit.keys.includes(current.key)))?.rect ?? null
+  return exact ?? placed.value.find(({ hit }) => hit.keys.includes(current.key)) ?? null
 })
 
 function hitAt(event: MouseEvent) {
@@ -319,7 +319,8 @@ onBeforeUnmount(() => {
     :text="editedText"
     :text-key="editing.key"
     :language="language"
-    :anchor="anchor"
+    :anchor="anchored?.rect ?? null"
+    :hit="anchored?.hit ?? null"
     :drawer-open="drawerOpen"
     :member-id="memberId"
     :project-id="session.project.id"

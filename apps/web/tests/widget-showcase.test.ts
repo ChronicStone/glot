@@ -320,6 +320,10 @@ test('a member fixes a Polish text in the page, sends it for review, and after t
     .toBe(KEY)
   await page.waitForTimeout(600)
 
+  await expect
+    .poll(() => shadow(page, '[data-glot=fits]').textContent(), POLL)
+    .toMatch(/Fits the line: \d+ of \d+ px/u)
+
   const message = shadow(page, '[data-glot=message]')
 
   await message.press('ControlOrMeta+a')

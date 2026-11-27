@@ -9,6 +9,8 @@ import { computed, onBeforeUnmount, ref, useTemplateRef, watch } from 'vue'
 import type { Composer } from 'vue-i18n'
 import { NARROW_SCREEN, PLURAL, WIDGET_LAYOUT } from '../constants/widget.constants.ts'
 import { nestMessage, withoutPath } from '../utils/message.utils.ts'
+import type { PageHit } from '../types/widget.types.ts'
+import { measureLine } from '../utils/fit.utils.ts'
 import { pluralForms, pluralLabels } from '../utils/plural.utils.ts'
 import { translationIn } from '../utils/text.utils.ts'
 import GlotIcon from './GlotIcon.vue'
@@ -20,6 +22,7 @@ const props = defineProps<{
   textKey: string
   language: string
   anchor: DOMRect | null
+  hit: PageHit | null
   drawerOpen: boolean
   memberId: string
   projectId: string
@@ -103,6 +106,33 @@ function restore() {
 }
 
 const narrow = useMediaQuery(NARROW_SCREEN)
+const fit = ref<ReturnType<typeof measureLine>>(null)
+const oneLine = ref<boolean>(false)
+
+const fitOver = computed(
+  () => !!fit.value && (fit.value.lines > 1 || fit.value.used > fit.value.room),
+)
+
+function remeasure() {
+  requestAnimationFrame(() => {
+    fit.value = props.hit
+      ? measureLine({ node: props.hit.node, attribute: props.hit.attribute })
+      : null
+  })
+}
+
+watch([value, () => props.anchor], remeasure)
+
+watch(
+  () => props.hit,
+  (hit) => {
+    if (hit && !oneLine.value && !fit.value) {
+      oneLine.value = measureLine({ node: hit.node, attribute: hit.attribute })?.lines === 1
+      remeasure()
+    }
+  },
+  { immediate: true },
+)
 
 const forms = computed(() => {
   const own = pluralForms(value.value)
@@ -271,6 +301,25 @@ onBeforeUnmount(() => {
     >
       <GlotMessageInput v-model="value" />
     </label>
+    <div
+      v-if="fit && oneLine"
+      class="fits"
+      data-glot="fits"
+      :style="fitOver ? { color: 'var(--glot-fix)' } : {}"
+    >
+      <GlotIcon name="ruler" class="ic-13" />
+      <span
+        >{{ fitOver ? 'Does not fit the line' : 'Fits the line' }}: {{ fit.used }} of
+        {{ fit.room }} px</span
+      >
+      <span class="meter"
+        ><i
+          :style="{
+            width: `${Math.min(100, (fit.used / Math.max(fit.room, 1)) * 100)}%`,
+            ...(fitOver ? { background: 'var(--glot-fix-bar)' } : {}),
+          }"
+      /></span>
+    </div>
     <div v-for="failure in failures" :key="failure.code" class="check-fail">
       <GlotIcon name="book-open-text" />
       <div>
