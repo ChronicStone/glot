@@ -55,7 +55,9 @@ function openModal(person: Person | undefined) {
   <AppPage title="Settings" scroll>
     <template #pill>
       <span class="pill plain pill-lg"
-        ><UIcon name="i-lucide-users" />{{ people.data.value?.length ?? 0 }} people</span
+        ><UIcon name="i-lucide-users" />{{
+          counted({ count: people.data.value?.length ?? 0, one: 'person', other: 'people' })
+        }}</span
       >
     </template>
     <template #actions>

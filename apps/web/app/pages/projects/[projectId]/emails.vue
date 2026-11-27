@@ -319,7 +319,9 @@ watch(currentLanguage, () => {
       <aside class="panel">
         <div class="panel-h" style="padding-bottom: 12px">
           <h3>{{ template?.kind === 'sms' ? template.name : 'Texts in this email' }}</h3>
-          <span class="meta">{{ items.length }} {{ items.length === 1 ? 'text' : 'texts' }}</span>
+          <span class="meta">{{
+            counted({ count: items.length, one: 'text', other: 'texts' })
+          }}</span>
         </div>
         <div class="em-texts">
           <template v-for="(text, index) in items" :key="text.id">

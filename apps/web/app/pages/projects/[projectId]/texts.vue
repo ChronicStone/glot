@@ -120,7 +120,10 @@ const sheetOpen = computed({
 const sync = useMutation(
   $api.projects.sync.mutationOptions({
     onSuccess: async ({ texts: read }) => {
-      toast.add({ title: `Read ${read.toLocaleString('en-US')} texts`, color: 'success' })
+      toast.add({
+        title: `Read ${counted({ count: read, one: 'text', other: 'texts' })}`,
+        color: 'success',
+      })
 
       await $queryClient.invalidateQueries({ queryKey: $api.texts.key() })
     },

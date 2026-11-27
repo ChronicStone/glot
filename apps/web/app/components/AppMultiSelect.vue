@@ -163,7 +163,7 @@ function create(code: string) {
       <template #create-item-label="{ item }">Add the language “{{ item }}”</template>
       <template #content-bottom>
         <div class="sel-foot">
-          <span>{{ model.length }} languages</span>
+          <span>{{ counted({ count: model.length, one: 'language', other: 'languages' }) }}</span>
         </div>
       </template>
     </USelectMenu>

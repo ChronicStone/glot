@@ -52,7 +52,10 @@ function failed(error: Error) {
 
 const run = useMutation(
   $api.releases.run.mutationOptions({
-    onSuccess: (release) => refresh(`Release opened with ${release.changes} texts`),
+    onSuccess: (release) =>
+      refresh(
+        `Release opened with ${counted({ count: release.changes, one: 'text', other: 'texts' })}`,
+      ),
     onError: failed,
   }),
 )
@@ -142,7 +145,7 @@ const lanes = computed(() =>
         bars: [
           {
             kind: 'checks',
-            label: `#${release.pullRequestNumber ?? ''}`,
+            label: release.pullRequestNumber ? `#${release.pullRequestNumber}` : 'Release branch',
             from: opened,
             to: merged ?? current,
           },
@@ -184,7 +187,11 @@ useIntervalFn(() => {
       <span v-else class="pill ok pill-lg"><UIcon name="i-lucide-check" />On track</span>
     </template>
     <template #meta>
-      <span><UIcon name="i-lucide-rocket" />{{ history.data.value?.total ?? 0 }} releases</span>
+      <span
+        ><UIcon name="i-lucide-rocket" />{{
+          counted({ count: history.data.value?.total ?? 0, one: 'release', other: 'releases' })
+        }}</span
+      >
       <span v-if="next.data.value"
         ><UIcon name="i-lucide-clock" />Next at {{ clock.format(next.data.value.nextRunAt) }}</span
       >
@@ -221,7 +228,10 @@ useIntervalFn(() => {
         <template v-for="lane in lanes" :key="lane.release.id">
           <div class="tl-lbl">
             <b>{{ clock.format(new Date(lane.release.createdAt)) }}</b
-            ><span>{{ lane.release.changes }} texts · {{ startedBy(lane.release) }}</span>
+            ><span
+              >{{ counted({ count: lane.release.changes, one: 'text', other: 'texts' }) }} ·
+              {{ startedBy(lane.release) }}</span
+            >
           </div>
           <div class="tl-lane">
             <span
@@ -238,7 +248,12 @@ useIntervalFn(() => {
         <template v-if="next.data.value">
           <div class="tl-lbl">
             <b>{{ clock.format(next.data.value.nextRunAt) }} · next</b
-            ><span>{{ next.data.value.ready.changes }} texts · Approved</span>
+            ><span
+              >{{
+                counted({ count: next.data.value.ready.changes, one: 'text', other: 'texts' })
+              }}
+              · Approved</span
+            >
           </div>
           <div class="tl-lane">
             <span
@@ -373,14 +388,16 @@ useIntervalFn(() => {
                 <div class="g-grow">
                   <div class="r-title">
                     {{ day.format(new Date(release.createdAt)) }}
-                    {{ clock.format(new Date(release.createdAt)) }} · {{ release.changes }} texts
+                    {{ clock.format(new Date(release.createdAt)) }} ·
+                    {{ counted({ count: release.changes, one: 'text', other: 'texts' }) }}
                   </div>
                   <div class="r-sub">
                     By {{ startedBy(release)
                     }}<template v-if="release.pullRequestNumber">
                       · pull request #{{ release.pullRequestNumber }}</template
                     >
-                    · {{ release.approvals }} approvals
+                    ·
+                    {{ counted({ count: release.approvals, one: 'approval', other: 'approvals' }) }}
                   </div>
                 </div>
                 <span class="meta"
@@ -480,7 +497,9 @@ useIntervalFn(() => {
         <div v-if="next.data.value?.open" class="rows">
           <div class="r">
             <UIcon name="i-lucide-git-pull-request" class="muted" /><span class="g-grow"
-              >Pull request #{{ next.data.value.open.pullRequestNumber }} is waiting to merge</span
+              ><template v-if="next.data.value.open.pullRequestNumber"
+                >Pull request #{{ next.data.value.open.pullRequestNumber }}</template
+              ><template v-else>The release branch</template> is waiting to merge</span
             ><a
               v-if="next.data.value.open.pullRequestUrl"
               :href="next.data.value.open.pullRequestUrl"

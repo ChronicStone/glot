@@ -65,13 +65,13 @@ const table = useAppTable({ columns, data, getRowId: (person) => person.user.id 
       <template #cell-written="{ row }">
         <span class="mono">{{ count.format(row.written.words) }}</span>
         <span class="muted" style="font-size: 12px">
-          · {{ count.format(row.written.texts) }} texts</span
+          · {{ counted({ count: row.written.texts, one: 'text', other: 'texts' }) }}</span
         >
       </template>
       <template #cell-reviewed="{ row }">
         <span class="mono">{{ count.format(row.reviewed.words) }}</span>
         <span class="muted" style="font-size: 12px">
-          · {{ count.format(row.reviewed.texts) }} texts</span
+          · {{ counted({ count: row.reviewed.texts, one: 'text', other: 'texts' }) }}</span
         >
       </template>
     </AppDataTable>

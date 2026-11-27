@@ -206,7 +206,9 @@ function edit(concept: GlossaryTerm | undefined) {
   <AppPage title="Glossary">
     <template #pill>
       <span class="pill plain pill-lg"
-        ><UIcon name="i-lucide-book-open-text" />{{ all.length }} concepts</span
+        ><UIcon name="i-lucide-book-open-text" />{{
+          counted({ count: all.length, one: 'concept', other: 'concepts' })
+        }}</span
       >
     </template>
     <template #meta>

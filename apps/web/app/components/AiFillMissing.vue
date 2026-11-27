@@ -100,7 +100,7 @@ watch(finished, async (fill) => {
     toast.add({ title: `AI could not fill ${name}`, icon: 'i-lucide-circle-alert', color: 'error' })
   } else {
     toast.add({
-      title: `${fill.filled} ${name} ${fill.filled === 1 ? 'text' : 'texts'} sent for review${refused}`,
+      title: `${counted({ count: fill.filled, one: `${name} text`, other: `${name} texts` })} sent for review${refused}`,
       ...(fill.reason ? { description: fill.reason.message } : {}),
       icon: 'i-lucide-sparkle',
       color: fill.status === AI_FILL_STATUSES.PARTIAL ? 'warning' : 'success',

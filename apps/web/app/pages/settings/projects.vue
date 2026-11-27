@@ -40,7 +40,7 @@ const sync = useMutation(
   $api.projects.sync.mutationOptions({
     onSuccess: async ({ texts, commit }) => {
       toast.add({
-        title: `Read ${texts.toLocaleString('en-US')} texts`,
+        title: `Read ${counted({ count: texts, one: 'text', other: 'texts' })}`,
         description: `Commit ${commit.slice(0, 7)}`,
         color: 'success',
       })
