@@ -143,8 +143,12 @@ export class LocalGitReader implements GitReader, GitWriter {
         }
       })
 
-      git.stdin.on('error', fail)
-      git.stdin.end(options.input ?? '')
+      git.stdin.on('error', (error: NodeJS.ErrnoException) => {
+        if (error.code !== 'EPIPE') {
+          fail(error)
+        }
+      })
+      git.stdin.end(options.input)
     })
   }
 }
