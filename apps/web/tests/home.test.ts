@@ -24,6 +24,7 @@ import { DigestJobsService } from '../server/domains/digests/services/digest-job
 import { HomeService } from '../server/domains/home/services/home.service.ts'
 import { dropDatabase } from './support/database.ts'
 import { signInByMagicLink, withCookie } from './support/session.ts'
+import { testAiRuntime } from './support/ai-runtime.ts'
 import { startSmtpSink } from './support/smtp.ts'
 import type { Database } from '@glot/database'
 import type { DraftStatus } from '@glot/database/types/drafts'
@@ -33,6 +34,7 @@ const run = promisify(execFile)
 const baseUrl = inject('baseUrl')
 const ADMIN_URL = process.env.GLOT_TEST_ADMIN_URL ?? 'postgres://glot:glot@localhost:54329/glot'
 const APP_URL = 'https://glot.example.test'
+const AUTH_SECRET = 'glot-digest-test-secret-at-least-32-characters'
 const TARGET_LANGUAGES = ['de', 'en', 'nl', 'pl']
 
 const HOME_PEOPLE = [
@@ -186,14 +188,21 @@ async function createDigestFixture() {
   const auth = createGlotAuth({
     baseURL: APP_URL,
     database: connection.drizzle,
-    secret: 'glot-digest-test-secret-at-least-32-characters',
+    secret: AUTH_SECRET,
     trustedOrigins: [APP_URL],
   })
 
   const reader = new LocalGitReader({ root })
   const catalog = new CatalogService({ reader })
   const sink = await startSmtpSink()
-  const context = { auth, db, catalog, git: reader }
+
+  const context = {
+    auth,
+    db,
+    catalog,
+    git: reader,
+    ai: testAiRuntime({ secret: AUTH_SECRET, baseUrl: 'http://127.0.0.1:1' }),
+  }
 
   return {
     db,
