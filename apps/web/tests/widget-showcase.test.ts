@@ -333,6 +333,15 @@ test('the pill drags anywhere, a click still opens it, and it stays where it was
   await page.reload()
   await expect.poll(async () => (await launcher.boundingBox())?.x, POLL).toBe(after?.x)
 
+  await page.setViewportSize({ width: 1440, height: 200 })
+  await expect
+    .poll(async () => {
+      const box = await launcher.boundingBox()
+
+      return !!box && box.y + box.height <= 200
+    }, POLL)
+    .toBe(true)
+
   await page.setViewportSize({ width: 600, height: 400 })
   await expect
     .poll(async () => {
@@ -388,8 +397,21 @@ test('the panel docks left or right by its header or its dock button, and steps 
   expect((panel?.x ?? 0) + (panel?.width ?? 0)).toBeLessThan(text?.x ?? 0)
   await shoot({ page, name: '06-stepped-aside' })
 
+  await dock.click()
   await shadow(page, '[data-glot=editor] [aria-label=Close]').click()
-  await expect.poll(() => drawer.getAttribute('data-side'), POLL).toBe('right')
+  await expect.poll(() => drawer.getAttribute('data-side'), POLL).toBe('left')
+
+  await page.setViewportSize({ width: 768, height: 900 })
+  await shadow(page, '[data-glot=row][data-key="marketplace.bid.placeBid"] .t').click()
+  await expect.poll(() => shadow(page, '[data-glot=editor]').count(), POLL).toBe(1)
+
+  const editor = await shadow(page, '[data-glot=editor]').boundingBox()
+
+  expect(await drawer.getAttribute('data-side')).toBe('left')
+  expect((editor?.x ?? 0) + (editor?.width ?? 0)).toBeLessThanOrEqual(768)
+  await page.waitForTimeout(400)
+  await shoot({ page, name: '08-editor-768-docked-left' })
+  await shadow(page, '[data-glot=editor] [aria-label=Close]').click()
 
   await page.setViewportSize({ width: 375, height: 812 })
   await expect.poll(() => drawer.getAttribute('data-side'), POLL).toBe(null)
