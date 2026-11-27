@@ -1,19 +1,14 @@
-const SAMPLED_COUNTS = 200
+import { integerPluralCategories } from '@glot/checks'
+
+const LABELLED_COUNTS = 100
 const LISTED_COUNTS = 26
-const CATEGORY_ORDER = ['zero', 'one', 'two', 'few', 'many', 'other']
 
 function pluralCategories(language: string) {
   const rules = new Intl.PluralRules(language)
-  const counts = new Map<string, number[]>()
+  const counts = Array.from({ length: LABELLED_COUNTS }, (_, count) => count)
 
-  for (let count = 0; count < SAMPLED_COUNTS; count += 1) {
-    const category = rules.select(count)
-
-    counts.set(category, [...(counts.get(category) ?? []), count])
-  }
-
-  return [...counts.entries()].toSorted(
-    ([a], [b]) => CATEGORY_ORDER.indexOf(a) - CATEGORY_ORDER.indexOf(b),
+  return integerPluralCategories(language).map(
+    (category) => [category, counts.filter((count) => rules.select(count) === category)] as const,
   )
 }
 

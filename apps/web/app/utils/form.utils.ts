@@ -25,7 +25,12 @@ export function errorMessage(errors: readonly unknown[]) {
   return first && typeof first === 'object' && 'message' in first ? String(first.message) : ''
 }
 
-export function textCheckError(options: { source: string; target: string; syntax?: Syntax }) {
+export function textCheckError(options: {
+  source: string
+  target: string
+  syntax?: Syntax
+  language?: string
+}) {
   if (!options.target.trim()) {
     return
   }

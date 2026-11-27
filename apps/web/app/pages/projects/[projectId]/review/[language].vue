@@ -194,6 +194,8 @@ const editor = useForm({
       textCheckError({
         source: current.value?.text.source.value ?? '',
         target: value.forms.join(' | '),
+        language: language.value,
+        ...(current.value ? { syntax: current.value.text.syntax } : {}),
       }),
   },
   onSubmit: ({ value }) =>
@@ -213,6 +215,8 @@ const shownFailures = computed(() =>
         source: current.value?.text.source.value ?? '',
         target: edited.value,
         avoid: hits.value.flatMap((hit) => hit.terms[language.value]?.avoid ?? []),
+        language: language.value,
+        ...(current.value ? { syntax: current.value.text.syntax } : {}),
       })
     : failures.value,
 )

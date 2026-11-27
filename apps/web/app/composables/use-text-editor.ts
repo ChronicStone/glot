@@ -33,7 +33,12 @@ export function useTextEditor(options: {
     const text = options.text()
 
     return text
-      ? textCheckError({ source: text.source.value, target, syntax: text.syntax })
+      ? textCheckError({
+          source: text.source.value,
+          target,
+          syntax: text.syntax,
+          ...(translation.value ? { language: translation.value.language } : {}),
+        })
       : undefined
   }
 
