@@ -25,9 +25,12 @@ const repositories = resolve(root, `${DEMO_REPOSITORIES_FOLDER}${suffix}`)
 const glotUrl = `http://localhost:${DEMO_PORTS.GLOT + offset}`
 const appUrl = `http://localhost:${DEMO_PORTS.APP + offset}`
 
+const authSecret = process.env.AUTH_SECRET ?? randomBytes(32).toString('hex')
+
 execFileSync('docker', ['compose', '-p', 'glot', 'up', '-d', '--wait', 'postgres'], {
   cwd: root,
   stdio: 'inherit',
+  env: { ...process.env, AUTH_SECRET: authSecret },
 })
 
 const admin = new pg.Client({ connectionString: `${DEMO_POSTGRES_URL}/glot` })
@@ -67,7 +70,7 @@ const glot = startService({
   cwd: resolve(root, 'apps/web'),
   env: {
     DATABASE_URL: databaseUrl,
-    AUTH_SECRET: process.env.AUTH_SECRET ?? randomBytes(32).toString('hex'),
+    AUTH_SECRET: authSecret,
     APP_URL: glotUrl,
     GLOT_GIT_ROOT: repositories,
     GLOT_CLOCK: 'on',
