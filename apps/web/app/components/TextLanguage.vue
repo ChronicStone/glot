@@ -5,7 +5,7 @@ import GlotTextValue from '@glot/ui/components/GlotTextValue.vue'
 import { TEXT_STATE_CLASSES } from '@glot/ui/constants'
 import { formatTimeAgo } from '@vueuse/core'
 
-const { translation } = defineProps<{
+const { translation, working, editable, ownDraft, fieldError } = defineProps<{
   translation: Translation
   working: boolean
   editable: boolean
@@ -14,6 +14,13 @@ const { translation } = defineProps<{
 }>()
 
 const emit = defineEmits<{ select: [] }>()
+
+const valueFailures = computed(() =>
+  (working && editable && ownDraft
+    ? (translation.draft?.failures ?? [])
+    : translation.failures
+  ).filter(({ message }) => message !== fieldError),
+)
 
 const byline = computed(() => {
   const draft = translation.draft
@@ -60,32 +67,26 @@ const byline = computed(() => {
     <div v-else class="val muted" style="font-size: 13px">
       No {{ languageName(translation.language) }} text yet.
     </div>
-    <div
-      v-for="failure in translation.failures.filter(({ message }) => message !== fieldError)"
-      :key="failure.code"
-      class="check-fail"
-    >
+    <div v-for="failure in valueFailures" :key="failure.code" class="check-fail">
       <UIcon name="i-lucide-triangle-alert" />
       <div>
         <b>{{ failure.message }}</b>
       </div>
     </div>
-    <div v-if="translation.draft && !ownDraft" class="well" style="margin-top: 10px">
-      <div class="hint">{{ translation.draft.authorName }} sent this for review</div>
-      <div class="val" style="margin-top: 2px">
-        <GlotTextValue :value="translation.draft.value" />
+    <template v-if="translation.draft && !ownDraft">
+      <div class="well" style="margin-top: 10px">
+        <div class="hint">{{ translation.draft.authorName }} sent this for review</div>
+        <div class="val" style="margin-top: 2px">
+          <GlotTextValue :value="translation.draft.value" />
+        </div>
       </div>
-    </div>
-    <div
-      v-for="failure in translation.draft?.failures ?? []"
-      :key="failure.code"
-      class="check-fail"
-    >
-      <UIcon name="i-lucide-triangle-alert" />
-      <div>
-        <b>{{ failure.message }}</b>
+      <div v-for="failure in translation.draft.failures" :key="failure.code" class="check-fail">
+        <UIcon name="i-lucide-triangle-alert" />
+        <div>
+          <b>{{ failure.message }}</b>
+        </div>
       </div>
-    </div>
+    </template>
     <slot />
   </div>
 </template>
