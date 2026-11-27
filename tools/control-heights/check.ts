@@ -58,6 +58,8 @@ const SCREENS = [
     row: '3 texts',
   },
   { name: 'Emails & documents', path: '/projects/{project}/emails' },
+  { name: 'Emails · SMS', path: '/projects/{project}/emails?template=outbid-sms' },
+  { name: 'Emails · text', path: '/projects/{project}/emails', click: 'Enchérir à nouveau' },
   { name: 'People', path: '/settings/people' },
   { name: 'People · invite', path: '/settings/people', click: 'Invite' },
   { name: 'Projects', path: '/settings/projects' },
