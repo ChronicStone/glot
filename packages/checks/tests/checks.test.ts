@@ -1,5 +1,5 @@
 import { expect, test } from 'vite-plus/test'
-import { checkText, checkWords } from '../src/index.ts'
+import { checkText, checkWords, countWords } from '../src/index.ts'
 
 function codes(input: { source: string; target: string; avoid?: string[] }) {
   return checkText({ avoid: [], ...input }).map((failure) => failure.code)
@@ -159,4 +159,13 @@ test('checkWords reports only the glossary failures and nothing for a text with 
   expect(
     checkWords({ source: 'Fin le {date}', target: 'Koniec {data}', avoid: [], keep: [] }),
   ).toEqual([])
+})
+
+test('words are counted in the plain text, without placeholders, tags or the plural bar', () => {
+  expect(countWords('Enregistrer')).toBe(1)
+  expect(countWords('Ends on {date} at {0}')).toBe(3)
+  expect(countWords('<b>Save</b> your <i>changes</i> now')).toBe(4)
+  expect(countWords('{count} item | {count} items')).toBe(2)
+  expect(countWords("Écrire à {'@'}glot")).toBe(3)
+  expect(countWords('')).toBe(0)
 })
