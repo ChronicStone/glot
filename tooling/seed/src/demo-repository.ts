@@ -9,6 +9,7 @@ import {
   DEMO_SOURCE,
   DEMO_TEXTS,
 } from './fixtures/demo-repository.fixtures.ts'
+import { DEMO_APP_TEXTS } from './fixtures/demo-app.fixtures.ts'
 
 const run = promisify(execFile)
 
@@ -45,14 +46,19 @@ async function writeRepositoryFile(options: { directory: string; path: string; c
   await writeFile(file, options.content)
 }
 
-export async function seedDemoRepository(options: { root: string; repository?: string }) {
+export async function seedDemoRepository(options: {
+  root: string
+  repository?: string
+  withApp?: boolean
+}) {
   const directory = join(options.root, options.repository ?? DEMO_REPOSITORY)
+  const texts = options.withApp ? [...DEMO_TEXTS, ...DEMO_APP_TEXTS] : DEMO_TEXTS
 
   await rm(directory, { recursive: true, force: true })
   await mkdir(directory, { recursive: true })
 
   for (const language of DEMO_SOURCE.languages) {
-    const entries = DEMO_TEXTS.flatMap(({ path, values }) =>
+    const entries = texts.flatMap(({ path, values }) =>
       values[language] === undefined ? [] : [{ path, value: values[language] }],
     )
 
@@ -62,14 +68,16 @@ export async function seedDemoRepository(options: { root: string; repository?: s
       content: `${JSON.stringify(nestMessages(entries), null, 2)}\n`,
     })
 
-    const reviews = DEMO_TEXTS.filter(({ reviewed }) => reviewed.includes(language)).map((text) =>
-      JSON.stringify({
-        key: { source: DEMO_SOURCE.name, path: text.path },
-        sourceHash: hashText(text.values[DEMO_SOURCE.sourceLanguage] ?? ''),
-        targetHash: hashText(text.values[language] ?? ''),
-        reviewedBy: DEMO_REVIEWER,
-      }),
-    )
+    const reviews = texts
+      .filter(({ reviewed }) => reviewed.includes(language))
+      .map((text) =>
+        JSON.stringify({
+          key: { source: DEMO_SOURCE.name, path: text.path },
+          sourceHash: hashText(text.values[DEMO_SOURCE.sourceLanguage] ?? ''),
+          targetHash: hashText(text.values[language] ?? ''),
+          reviewedBy: DEMO_REVIEWER,
+        }),
+      )
 
     if (reviews.length > 0) {
       await writeRepositoryFile({
