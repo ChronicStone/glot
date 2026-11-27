@@ -27,6 +27,9 @@
         "nuxt": "catalog:",
         "vue": "catalog:",
       },
+      "devDependencies": {
+        "vite-plus": "catalog:",
+      },
     },
     "apps/web": {
       "name": "@glot/web",

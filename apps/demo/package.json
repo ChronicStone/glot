@@ -5,12 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "nuxt dev",
-    "build": "nuxt build"
+    "build": "nuxt build",
+    "test": "vp test run"
   },
   "dependencies": {
     "@glot/nuxt": "workspace:*",
     "@nuxtjs/i18n": "10.7.0",
     "nuxt": "catalog:",
     "vue": "catalog:"
+  },
+  "devDependencies": {
+    "vite-plus": "catalog:"
   }
 }

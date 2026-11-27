@@ -4,6 +4,7 @@ export default defineNuxtConfig({
   buildDir: process.env.DEMO_BUILD_DIR ?? '.nuxt',
   devServer: { port: Number(process.env.DEMO_PORT ?? 3200) },
   css: ['~/assets/demo.css'],
+  nitro: { output: { dir: process.env.DEMO_OUTPUT_DIR ?? '.output' } },
   runtimeConfig: {
     locales: {
       repository: process.env.GLOT_LOCALES_DIR ?? '',
