@@ -860,3 +860,19 @@ test('a comment is removed where it stands, not where its text first appears', (
     }),
   ).toContain('HTML_TAGS')
 })
+
+test('a copy of a comment placed inside a tag does not hide the tag', () => {
+  expect(
+    codes({
+      source: 'Menu > Compte > Profil <!-- haut --> <i>voir</i>',
+      target: 'Menu Compte Profil <i <!-- data-probe -->>voir</i> <!-- data-probe -->',
+    }),
+  ).toContain('HTML_TAGS')
+
+  expect(
+    codes({
+      source: 'a > b > c > <!-- x = y --> 1 = 2 <i>voir</i> @:b',
+      target: 'a b c <i <!-- =" -->>voir" @:b ></i> <!-- =" --> 1 2',
+    }),
+  ).toContain('HTML_TAGS')
+})
