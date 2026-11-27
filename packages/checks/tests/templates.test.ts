@@ -67,10 +67,10 @@ test('a writer cannot change the markup or a link: tags and attributes must matc
 test('links start with https:// or mailto:, or are a placeholder', () => {
   expect(
     codes({
-      source: '<a href="javascript:alert(1)">ici</a>',
+      source: '<a href="https://agorastore.fr/aide">ici</a>',
       target: '<a href="javascript:alert(1)">here</a>',
     }),
-  ).toEqual(['LINKS'])
+  ).toEqual(['MARKUP', 'LINKS'])
   expect(
     codes({
       source: '<a href="{{lotUrl}}">Voir</a> <a href="mailto:aide@agorastore.fr">aide</a>',
@@ -135,4 +135,40 @@ test('checkWords reads an email text without its placeholders and tags', () => {
       syntax,
     }).map((failure) => failure.code),
   ).toEqual(['AVOID_WORDS'])
+})
+
+test('a tag left open is refused: it would turn the rest of the email into a link', () => {
+  const source = 'Payez votre facture.'
+
+  expect(
+    checkText({
+      source,
+      target: 'Pay your invoice <a href="https://evil.example/login" ',
+      avoid: [],
+      syntax,
+    }),
+  ).toEqual([
+    {
+      code: 'MARKUP',
+      message:
+        'The markup and links must match the source text: only a Developer changes them. A tag is left open: <a href="https://evil.example/login".',
+    },
+  ])
+
+  expect(codes({ source, target: 'Pay <img src="https://tracker.example/p.gif"' })).toEqual([
+    'MARKUP',
+  ])
+
+  expect(codes({ source: 'Total < 10 €', target: 'Total < 10 €' })).toEqual([])
+})
+
+test("a link the source already has is the developers' to fix, not each translation's", () => {
+  const source = 'Gérer mes <a href="http://agorastore.fr/notifications">notifications</a>'
+
+  expect(
+    codes({
+      source,
+      target: 'Manage my <a href="http://agorastore.fr/notifications">notifications</a>',
+    }),
+  ).toEqual([])
 })

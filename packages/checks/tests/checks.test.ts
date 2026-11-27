@@ -263,3 +263,11 @@ test('a translation may have as many plural forms as its language uses for whole
     }).map(({ code }) => code),
   ).toEqual(['PLURAL_FORMS'])
 })
+
+test('a vue-i18n text with a tag left open fails the HTML tags check', () => {
+  expect(
+    checkText({ source: 'Voir', target: 'See <a href="https://evil.example"', avoid: [] }).map(
+      ({ code }) => code,
+    ),
+  ).toEqual(['HTML_TAGS'])
+})

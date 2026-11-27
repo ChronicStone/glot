@@ -10,6 +10,8 @@ export const CLI_COMMANDS = {
   CHECK: 'check',
 } as const
 
+export const CITTY_USAGE_ERROR_NAME = 'CLIError'
+
 export const CLI_HELP_FLAGS: readonly string[] = ['--help', '-h']
 
 export const LOCALE_TOKEN = '{locale}'

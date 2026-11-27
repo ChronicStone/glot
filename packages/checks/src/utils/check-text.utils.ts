@@ -1,13 +1,14 @@
 import { CHECK_CODES } from '../constants/checks.constants.ts'
 import { SYNTAXES, TEMPLATE_LINK_PROTOCOLS } from '../constants/syntax.constants.ts'
 import type { CheckFailure, Syntax } from '../types/checks.types.ts'
-import { htmlTagsOf } from './html.utils.ts'
+import { htmlTagsOf, openHtmlTagsOf } from './html.utils.ts'
 import { parseMessage, placeholdersOf, plainTextOf } from './message.utils.ts'
 import { integerPluralCategories } from './plural.utils.ts'
 import {
   parseTemplate,
   templateLinksOf,
   templateMarkupOf,
+  templateOpenTagsOf,
   templatePlainText,
 } from './template.utils.ts'
 import { wordFailures } from './words.utils.ts'
@@ -74,14 +75,24 @@ function checkTemplate(input: { source: string; target: string; avoid: string[];
     target: templateMarkupOf(input.target),
   })
 
-  if (markup) {
+  const open = templateOpenTagsOf(input.target)
+
+  if (markup || open.length > 0) {
     failures.push({
       code: CHECK_CODES.MARKUP,
-      message: `The markup and links must match the source text: only a Developer changes them. ${markup}`,
+      message: [
+        'The markup and links must match the source text: only a Developer changes them.',
+        ...(open.length > 0 ? [`A tag is left open: ${open.join(' ')}.`] : []),
+        ...(markup ? [markup] : []),
+      ].join(' '),
     })
   }
 
-  const refused = templateLinksOf(input.target).filter((link) => !isAllowedLink(link))
+  const sourceLinks = new Set(templateLinksOf(input.source))
+
+  const refused = templateLinksOf(input.target).filter(
+    (link) => !sourceLinks.has(link) && !isAllowedLink(link),
+  )
 
   if (refused.length > 0) {
     failures.push({
@@ -153,11 +164,16 @@ export function checkText(input: {
   }
 
   const tags = mismatch({ source: htmlTagsOf(input.source), target: htmlTagsOf(input.target) })
+  const openTags = openHtmlTagsOf(input.target)
 
-  if (tags) {
+  if (tags || openTags.length > 0) {
     failures.push({
       code: CHECK_CODES.HTML_TAGS,
-      message: `The HTML tags must match the source text. ${tags}`,
+      message: [
+        'The HTML tags must match the source text.',
+        ...(openTags.length > 0 ? [`A tag is left open: ${openTags.join(' ')}.`] : []),
+        ...(tags ? [tags] : []),
+      ].join(' '),
     })
   }
 

@@ -2,7 +2,13 @@
 import { renderUsage, runCommand } from 'citty'
 import { checkCommand } from './commands/check.command.ts'
 import { glotCommand } from './commands/glot.command.ts'
-import { CLI_COMMANDS, CLI_EXIT, CLI_HELP_FLAGS, CLI_NAME } from './constants/cli.constants.ts'
+import {
+  CITTY_USAGE_ERROR_NAME,
+  CLI_COMMANDS,
+  CLI_EXIT,
+  CLI_HELP_FLAGS,
+  CLI_NAME,
+} from './constants/cli.constants.ts'
 
 const rawArgs = process.argv.slice(2)
 
@@ -18,8 +24,7 @@ if (rawArgs.some((argument) => CLI_HELP_FLAGS.includes(argument))) {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
 
-    // citty does not export CLIError, the class of its argument and command errors.
-    const misused = error instanceof Error && error.name === 'CLIError'
+    const misused = error instanceof Error && error.name === CITTY_USAGE_ERROR_NAME
 
     process.stderr.write(misused ? `${usage}\n\n${message}\n` : `${message}\n`)
 
