@@ -1,5 +1,5 @@
 import { CHECK_CODES } from '@glot/checks'
-import { REVIEW_REASONS } from '@glot/contract'
+import { CONFLICT_REASONS, REVIEW_REASONS } from '@glot/contract'
 
 export const REVIEW_REASON_LABELS = {
   [REVIEW_REASONS.SENT_FOR_REVIEW]: 'Sent for review',
@@ -24,4 +24,15 @@ export const SESSION_OUTCOMES = {
   APPROVED: 'ok',
   EDITED: 'edit',
   SKIPPED: 'skip',
+} as const
+
+export const CONFLICT_REASON_LABELS = {
+  [CONFLICT_REASONS.SOURCE_CHANGED]: 'The French changed after this was approved',
+  [CONFLICT_REASONS.TARGET_CHANGED]: 'The text changed in the repository after this was approved',
+  [CONFLICT_REASONS.TEXT_REMOVED]: 'The text is gone from the repository',
+} as const
+
+export const TIMELINE_HOURS = {
+  BEFORE: 11,
+  AFTER: 1,
 } as const
