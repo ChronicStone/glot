@@ -26,7 +26,8 @@
     "db:migrate": "bun --env-file=../../.env run --cwd packages/database db:migrate",
     "db:studio": "bun --env-file=../../.env run --cwd packages/database db:studio",
     "ready": "bun run check && bun run test && vp run -r build",
-    "db:seed": "bun --env-file=.env tooling/seed/src/run.ts"
+    "db:seed": "bun --env-file=.env tooling/seed/src/run.ts",
+    "demo": "bun --env-file=.env tooling/demo/src/run.ts"
   },
   "devDependencies": {
     "@oxlint/plugins": "catalog:",

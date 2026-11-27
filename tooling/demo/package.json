@@ -1,0 +1,19 @@
+{
+  "name": "@glot/demo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "demo": "bun src/run.ts",
+    "typecheck": "tsrs --noEmit"
+  },
+  "dependencies": {
+    "@glot/database": "workspace:*",
+    "@glot/seed": "workspace:*",
+    "drizzle-orm": "catalog:",
+    "pg": "catalog:"
+  },
+  "devDependencies": {
+    "@types/pg": "catalog:"
+  }
+}

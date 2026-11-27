@@ -193,6 +193,19 @@
       "name": "@glot/utils",
       "version": "0.0.0",
     },
+    "tooling/demo": {
+      "name": "@glot/demo",
+      "version": "0.0.0",
+      "dependencies": {
+        "@glot/database": "workspace:*",
+        "@glot/seed": "workspace:*",
+        "drizzle-orm": "catalog:",
+        "pg": "catalog:",
+      },
+      "devDependencies": {
+        "@types/pg": "catalog:",
+      },
+    },
     "tooling/seed": {
       "name": "@glot/seed",
       "version": "0.0.0",
@@ -440,6 +453,8 @@
     "@glot/contract": ["@glot/contract@workspace:packages/contract"],
 
     "@glot/database": ["@glot/database@workspace:packages/database"],
+
+    "@glot/demo": ["@glot/demo@workspace:tooling/demo"],
 
     "@glot/nuxt": ["@glot/nuxt@workspace:packages/nuxt"],
 
