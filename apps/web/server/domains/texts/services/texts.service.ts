@@ -1,4 +1,5 @@
 import { checkText, checkWords } from '@glot/checks'
+import type { Syntax } from '@glot/checks'
 import type { Text, TextRefInput, TextSearchInput, TextsByKeysInput } from '@glot/contract'
 import type { Draft, User } from '@glot/database'
 import { DRAFT_STATUSES } from '@glot/database/constants/drafts'
@@ -75,12 +76,19 @@ export class TextsService {
     return new GlossaryService(this.#context).wordsToCheck(workspaceId)
   }
 
-  failures(options: { words: GlossaryWords; language: string; source: string; target: string }) {
+  failures(options: {
+    words: GlossaryWords
+    language: string
+    source: string
+    target: string
+    syntax: Syntax
+  }) {
     return checkText({
       source: options.source,
       target: options.target,
       avoid: options.words.avoid[options.language] ?? [],
       keep: options.words.keep,
+      syntax: options.syntax,
     })
   }
 
@@ -155,6 +163,7 @@ export class TextsService {
       key: entry.key,
       source: { language: entry.sourceLanguage, value: entry.sourceValue },
       where: entry.key.source,
+      syntax: entry.syntax,
       shownIn: shownIn.get(entry.key.source) ?? [],
       translations: entry.translations.map((translation) =>
         this.#translation({
@@ -233,6 +242,7 @@ export class TextsService {
               language: shown.language,
               source: entry.sourceValue,
               target: shown.value,
+              syntax: entry.syntax,
             }),
           })
         : null,
@@ -255,6 +265,7 @@ export class TextsService {
         language: draft.language,
         source: options.entry.sourceValue,
         target: draft.value,
+        syntax: options.entry.syntax,
       }),
     }
   }
@@ -280,6 +291,7 @@ export class TextsService {
           target: translation.value,
           avoid,
           keep: words.keep,
+          syntax: options.entry.syntax,
         }),
       ],
     }

@@ -1,13 +1,13 @@
 import { CHECK_CODES } from '../constants/checks.constants.ts'
 import { SYNTAXES, TEMPLATE_LINK_PROTOCOLS } from '../constants/syntax.constants.ts'
 import type { CheckFailure, Syntax } from '../types/checks.types.ts'
-import { htmlTagsOf, withoutHtmlTags } from './html.utils.ts'
+import { htmlTagsOf } from './html.utils.ts'
 import { parseMessage, placeholdersOf, plainTextOf } from './message.utils.ts'
 import {
   parseTemplate,
   templateLinksOf,
   templateMarkupOf,
-  templateTokenRanges,
+  templatePlainText,
 } from './template.utils.ts'
 import { wordFailures } from './words.utils.ts'
 
@@ -35,18 +35,6 @@ function mismatch(options: { source: string[]; target: string[] }) {
     ...(missing.length > 0 ? [`Missing from this text: ${missing.join(' ')}.`] : []),
     ...(extra.length > 0 ? [`Not in the source text: ${extra.join(' ')}.`] : []),
   ].join(' ')
-}
-
-function templatePlainText(message: string) {
-  let text = ''
-  let at = 0
-
-  for (const range of templateTokenRanges(message)) {
-    text += `${message.slice(at, range.start)} `
-    at = range.end
-  }
-
-  return withoutHtmlTags(text + message.slice(at))
 }
 
 function isAllowedLink(link: string) {

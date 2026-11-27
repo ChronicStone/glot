@@ -1,4 +1,4 @@
-import type { CheckFailure } from '@glot/checks'
+import type { CheckFailure, Syntax } from '@glot/checks'
 import type { KeyRef } from '@glot/contract'
 import type { Project, ProjectSource } from '@glot/database'
 import type * as z from 'zod'
@@ -53,6 +53,7 @@ export interface CatalogTranslation {
 export interface CatalogEntry {
   id: string
   key: KeyRef
+  syntax: Syntax
   sourceLanguage: string
   sourceValue: string
   sourceHash: string

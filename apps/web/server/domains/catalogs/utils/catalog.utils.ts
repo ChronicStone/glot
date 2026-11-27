@@ -67,6 +67,7 @@ export function buildEntries(options: { project: CatalogProject; files: Map<stri
       entries.push({
         id: encodeTextId(key),
         key,
+        syntax: source.kind,
         sourceLanguage: source.sourceLanguage,
         sourceValue: value,
         sourceHash: hashText(value),
@@ -80,7 +81,12 @@ export function buildEntries(options: { project: CatalogProject; files: Map<stri
             failures:
               translated === null
                 ? []
-                : checkText({ source: value, target: translated, avoid: [] }),
+                : checkText({
+                    source: value,
+                    target: translated,
+                    avoid: [],
+                    syntax: source.kind,
+                  }),
           }
         }),
       })

@@ -1,4 +1,4 @@
-import type { DraftRefInput, DraftSaveInput } from '@glot/contract'
+import type { DraftRefInput, DraftSaveInput, Text } from '@glot/contract'
 import type { Draft } from '@glot/database'
 import { DRAFT_STATUSES } from '@glot/database/constants/drafts'
 import { ORPCError } from '@orpc/server'
@@ -66,17 +66,17 @@ export class DraftsService {
           },
         })
 
-    return await this.#view({ draft, workspaceId: project.workspaceId, source: text.source.value })
+    return await this.#view({ draft, workspaceId: project.workspaceId, text })
   }
 
   async send(input: DraftRefInput) {
-    const { draft, workspaceId, source } = await this.#own(input)
+    const { draft, workspaceId, text } = await this.#own(input)
 
     if (draft.status !== DRAFT_STATUSES.DRAFT) {
       throw new ORPCError('CONFLICT', { message: 'This draft is not waiting to be sent' })
     }
 
-    const view = await this.#view({ draft, workspaceId, source })
+    const view = await this.#view({ draft, workspaceId, text })
 
     if (view.failures.length > 0) {
       throw new ORPCError('CONFLICT', { message: 'This draft fails a check' })
@@ -89,11 +89,11 @@ export class DraftsService {
       })
       .throw()
 
-    return this.#view({ draft: sent, workspaceId, source })
+    return this.#view({ draft: sent, workspaceId, text })
   }
 
   async withdraw(input: DraftRefInput) {
-    const { draft, workspaceId, source } = await this.#own(input)
+    const { draft, workspaceId, text } = await this.#own(input)
 
     if (draft.status !== DRAFT_STATUSES.DRAFT && draft.status !== DRAFT_STATUSES.IN_REVIEW) {
       throw new ORPCError('CONFLICT', { message: 'This draft can no longer be withdrawn' })
@@ -106,7 +106,7 @@ export class DraftsService {
       })
       .throw()
 
-    return this.#view({ draft: withdrawn, workspaceId, source })
+    return this.#view({ draft: withdrawn, workspaceId, text })
   }
 
   async #own(input: DraftRefInput) {
@@ -132,10 +132,10 @@ export class DraftsService {
       textId: draft.textId,
     })
 
-    return { draft, workspaceId: project.workspaceId, source: text.source.value }
+    return { draft, workspaceId: project.workspaceId, text }
   }
 
-  async #view(options: { draft: Draft; workspaceId: string; source: string }) {
+  async #view(options: { draft: Draft; workspaceId: string; text: Text }) {
     const author = await this.#context.db.user.findFirst({ where: { id: options.draft.authorId } })
     const texts = new TextsService(this.#context)
 
@@ -145,8 +145,9 @@ export class DraftsService {
       failures: texts.failures({
         words: await texts.words(options.workspaceId),
         language: options.draft.language,
-        source: options.source,
+        source: options.text.source.value,
         target: options.draft.value,
+        syntax: options.text.syntax,
       }),
     })
   }

@@ -32,7 +32,9 @@ export class AiTranslatorService {
     const provider = this.#provider(settings.provider)
 
     const items = options.texts.map((text, index) => {
-      const { text: protectedText, tokens } = protectMessage(text.source.value)
+      const { text: protectedText, tokens } = protectMessage(text.source.value, {
+        syntax: text.syntax,
+      })
 
       const problems: string[] = []
 

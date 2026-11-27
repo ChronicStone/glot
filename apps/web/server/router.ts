@@ -9,6 +9,7 @@ import { projectsRouter } from './domains/projects/routers/projects.router.ts'
 import { releasesRouter } from './domains/releases/routers/releases.router.ts'
 import { contributionsRouter } from './domains/contributions/routers/contributions.router.ts'
 import { reviewsRouter } from './domains/reviews/routers/reviews.router.ts'
+import { templatesRouter } from './domains/templates/routers/templates.router.ts'
 import { textsRouter } from './domains/texts/routers/texts.router.ts'
 import { widgetRouter } from './domains/widget/routers/widget.router.ts'
 
@@ -25,4 +26,5 @@ export const router = procedures.router({
   reports: contributionsRouter,
   widget: widgetRouter,
   ai: aiRouter,
+  templates: templatesRouter,
 })

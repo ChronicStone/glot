@@ -1,6 +1,7 @@
 import { expect, test } from 'vite-plus/test'
 import {
   checkText,
+  checkWords,
   messageSegments,
   protectMessage,
   restoreMessage,
@@ -122,4 +123,16 @@ test('an SMS with a curly apostrophe switches to Unicode: 70 characters per mess
     messages: 1,
   })
   expect(smsLength('Prix: 10€')).toMatchObject({ alphabet: 'GSM-7', length: 10 })
+})
+
+test('checkWords reads an email text without its placeholders and tags', () => {
+  expect(
+    checkWords({
+      source: 'Le lot {{lotName}}',
+      target: 'Das <b>Grundstück</b> {{lotName}}',
+      avoid: ['Grundstück'],
+      keep: [],
+      syntax,
+    }).map((failure) => failure.code),
+  ).toEqual(['AVOID_WORDS'])
 })

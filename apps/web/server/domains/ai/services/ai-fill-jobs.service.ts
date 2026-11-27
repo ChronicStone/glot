@@ -142,6 +142,7 @@ export class AiFillJobsService {
                     language: fill.language,
                     source: text.source.value,
                     target: value,
+                    syntax: text.syntax,
                   })
 
             if (value !== null && failures?.length === 0) {

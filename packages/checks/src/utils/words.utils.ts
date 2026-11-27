@@ -1,6 +1,8 @@
 import { CHECK_CODES } from '../constants/checks.constants.ts'
-import type { CheckFailure } from '../types/checks.types.ts'
+import { SYNTAXES } from '../constants/syntax.constants.ts'
+import type { CheckFailure, Syntax } from '../types/checks.types.ts'
 import { parseMessage, plainTextOf } from './message.utils.ts'
+import { parseTemplate, templatePlainText } from './template.utils.ts'
 
 function isLetter(character: string | undefined) {
   return /[\p{L}\p{N}]/u.test(character ?? '')
@@ -59,7 +61,19 @@ export function checkWords(input: {
   target: string
   avoid: string[]
   keep: string[]
+  syntax?: Syntax
 }) {
+  if (input.syntax === SYNTAXES.HANDLEBARS_HTML) {
+    return parseTemplate(input.target).problem
+      ? []
+      : wordFailures({
+          sourceText: parseTemplate(input.source).problem ? null : templatePlainText(input.source),
+          targetText: templatePlainText(input.target),
+          avoid: input.avoid,
+          keep: input.keep,
+        })
+  }
+
   const target = parseMessage(input.target)
   const source = parseMessage(input.source)
 

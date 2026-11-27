@@ -98,6 +98,7 @@ export class ReviewsService {
                 language: input.language,
                 source: text.source.value,
                 target: draft.value,
+                syntax: text.syntax,
               }),
             })
           : null,
@@ -324,6 +325,7 @@ export class ReviewsService {
       language: options.language,
       source: options.text.source.value,
       target: options.value,
+      syntax: options.text.syntax,
     })
 
     if (failures.length > 0) {

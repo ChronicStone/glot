@@ -63,6 +63,7 @@ export class AiService {
         language: input.language,
         source: text.source.value,
         target: result.value,
+        syntax: text.syntax,
       }),
       provider,
       model,

@@ -1,5 +1,6 @@
 import { TEMPLATE_UNMATCHED_PROBLEM } from '../constants/syntax.constants.ts'
 import type { TextSegment } from '../types/checks.types.ts'
+import { withoutHtmlTags } from './html.utils.ts'
 
 const TEMPLATE_TOKEN_PATTERN = /\{\{\{[\s\S]*?\}\}\}|\{\{[\s\S]*?\}\}|\[\[[\s\S]*?\]\]/gu
 const TEMPLATE_LEFTOVER_PATTERN = /\{\{|\}\}|\[\[|\]\]/u
@@ -31,6 +32,10 @@ export function templateTokenRanges(message: string) {
     start: match.index,
     end: match.index + match[0].length,
   }))
+}
+
+export function templatePlainText(message: string) {
+  return withoutHtmlTags(message.replace(TEMPLATE_TOKEN_PATTERN, ' '))
 }
 
 export function parseTemplate(message: string) {

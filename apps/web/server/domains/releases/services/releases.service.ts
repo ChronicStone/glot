@@ -367,6 +367,7 @@ export class ReleasesService {
             language: draft.language,
             source: entry.sourceValue,
             target: draft.value,
+            syntax: entry.syntax,
           })
         : [],
     })
