@@ -1,20 +1,15 @@
 <script setup lang="ts">
 import type { Text } from '@glot/contract'
-import { DRAFT_STATUSES } from '@glot/database/constants/drafts'
 import { TEXT_STATES } from '@glot/database/constants/texts'
 import GlotTextValue from '@glot/ui/components/GlotTextValue.vue'
 import { TEXT_STATE_CLASSES } from '@glot/ui/constants'
-import { useForm } from '@tanstack/vue-form'
 import { useMutation } from '@tanstack/vue-query'
 import { TEXT_PANEL_TABS, TEXT_STATE_PRIORITY } from '../constants/texts.constants.ts'
 
 const { text } = defineProps<{ text: Text; closable?: boolean }>()
 
 const emit = defineEmits<{ close: [] }>()
-const { $api, $queryClient } = useNuxtApp()
-const toast = useToast()
-const session = useNuxtApp().$auth.useSession()
-const { project } = useCurrentProject()
+const { $api } = useNuxtApp()
 const { write, approve } = useRights()
 const tab = ref<string>(TEXT_PANEL_TABS.LANGUAGES)
 const chosen = ref<string | undefined>()
@@ -43,90 +38,31 @@ const working = computed(
     pending.value[0],
 )
 
-const own = computed(() => working.value?.draft?.authorId === session.value.data?.user.id)
-
-const canWrite = computed(() =>
-  Boolean(working.value && write.value.includes(working.value.language)),
-)
-
-const canApprove = computed(() =>
-  Boolean(working.value && approve.value.includes(working.value.language)),
-)
-
-const original = computed(
-  () => (own.value ? working.value?.draft?.value : working.value?.value) ?? '',
-)
-
-const form = useForm({
-  defaultValues: { value: original.value },
-  validators: {
-    onMount: ({ value }) => textCheckError({ source: text.source.value, target: value.value }),
-    onChange: ({ value }) => textCheckError({ source: text.source.value, target: value.value }),
+const {
+  form,
+  value,
+  invalid,
+  error,
+  changed,
+  own,
+  canWrite,
+  canApprove,
+  target,
+  done,
+  failed,
+  approveNow,
+  sendNow,
+  saveNow,
+} = useTextEditor({
+  text: () => text,
+  translation: () => working.value,
+  onDone: () => {
+    commenting.value = false
+    body.value = ''
   },
 })
 
-const value = form.useSelector((state) => state.values.value)
-const invalid = form.useSelector((state) => !state.isValid || !state.values.value.trim())
-const error = form.useSelector((state) => errorMessage(state.errors))
-const changed = computed(() => value.value.trim() !== original.value.trim())
 const [DefineEditor, UseEditor] = createReusableTemplate()
-
-watch(original, async (next) => {
-  form.reset({ value: next })
-  await form.validate('change')
-})
-
-const target = computed(() => ({
-  projectId: project.value?.id ?? '',
-  textId: text.id,
-  language: working.value?.language ?? '',
-}))
-
-async function done(title: string) {
-  commenting.value = false
-  body.value = ''
-  toast.add({ title, icon: 'i-lucide-circle-check', color: 'success' })
-
-  await Promise.all([
-    $queryClient.invalidateQueries({ queryKey: $api.texts.key() }),
-    $queryClient.invalidateQueries({ queryKey: $api.reviews.key() }),
-  ])
-}
-
-function failed(error: Error) {
-  toast.add({ title: error.message, icon: 'i-lucide-circle-alert', color: 'error' })
-}
-
-const approveNow = useMutation({
-  mutationFn: () => {
-    const draft = working.value?.draft
-
-    if (changed.value) {
-      return $api.reviews.editAndApprove.call({ ...target.value, value: value.value })
-    }
-
-    return $api.reviews.approve.call({
-      ...target.value,
-      ...(draft?.status === DRAFT_STATUSES.IN_REVIEW ? { draftId: draft.id } : {}),
-    })
-  },
-  onSuccess: () => done(`${languageName(target.value.language)} approved`),
-  onError: failed,
-})
-
-const sendNow = useMutation({
-  mutationFn: async () => {
-    const saved = await $api.drafts.save.call({ ...target.value, value: value.value })
-
-    return $api.drafts.send.call({ projectId: target.value.projectId, draftId: saved.id })
-  },
-  onSuccess: () => done('Sent for review'),
-  onError: failed,
-})
-
-const saveNow = useMutation(
-  $api.drafts.save.mutationOptions({ onSuccess: () => done('Draft saved'), onError: failed }),
-)
 
 const commentNow = useMutation(
   $api.reviews.comment.mutationOptions({ onSuccess: () => done('Comment added'), onError: failed }),
@@ -275,7 +211,7 @@ defineShortcuts({
         class="btn btn-ghost"
         :class="{ 'is-loading': saveNow.isPending.value }"
         :disabled="!changed || invalid"
-        @click="saveNow.mutate({ ...target, value })"
+        @click="saveNow.mutate()"
       >
         Save draft
       </button>

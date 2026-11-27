@@ -1,4 +1,5 @@
 import { checkText } from '@glot/checks'
+import type { Syntax } from '@glot/checks'
 
 export function inputValue(event: Event) {
   return event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement
@@ -20,10 +21,10 @@ export function errorMessage(errors: readonly unknown[]) {
   return first && typeof first === 'object' && 'message' in first ? String(first.message) : ''
 }
 
-export function textCheckError(options: { source: string; target: string }) {
+export function textCheckError(options: { source: string; target: string; syntax?: Syntax }) {
   if (!options.target.trim()) {
     return
   }
 
-  return checkText({ source: options.source, target: options.target, avoid: [] })[0]?.message
+  return checkText({ ...options, avoid: [] })[0]?.message
 }
