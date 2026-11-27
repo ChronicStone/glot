@@ -9,7 +9,7 @@
     "build": "nuxt build",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "typecheck": "tsrs -p tsconfig.typecheck.json --noEmit --runExternalCode",
+    "typecheck": "tsrs -p tsconfig.typecheck.json --noEmit --runExternalCode && tsrs -p .nuxt/tsconfig.server.json --noEmit",
     "test": "vp test run"
   },
   "dependencies": {
