@@ -11,7 +11,7 @@ Glot is one Node server and PostgreSQL 18. The repository builds the server into
 ## Start
 
 ```sh
-git clone https://github.com/agorastore/glot.git && cd glot
+git clone https://github.com/ChronicStone/glot.git && cd glot
 cp .env.example .env
 ```
 
