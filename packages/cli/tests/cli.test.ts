@@ -35,15 +35,7 @@ async function glot(args: string[]) {
   }
 }
 
-const CHECK = [
-  'check',
-  '--source',
-  PATTERN,
-  '--source-language',
-  'fr',
-  '--languages',
-  'fr,en,de,pl',
-]
+const CHECK = ['check', PATTERN, '--source-language', 'fr', '--languages', 'fr,en,de,pl']
 
 beforeAll(async () => {
   root = await mkdtemp(join(tmpdir(), 'glot-cli-'))
@@ -125,24 +117,51 @@ test('a file that is not JSON stops the run with exit code 2', async () => {
 })
 
 test('missing arguments and unknown commands print the usage with exit code 2', async () => {
-  for (const args of [['check'], ['check', '--source', PATTERN], ['sync']]) {
+  for (const args of [[], ['check'], ['check', PATTERN], ['sync']]) {
     const result = await glot(args)
 
     expect(result.code).toBe(2)
-    expect(result.stderr).toContain('Usage: glot check --source <pattern>')
+    expect(result.stdout).toBe('')
+    expect(result.stderr).toContain('USAGE')
+    expect(result.stderr).toContain('glot check')
   }
 })
 
-test('the source file is read even when the languages leave its language out', async () => {
+test('--help prints the usage of the command it follows, with exit code 0', async () => {
+  const check = await glot(['check', '--help'])
+  const root = await glot(['--help'])
+
+  expect(check.code).toBe(0)
+  expect(check.stdout).toContain('--source-language')
+  expect(check.stdout).toContain('{locale}')
+  expect(root.code).toBe(0)
+  expect(root.stdout).toContain('check')
+})
+
+test('every source given is checked', async () => {
+  await write({ path: 'menus/fr.json', content: { bid: 'Enchérir {amount}' } })
+  await write({ path: 'menus/en.json', content: { bid: 'Bid' } })
+  await write({ path: 'emails/fr.json', content: { subject: 'Votre lot {lot}' } })
+  await write({ path: 'emails/en.json', content: { subject: 'Your lot' } })
+
   const result = await glot([
     'check',
-    '--source',
-    PATTERN,
+    'menus/{locale}.json',
+    'emails/{locale}.json',
     '--source-language',
     'fr',
     '--languages',
-    'en,de',
+    'fr,en',
   ])
+
+  expect(result.code).toBe(1)
+  expect(result.stdout).toContain('menus/en.json  bid  PLACEHOLDERS')
+  expect(result.stdout).toContain('emails/en.json  subject  PLACEHOLDERS')
+  expect(result.stdout.split('\n').at(-2)).toBe('2 texts checked, 2 failures.')
+})
+
+test('the source file is read even when the languages leave its language out', async () => {
+  const result = await glot(['check', PATTERN, '--source-language', 'fr', '--languages', 'en,de'])
 
   expect(result.code).toBe(1)
   expect(result.stdout.split('\n').at(-2)).toBe('7 texts checked, 2 failures.')
@@ -154,7 +173,6 @@ test('a missing source file stops the run with exit code 2, whatever the languag
   for (const languages of ['fr,en', 'en']) {
     const result = await glot([
       'check',
-      '--source',
       'orphans/{locale}.json',
       '--source-language',
       'fr',
@@ -173,7 +191,6 @@ test('a key with a dot and a nested key are two texts', async () => {
 
   const result = await glot([
     'check',
-    '--source',
     'dotted/{locale}.json',
     '--source-language',
     'fr',

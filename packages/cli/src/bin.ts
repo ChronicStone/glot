@@ -1,30 +1,28 @@
 #!/usr/bin/env node
-import { CLI_COMMANDS, CLI_EXIT, CLI_USAGE } from './constants/cli.constants.ts'
-import { CheckService } from './services/check.service.ts'
-import { parseCheckArguments } from './utils/check-arguments.utils.ts'
+import { renderUsage, runCommand } from 'citty'
+import { checkCommand } from './commands/check.command.ts'
+import { glotCommand } from './commands/glot.command.ts'
+import { CLI_COMMANDS, CLI_EXIT, CLI_HELP_FLAGS, CLI_NAME } from './constants/cli.constants.ts'
 
-const [command, ...argv] = process.argv.slice(2)
+const rawArgs = process.argv.slice(2)
 
-if (command !== CLI_COMMANDS.CHECK) {
-  console.error(CLI_USAGE)
-  process.exitCode = CLI_EXIT.USAGE
+const usage = await (rawArgs[0] === CLI_COMMANDS.CHECK
+  ? renderUsage(checkCommand, { meta: { name: CLI_NAME } })
+  : renderUsage(glotCommand))
+
+if (rawArgs.some((argument) => CLI_HELP_FLAGS.includes(argument))) {
+  process.stdout.write(`${usage}\n`)
 } else {
   try {
-    const { checked, failures } = await new CheckService().run(parseCheckArguments(argv))
-
-    const lines = failures.map(
-      (failure) => `${failure.path}  ${failure.key}  ${failure.code}  ${failure.message}`,
-    )
-
-    lines.push(
-      `${checked} ${checked === 1 ? 'text' : 'texts'} checked, ${failures.length} ${failures.length === 1 ? 'failure' : 'failures'}.`,
-    )
-
-    process.stdout.write(`${lines.join('\n')}\n`)
-
-    process.exitCode = failures.length > 0 ? CLI_EXIT.FAILED : CLI_EXIT.OK
+    await runCommand(glotCommand, { rawArgs })
   } catch (error) {
-    console.error(error instanceof Error ? error.message : String(error))
+    const message = error instanceof Error ? error.message : String(error)
+
+    // citty does not export CLIError, the class of its argument and command errors.
+    const misused = error instanceof Error && error.name === 'CLIError'
+
+    process.stderr.write(misused ? `${usage}\n\n${message}\n` : `${message}\n`)
+
     process.exitCode = CLI_EXIT.USAGE
   }
 }

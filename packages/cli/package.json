@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@glot/checks": "workspace:*",
+    "citty": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
