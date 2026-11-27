@@ -94,30 +94,57 @@ function renderedItem(item: MessageNode['items'][number], options: { written: bo
   return options.written ? '{}' : placeholderStandIn('')
 }
 
-const WORD_EDGE_START = /^[\w:-]/u
+const WORD_EDGE_START = /^(?:[\w:-]|\s*=)/u
 
 const WORD_EDGE_END = /[\w:-]$/u
 
-function touches(item: MessageNode['items'][number] | undefined, edge: RegExp) {
-  if (!item) {
-    return false
+function isText(item: MessageNode['items'][number]) {
+  return item.type === MESSAGE_NODE_TYPES.TEXT || item.type === MESSAGE_NODE_TYPES.LITERAL
+}
+
+function neighbour(options: { items: MessageNode['items']; from: number; step: 1 | -1 }) {
+  let text = ''
+
+  for (let at = options.from; at >= 0 && at < options.items.length; at += options.step) {
+    const item = options.items[at]
+
+    if (!item) {
+      break
+    }
+
+    if (!isText(item)) {
+      return { text, placeholder: text === '' }
+    }
+
+    text = options.step === 1 ? `${text}${item.value ?? ''}` : `${item.value ?? ''}${text}`
+
+    if (text.trim() !== '') {
+      return { text, placeholder: false }
+    }
   }
 
-  if (item.type === MESSAGE_NODE_TYPES.TEXT || item.type === MESSAGE_NODE_TYPES.LITERAL) {
-    return edge.test(item.value ?? '')
-  }
-
-  return true
+  return { text, placeholder: false }
 }
 
 export function gluedLinksOf(form: MessageNode) {
-  return form.items.flatMap((item, index) =>
-    item.type === MESSAGE_NODE_TYPES.LINKED &&
-    (touches(form.items[index - 1], WORD_EDGE_END) ||
-      touches(form.items[index + 1], WORD_EDGE_START))
-      ? [linkedKey(item.key)]
-      : [],
-  )
+  return form.items.flatMap((item, index) => {
+    if (item.type !== MESSAGE_NODE_TYPES.LINKED) {
+      return []
+    }
+
+    const key = linkedKey(item.key)
+    const before = neighbour({ items: form.items, from: index - 1, step: -1 })
+    const after = neighbour({ items: form.items, from: index + 1, step: 1 })
+
+    return [
+      ...(before.placeholder || WORD_EDGE_END.test(before.text) ? [`${key}|before`] : []),
+      ...(after.placeholder || WORD_EDGE_START.test(after.text) ? [`${key}|after`] : []),
+    ]
+  })
+}
+
+export function hasLinks(forms: MessageNode[]) {
+  return forms.some((form) => form.items.some((item) => item.type === MESSAGE_NODE_TYPES.LINKED))
 }
 
 export function renderedForms(forms: MessageNode[], options: { written: boolean }) {

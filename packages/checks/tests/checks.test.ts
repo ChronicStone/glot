@@ -701,3 +701,31 @@ test('a glue the source allows stays on its own linked text', () => {
 
   expect(codes({ source: '@:d @:k (v@:v)', target: '@:d @:k (v@:v)' })).toEqual([])
 })
+
+test('a source that does not parse still lets no translation glue a linked text', () => {
+  expect(
+    codes({ source: 'Écrivez à aide@agorastore.fr', target: "Write to @:k{'lick'}" }).includes(
+      'HTML_TAGS',
+    ),
+  ).toBe(true)
+})
+
+test('glue hidden behind an empty literal or a space before = is still glue', () => {
+  const source = '@:d @:k <b>ok</b> = 1'
+
+  for (const target of [
+    "@:d o{''}@:k{''}=alert(document.domain) <b>ok</b>",
+    "@:d @:k{''}lick=alert(document.domain) <b>ok</b>",
+    '@:d @:k = alert(document.domain) <b>ok</b>',
+  ]) {
+    expect(codes({ source, target })).toContain('HTML_TAGS')
+  }
+
+  expect(
+    codes({ source: '@:d (v@:k) <b>ok</b> = 1', target: "@:d (v @:k{'lick'}=x) <b>ok</b>" }),
+  ).toContain('HTML_TAGS')
+
+  expect(codes({ source: 'Contact : aide@agorastore.fr', target: 'Contact: @:k' })).toContain(
+    'PLACEHOLDERS',
+  )
+})

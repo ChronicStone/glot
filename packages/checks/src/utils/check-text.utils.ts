@@ -23,6 +23,7 @@ import {
 } from './html.utils.ts'
 import {
   gluedLinksOf,
+  hasLinks,
   parseMessage,
   placeholdersOf,
   plainTextOf,
@@ -357,16 +358,25 @@ export function checkText(input: {
 
   const sourceGlued = source.problem ? [] : source.forms.map(gluedLinksOf)
 
-  const gluedApart =
-    !source.problem &&
-    target.forms.some((form, index) => {
-      const allowed =
-        sourceGlued.length === target.forms.length ? [sourceGlued[index] ?? []] : sourceGlued
+  const gluedApart = target.forms.some((form, index) => {
+    const allowed = source.problem
+      ? [[]]
+      : sourceGlued.length === target.forms.length
+        ? [sourceGlued[index] ?? []]
+        : sourceGlued
 
-      return !allowed.some(
-        (keys) => difference({ from: gluedLinksOf(form), without: keys }).length === 0,
-      )
+    return !allowed.some(
+      (keys) => difference({ from: gluedLinksOf(form), without: keys }).length === 0,
+    )
+  })
+
+  if (source.problem && hasLinks(target.forms)) {
+    failures.push({
+      code: CHECK_CODES.PLACEHOLDERS,
+      message:
+        'The source text has a syntax mistake, so a linked text cannot be checked until the source is fixed.',
     })
+  }
 
   if (gluedApart) {
     failures.push({
