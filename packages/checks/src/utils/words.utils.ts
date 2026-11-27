@@ -23,13 +23,13 @@ function containsWord(options: { text: string; word: string }) {
 }
 
 export function wordFailures(options: {
-  source: ReturnType<typeof parseMessage>
-  target: ReturnType<typeof parseMessage>
+  sourceText: string | null
+  targetText: string
   avoid: string[]
   keep: string[]
 }) {
   const failures: CheckFailure[] = []
-  const targetText = plainTextOf(options.target.forms)
+  const { sourceText, targetText } = options
 
   for (const word of options.avoid) {
     if (containsWord({ text: targetText, word })) {
@@ -40,9 +40,7 @@ export function wordFailures(options: {
     }
   }
 
-  if (!options.source.problem) {
-    const sourceText = plainTextOf(options.source.forms)
-
+  if (sourceText !== null) {
     for (const word of options.keep) {
       if (containsWord({ text: sourceText, word }) && !containsWord({ text: targetText, word })) {
         failures.push({
@@ -63,12 +61,13 @@ export function checkWords(input: {
   keep: string[]
 }) {
   const target = parseMessage(input.target)
+  const source = parseMessage(input.source)
 
   return target.problem
     ? []
     : wordFailures({
-        source: parseMessage(input.source),
-        target,
+        sourceText: source.problem ? null : plainTextOf(source.forms),
+        targetText: plainTextOf(target.forms),
         avoid: input.avoid,
         keep: input.keep,
       })

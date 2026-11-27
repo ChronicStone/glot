@@ -1,6 +1,8 @@
-import { MESSAGE_NODE_TYPES } from '../constants/syntax.constants.ts'
+import { MESSAGE_NODE_TYPES, SYNTAXES } from '../constants/syntax.constants.ts'
+import type { Syntax } from '../types/checks.types.ts'
 import { htmlTagRanges } from './html.utils.ts'
 import { parseMessage } from './message.utils.ts'
+import { templateTokenRanges } from './template.utils.ts'
 
 const TOKEN_PATTERN = /⟦\s*(\d+)\s*⟧/gu
 const BRACKET_PATTERN = /[⟦⟧]/gu
@@ -25,8 +27,11 @@ function placeholderRanges(message: string) {
   )
 }
 
-export function protectMessage(message: string) {
-  const ranges = placeholderRanges(message)
+export function protectMessage(message: string, options: { syntax?: Syntax } = {}) {
+  const ranges =
+    options.syntax === SYNTAXES.HANDLEBARS_HTML
+      ? templateTokenRanges(message)
+      : placeholderRanges(message)
 
   const extra = [
     ...htmlTagRanges(message),

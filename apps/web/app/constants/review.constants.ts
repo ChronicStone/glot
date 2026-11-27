@@ -16,6 +16,8 @@ export const CHECK_LABELS = {
   [CHECK_CODES.PLACEHOLDERS]: 'Placeholders',
   [CHECK_CODES.PLURAL_FORMS]: 'Plural forms',
   [CHECK_CODES.HTML_TAGS]: 'HTML tags',
+  [CHECK_CODES.MARKUP]: 'Markup and links',
+  [CHECK_CODES.LINKS]: 'Links',
   [CHECK_CODES.AVOID_WORDS]: 'Glossary',
   [CHECK_CODES.NEVER_TRANSLATE]: 'Never translated',
 } as const

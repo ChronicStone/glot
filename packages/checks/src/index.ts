@@ -14,4 +14,10 @@ export { flattenMessages, parseJsonFile } from './utils/flatten.utils.ts'
 
 export { messageSegments } from './utils/message.utils.ts'
 
+export { smsLength } from './utils/sms.utils.ts'
+
+export { SYNTAXES } from './constants/syntax.constants.ts'
+
+export { SMS_ALPHABETS } from './constants/sms.constants.ts'
+
 export type * from './types/checks.types.ts'

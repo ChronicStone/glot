@@ -8,7 +8,8 @@
     ".": "./src/index.ts",
     "./constants": "./src/constants/checks.constants.ts",
     "./validators": "./src/validators/checks.validator.ts",
-    "./types": "./src/types/checks.types.ts"
+    "./types": "./src/types/checks.types.ts",
+    "./syntax": "./src/constants/syntax.constants.ts"
   },
   "scripts": {
     "typecheck": "tsrs --noEmit",

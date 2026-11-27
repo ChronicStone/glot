@@ -2,9 +2,12 @@ import { createParser } from '@intlify/message-compiler'
 import type { LinkedNode, MessageNode } from '@intlify/message-compiler'
 import {
   MESSAGE_NODE_TYPES,
+  SYNTAXES,
   SYNTAX_PROBLEMS,
   UNKNOWN_SYNTAX_PROBLEM,
 } from '../constants/syntax.constants.ts'
+import type { Syntax, TextSegment } from '../types/checks.types.ts'
+import { templateSegments } from './template.utils.ts'
 
 export function parseMessage(message: string) {
   const codes: number[] = []
@@ -68,7 +71,11 @@ export function plainTextOf(forms: MessageNode[]) {
     .join('')
 }
 
-export function messageSegments(message: string) {
+export function messageSegments(message: string, options: { syntax?: Syntax } = {}): TextSegment[] {
+  if (options.syntax === SYNTAXES.HANDLEBARS_HTML) {
+    return templateSegments(message)
+  }
+
   const { problem, forms } = parseMessage(message)
 
   if (problem !== null) {

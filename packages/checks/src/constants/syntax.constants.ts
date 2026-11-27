@@ -1,3 +1,16 @@
+export const SYNTAXES = {
+  VUE_I18N: 'vue-i18n',
+  HANDLEBARS_HTML: 'handlebars-html',
+} as const
+
+export const TEMPLATE_LINK_PROTOCOLS = {
+  HTTPS: 'https:',
+  MAILTO: 'mailto:',
+} as const
+
+export const TEMPLATE_UNMATCHED_PROBLEM =
+  'A {{, }}, [[ or ]] is left on its own: placeholders are written {{name}}.'
+
 export const MESSAGE_NODE_TYPES = {
   TEXT: 3,
   NAMED: 4,
