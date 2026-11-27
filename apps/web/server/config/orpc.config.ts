@@ -4,6 +4,7 @@ import { McpRegistrar } from '@orpc/mcp'
 import { OpenAPIGenerator } from '@orpc/openapi'
 import { OpenAPIHandler } from '@orpc/openapi/fetch'
 import { OpenAPIReferenceHandlerPlugin } from '@orpc/openapi/plugins'
+import { onError, ORPCError } from '@orpc/server'
 import { RPCHandler } from '@orpc/server/fetch'
 import { ZodToJsonSchemaConverter } from '@orpc/zod'
 import { env } from '../env.ts'
@@ -17,11 +18,25 @@ const errorStatusMap = {
   PEOPLE_ONLY: PEOPLE_ONLY_ERRORS.PEOPLE_ONLY.status,
 }
 
+const interceptors = [
+  onError((error) => {
+    if (!(error instanceof ORPCError)) {
+      console.error('Unexpected error in a procedure', error)
+    }
+  }),
+]
+
 export const openapiGenerator = new OpenAPIGenerator({ converters })
 
-export const rpcHandler = new RPCHandler(router, { errorStatusMap })
+export const rpcHandler = new RPCHandler(router, {
+  errorStatusMap,
+  interceptors,
+})
 
-export const restHandler = new OpenAPIHandler(router, { errorStatusMap })
+export const restHandler = new OpenAPIHandler(router, {
+  errorStatusMap,
+  interceptors,
+})
 
 export const referenceHandler = new OpenAPIHandler(
   {},
