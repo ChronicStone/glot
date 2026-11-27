@@ -175,6 +175,7 @@
       },
       "devDependencies": {
         "nuxt": "catalog:",
+        "vite-plus": "catalog:",
         "vue-i18n": "catalog:",
       },
       "peerDependencies": {

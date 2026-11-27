@@ -8,7 +8,8 @@
     ".": "./src/module.ts"
   },
   "scripts": {
-    "typecheck": "tsrs -p tsconfig.typecheck.json --noEmit --runExternalCode"
+    "typecheck": "tsrs -p tsconfig.typecheck.json --noEmit --runExternalCode",
+    "test": "vp test run"
   },
   "dependencies": {
     "@glot/checks": "workspace:*",
@@ -27,6 +28,7 @@
   },
   "devDependencies": {
     "nuxt": "catalog:",
+    "vite-plus": "catalog:",
     "vue-i18n": "catalog:"
   },
   "peerDependencies": {

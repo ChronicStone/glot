@@ -4,6 +4,7 @@ import { onMounted, useTemplateRef, watch } from 'vue'
 import { CARET_STOP } from '../constants/widget.constants.ts'
 import { placeholderToken, serializeEditable } from '../utils/message.utils.ts'
 
+const { autofocus = true } = defineProps<{ autofocus?: boolean }>()
 const model = defineModel<string>({ required: true })
 const editable = useTemplateRef<HTMLDivElement>('editable')
 
@@ -72,8 +73,11 @@ watch(model, (value) => {
 
 onMounted(() => {
   render(model.value)
-  editable.value?.focus()
-  caretToEnd()
+
+  if (autofocus) {
+    editable.value?.focus()
+    caretToEnd()
+  }
 })
 </script>
 

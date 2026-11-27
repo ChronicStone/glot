@@ -20,6 +20,7 @@ export default defineNuxtConfig({
     project: process.env.GLOT_PROJECT ?? 'glot/demo',
   },
   i18n: {
+    vueI18n: './i18n.config.ts',
     defaultLocale: 'fr',
     strategy: 'prefix_except_default',
     locales: ['fr', 'en', 'de', 'pl', 'nl'].map((code) => ({

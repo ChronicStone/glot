@@ -7,8 +7,9 @@ import { TEXT_STATE_CLASSES, TEXT_STATE_LABELS } from '@glot/ui/constants'
 import { useMediaQuery } from '@vueuse/core'
 import { computed, onBeforeUnmount, ref, useTemplateRef, watch } from 'vue'
 import type { Composer } from 'vue-i18n'
-import { NARROW_SCREEN, WIDGET_LAYOUT } from '../constants/widget.constants.ts'
+import { NARROW_SCREEN, PLURAL, WIDGET_LAYOUT } from '../constants/widget.constants.ts'
 import { nestMessage, withoutPath } from '../utils/message.utils.ts'
+import { pluralForms, pluralLabels } from '../utils/plural.utils.ts'
 import { translationIn } from '../utils/text.utils.ts'
 import GlotIcon from './GlotIcon.vue'
 import GlotKey from './GlotKey.vue'
@@ -102,6 +103,29 @@ function restore() {
 }
 
 const narrow = useMediaQuery(NARROW_SCREEN)
+
+const forms = computed(() => {
+  const own = pluralForms(value.value)
+  const wanted = pluralForms(props.text.source.value).length
+
+  return own.length >= wanted
+    ? own
+    : [...own, ...Array.from({ length: wanted - own.length }, () => '')]
+})
+
+const labels = computed(() =>
+  pluralLabels({
+    language: props.language,
+    count: forms.value.length,
+    appRule: props.language in props.composer.pluralRules,
+  }),
+)
+
+function setForm(options: { index: number; form: string }) {
+  value.value = forms.value
+    .map((form, index) => (index === options.index ? options.form : form))
+    .join(PLURAL.SEPARATOR)
+}
 
 const position = computed(() => {
   if (narrow.value && props.anchor && props.anchor.top > window.innerHeight / 2) {
@@ -213,7 +237,35 @@ onBeforeUnmount(() => {
         <GlotIcon name="x" />
       </button>
     </div>
+    <template v-if="forms.length > 1">
+      <div
+        v-for="(form, index) in forms"
+        :key="index"
+        class="row-flex"
+        :style="{ marginTop: index === 0 ? '12px' : '8px', alignItems: 'flex-start' }"
+        data-glot="plural-form"
+      >
+        <span
+          class="tag mono"
+          :style="{
+            width: '92px',
+            flex: 'none',
+            height: 'var(--glot-control-h)',
+            justifyContent: 'center',
+          }"
+          >{{ labels[index] }}</span
+        >
+        <label class="input" :style="{ flex: 1, height: 'auto', minHeight: 'var(--ctl-h)' }">
+          <GlotMessageInput
+            :model-value="form"
+            :autofocus="index === 0"
+            @update:model-value="setForm({ index, form: $event })"
+          />
+        </label>
+      </div>
+    </template>
     <label
+      v-else
       class="input is-focus"
       :style="{ marginTop: '12px', height: 'auto', minHeight: 'var(--ctl-h)' }"
     >

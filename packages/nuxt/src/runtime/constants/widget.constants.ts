@@ -58,3 +58,24 @@ export const HOST_EVENTS = {
 export const CARET_STOP = '\u200B'
 
 export const NARROW_SCREEN = '(max-width: 760px)'
+
+export const PLURAL = {
+  SEPARATOR: ' | ',
+  SPLIT: /\s*\|\s*/u,
+  SAMPLE_UP_TO: 100,
+  RANGES_SHOWN: 2,
+} as const
+
+export const PLURAL_CATEGORY_ORDER = {
+  ZERO: 'zero',
+  ONE: 'one',
+  TWO: 'two',
+  FEW: 'few',
+  MANY: 'many',
+  OTHER: 'other',
+} as const
+
+export const VUE_I18N_FORM_LABELS = {
+  TWO: ['1', 'other'],
+  THREE: ['0', '1', '2+'],
+} as const
