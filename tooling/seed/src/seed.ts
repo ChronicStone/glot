@@ -1,12 +1,13 @@
 import type { Database } from '@glot/database'
 import { SOURCE_KINDS } from '@glot/database/constants/projects'
 import { WORKSPACE_ROLES } from '@glot/database/constants/workspaces'
+import { PREVIEW_DEMO_SOURCES } from '@glot/preview-demo/constants'
 import { seedDemoGlossary } from './demo-glossary.ts'
 import { DEMO_REPOSITORY, DEMO_SOURCE } from './fixtures/demo-repository.fixtures.ts'
 
 export async function seedDemoProject(
   db: Database,
-  options: { workspaceId: string; repository: string },
+  options: { workspaceId: string; repository: string; previewUrl?: string },
 ) {
   const project = await db.projects.create({
     data: {
@@ -15,8 +16,22 @@ export async function seedDemoProject(
       repository: options.repository,
       sourceLanguage: DEMO_SOURCE.sourceLanguage,
       languages: DEMO_SOURCE.languages,
+      previewUrl: options.previewUrl ?? null,
     },
   })
+
+  if (options.previewUrl) {
+    await db.projectSources.createMany({
+      data: Object.values(PREVIEW_DEMO_SOURCES).map((source) => ({
+        projectId: project.id,
+        kind: SOURCE_KINDS.HANDLEBARS_HTML,
+        name: source.name,
+        pathPattern: source.pathPattern,
+        sourceLanguage: DEMO_SOURCE.sourceLanguage,
+        languages: DEMO_SOURCE.languages,
+      })),
+    })
+  }
 
   const source = await db.projectSources.create({
     data: { projectId: project.id, kind: SOURCE_KINDS.VUE_I18N, ...DEMO_SOURCE },
@@ -33,7 +48,7 @@ export async function seedDemoProject(
   return project
 }
 
-export async function seedDemo(db: Database) {
+export async function seedDemo(db: Database, options: { previewUrl?: string } = {}) {
   const anna = await db.user.create({
     data: { id: 'user-anna', name: 'Anna', email: 'anna@glot.test', emailVerified: true },
   })
@@ -60,6 +75,7 @@ export async function seedDemo(db: Database) {
   const project = await seedDemoProject(db, {
     workspaceId: workspace.id,
     repository: DEMO_REPOSITORY,
+    ...options,
   })
 
   await seedDemoGlossary(db, { workspaceId: workspace.id })

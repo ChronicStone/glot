@@ -2,6 +2,7 @@ import { execFile } from 'node:child_process'
 import { mkdir, rm, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { promisify } from 'node:util'
+import { PREVIEW_DEMO_SOURCES } from '@glot/preview-demo/constants'
 import { hashText } from '@glot/utils/hash'
 import {
   DEMO_REPOSITORY,
@@ -10,6 +11,7 @@ import {
   DEMO_TEXTS,
 } from './fixtures/demo-repository.fixtures.ts'
 import { DEMO_APP_TEXTS } from './fixtures/demo-app.fixtures.ts'
+import { DEMO_EMAIL_TEXTS } from './fixtures/demo-emails.fixtures.ts'
 
 const run = promisify(execFile)
 
@@ -46,13 +48,31 @@ async function writeRepositoryFile(options: { directory: string; path: string; c
   await writeFile(file, options.content)
 }
 
+function reviewLine(options: {
+  source: string
+  path: string[]
+  values: Record<string, string>
+  sourceLanguage: string
+  language: string
+}) {
+  return JSON.stringify({
+    key: { source: options.source, path: options.path },
+    sourceHash: hashText(options.values[options.sourceLanguage] ?? ''),
+    targetHash: hashText(options.values[options.language] ?? ''),
+    reviewedBy: DEMO_REVIEWER,
+  })
+}
+
 export async function seedDemoRepository(options: {
   root: string
   repository?: string
   withApp?: boolean
+  withEmails?: boolean
 }) {
   const directory = join(options.root, options.repository ?? DEMO_REPOSITORY)
   const texts = options.withApp ? [...DEMO_TEXTS, ...DEMO_APP_TEXTS] : DEMO_TEXTS
+  const emails = options.withEmails ? DEMO_EMAIL_TEXTS : []
+  const emailSources = Object.values(PREVIEW_DEMO_SOURCES)
 
   await rm(directory, { recursive: true, force: true })
   await mkdir(directory, { recursive: true })
@@ -68,16 +88,44 @@ export async function seedDemoRepository(options: {
       content: `${JSON.stringify(nestMessages(entries), null, 2)}\n`,
     })
 
-    const reviews = texts
-      .filter(({ reviewed }) => reviewed.includes(language))
-      .map((text) =>
-        JSON.stringify({
-          key: { source: DEMO_SOURCE.name, path: text.path },
-          sourceHash: hashText(text.values[DEMO_SOURCE.sourceLanguage] ?? ''),
-          targetHash: hashText(text.values[language] ?? ''),
-          reviewedBy: DEMO_REVIEWER,
-        }),
+    for (const source of options.withEmails ? emailSources : []) {
+      const messages = emails.flatMap(({ source: name, path, values }) =>
+        name !== source.name || values[language] === undefined
+          ? []
+          : [{ path, value: values[language] }],
       )
+
+      await writeRepositoryFile({
+        directory,
+        path: source.pathPattern.replace('{locale}', language),
+        content: `${JSON.stringify(nestMessages(messages), null, 2)}\n`,
+      })
+    }
+
+    const reviews = [
+      ...texts
+        .filter(({ reviewed }) => reviewed.includes(language))
+        .map((text) =>
+          reviewLine({
+            source: DEMO_SOURCE.name,
+            path: text.path,
+            values: text.values,
+            sourceLanguage: DEMO_SOURCE.sourceLanguage,
+            language,
+          }),
+        ),
+      ...emails
+        .filter(({ reviewed }) => reviewed.includes(language))
+        .map((text) =>
+          reviewLine({
+            source: text.source,
+            path: text.path,
+            values: text.values,
+            sourceLanguage: DEMO_SOURCE.sourceLanguage,
+            language,
+          }),
+        ),
+    ]
 
     if (reviews.length > 0) {
       await writeRepositoryFile({
