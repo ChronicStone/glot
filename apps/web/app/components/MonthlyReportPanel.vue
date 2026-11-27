@@ -6,6 +6,7 @@ const { workspaceId } = defineProps<{ workspaceId: string }>()
 
 const { $api } = useNuxtApp()
 const count = new Intl.NumberFormat('en')
+
 const monthLabel = new Intl.DateTimeFormat('en', {
   month: 'long',
   year: 'numeric',
