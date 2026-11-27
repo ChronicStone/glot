@@ -7,10 +7,7 @@ import type {
 import type { WorkspaceRole } from '@glot/database/types/workspaces'
 import { ORPCError } from '@orpc/server'
 import type { RequestContext } from '../../../types/context.types.ts'
-import {
-  INVITATION_CALLBACK_PATH,
-  INVITATION_PROVISIONING_SOURCE,
-} from '../constants/people.constants.ts'
+import { INVITATION_CALLBACK_PATH } from '../constants/people.constants.ts'
 import { toPerson } from '../utils/people.utils.ts'
 import { WorkspaceAccessService } from './workspace-access.service.ts'
 
@@ -45,30 +42,6 @@ export class PeopleService {
     return membership
   }
 
-  async #userFor(input: PersonInviteInput) {
-    const email = input.email.toLowerCase()
-    const existing = await this.#context.db.user.findFirst({ where: { email } })
-
-    if (existing) {
-      return existing
-    }
-
-    const { internalAdapter } = await this.#context.auth.$context
-
-    await internalAdapter.createUser(
-      { email, name: input.name ?? email.split('@')[0] ?? email, emailVerified: false },
-      INVITATION_PROVISIONING_SOURCE,
-    )
-
-    const created = await this.#context.db.user.findFirst({ where: { email } })
-
-    if (!created) {
-      throw new ORPCError('INTERNAL_SERVER_ERROR')
-    }
-
-    return created
-  }
-
   async list(input: WorkspaceRefInput) {
     await this.#access.membershipOf(input.workspaceId)
 
@@ -90,36 +63,73 @@ export class PeopleService {
   async invite(input: PersonInviteInput) {
     await this.#access.requireManager({ workspaceId: input.workspaceId, roles: [input.role] })
 
-    const user = await this.#userFor(input)
+    const email = input.email.toLowerCase()
+    const existing = await this.#context.db.user.findFirst({ where: { email } })
 
-    const member = await this.#context.db.workspaceMemberships.exists({
-      where: { workspaceId: input.workspaceId, userId: user.id },
-    })
+    if (existing) {
+      const member = await this.#context.db.workspaceMemberships.exists({
+        where: { workspaceId: input.workspaceId, userId: existing.id },
+      })
 
-    if (member) {
-      throw new ORPCError('CONFLICT')
+      if (member) {
+        throw new ORPCError('CONFLICT')
+      }
     }
 
-    const membership = await this.#context.db.transaction(async (tx) => {
+    const userId = existing?.id ?? (await this.#newUserId())
+
+    const { user, membership } = await this.#context.db.transaction(async (tx) => {
+      const person =
+        existing ??
+        (await tx.user.create({
+          data: {
+            id: userId,
+            email,
+            name: input.name ?? email.split('@')[0] ?? email,
+            emailVerified: false,
+          },
+        }))
+
       const created = await tx.workspaceMemberships.create({
         data: {
           workspaceId: input.workspaceId,
-          userId: user.id,
+          userId: person.id,
           role: input.role,
           languages: input.languages,
           expiresAt: input.expiresAt ?? null,
         },
       })
 
+      return { user: person, membership: created }
+    })
+
+    try {
       await this.#context.auth.api.signInMagicLink({
         body: { email: user.email, callbackURL: INVITATION_CALLBACK_PATH },
         headers: new Headers(),
       })
+    } catch {
+      await this.#context.db.workspaceMemberships.delete({ where: { id: membership.id } })
 
-      return created
-    })
+      if (!existing) {
+        await this.#context.db.user.delete({ where: { id: user.id } })
+      }
+
+      throw new ORPCError('BAD_GATEWAY', { message: 'The sign-in link could not be sent' })
+    }
 
     return toPerson({ ...membership, user })
+  }
+
+  async #newUserId() {
+    const { generateId } = await this.#context.auth.$context
+    const id = generateId({ model: 'user' })
+
+    if (id === false) {
+      throw new ORPCError('INTERNAL_SERVER_ERROR')
+    }
+
+    return id
   }
 
   async update(input: PersonUpdateInput) {

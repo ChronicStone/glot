@@ -15,5 +15,3 @@ export const ROLE_RANKS = {
 } as const
 
 export const INVITATION_CALLBACK_PATH = '/'
-
-export const INVITATION_PROVISIONING_SOURCE = { method: 'invitation' } as const
