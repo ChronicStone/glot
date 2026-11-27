@@ -19,3 +19,5 @@ export const TEXT_PANEL_TABS = {
 } as const
 
 export const AI_FILL_POLL_MS = 1500
+
+export const AI_FILL_SCAN_PAGE = 200

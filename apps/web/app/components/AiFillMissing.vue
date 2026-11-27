@@ -1,27 +1,63 @@
 <script setup lang="ts">
 import { AI_FILL_STATUSES } from '@glot/contract'
-import { useMutation, useQuery } from '@tanstack/vue-query'
+import { TEXT_STATES } from '@glot/database/constants/texts'
+import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/vue-query'
 import { API_ERROR_CODES } from '../constants/api.constants.ts'
-import { AI_FILL_POLL_MS } from '../constants/texts.constants.ts'
+import { AI_FILL_POLL_MS, AI_FILL_SCAN_PAGE } from '../constants/texts.constants.ts'
 
-const { projectId, language, missing } = defineProps<{
-  projectId: string
-  language: string
-  missing: number
-}>()
+const { projectId, language } = defineProps<{ projectId: string; language: string }>()
 
 const { $api, $queryClient } = useNuxtApp()
 const toast = useToast()
 const watched = ref<string | undefined>()
 
-const running = (status: string) =>
-  status === AI_FILL_STATUSES.QUEUED || status === AI_FILL_STATUSES.RUNNING
+function running(status: string) {
+  return status === AI_FILL_STATUSES.QUEUED || status === AI_FILL_STATUSES.RUNNING
+}
 
 const fills = useQuery(() => ({
   ...$api.ai.fills.queryOptions({ input: { projectId } }),
   refetchInterval: (query) =>
     query.state.data?.some(({ status }) => running(status)) ? AI_FILL_POLL_MS : false,
 }))
+
+const missingTexts = useInfiniteQuery(() => ({
+  ...$api.texts.search.infiniteOptions({
+    input: (cursor: string | undefined) => ({
+      projectId,
+      language,
+      state: TEXT_STATES.MISSING,
+      limit: AI_FILL_SCAN_PAGE,
+      cursor,
+    }),
+    initialPageParam: undefined,
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
+  }),
+}))
+
+watch(
+  () => missingTexts.data.value?.pages.length,
+  async () => {
+    if (missingTexts.hasNextPage.value && !missingTexts.isFetchingNextPage.value) {
+      await missingTexts.fetchNextPage()
+    }
+  },
+  { immediate: true },
+)
+
+const fillable = computed(
+  () =>
+    missingTexts.data.value?.pages
+      .flatMap(({ items }) => items)
+      .filter((text) =>
+        text.translations.some(
+          (translation) =>
+            translation.language === language &&
+            translation.state === TEXT_STATES.MISSING &&
+            !translation.draft,
+        ),
+      ).length ?? 0,
+)
 
 const current = computed(() =>
   fills.data.value?.find((fill) => fill.language === language && running(fill.status)),
@@ -87,13 +123,13 @@ watch(finished, async (fill) => {
     }}
   </button>
   <button
-    v-else-if="missing > 0"
+    v-else-if="fillable > 0"
     type="button"
     class="btn btn-ai"
     :class="{ 'is-loading': start.isPending.value }"
-    :title="`Write the missing ${languageName(language)} texts that have no draft yet with AI and send them for review`"
+    :title="`Write the ${fillable} missing ${languageName(language)} texts that have no draft yet with AI and send them for review`"
     @click="start.mutate({ projectId, language })"
   >
-    <UIcon name="i-lucide-sparkle" />Fill missing
+    <UIcon name="i-lucide-sparkle" />Fill {{ fillable.toLocaleString('en-US') }} missing
   </button>
 </template>

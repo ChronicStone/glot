@@ -272,11 +272,6 @@ defineShortcuts({
             v-if="project && language && write.includes(language)"
             :project-id="project.id"
             :language="language"
-            :missing="
-              counts.byLanguage.find((row) => row.language === language)?.counts[
-                TEXT_STATES.MISSING
-              ] ?? 0
-            "
           />
         </div>
         <div class="tx-chips">
