@@ -2269,6 +2269,17 @@
 .sel-menu {
   max-height: min(500px, var(--glot-reka-combobox-content-available-height, 500px));
 }
+.lc {
+  white-space: nowrap;
+}
+.field {
+  min-width: 0;
+}
+.sel {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
 
 .app {
   display: grid;

@@ -23,7 +23,6 @@ const { groups, locked = [] } = defineProps<{
 }>()
 
 const trigger = useTemplateRef<HTMLElement>('trigger')
-const measure = useTemplateRef<HTMLElement>('measure')
 const visible = ref<number>(Number.POSITIVE_INFINITY)
 
 const options = computed(() => groups.flatMap((group) => group.options))
@@ -45,26 +44,22 @@ const chosen = computed(() =>
   }),
 )
 
-function fit() {
-  const width = trigger.value?.clientWidth ?? 0
-  const tags = [...(measure.value?.children ?? [])].map((tag) => tag.getBoundingClientRect().width)
-  const room = width - 44
+async function fit() {
+  visible.value = Number.POSITIVE_INFINITY
 
-  let used = 0
-  let count = 0
+  await nextTick()
 
-  for (const [index, tag] of tags.entries()) {
-    const reserve = index < tags.length - 1 ? 40 : 0
+  const box = trigger.value?.querySelector('.sel-v')?.getBoundingClientRect()
 
-    if (used + tag + reserve > room) {
-      break
-    }
+  const tags = [...(trigger.value?.querySelectorAll('.sel-chips > .sel-tag:not(.more)') ?? [])].map(
+    (tag) => tag.getBoundingClientRect().right,
+  )
 
-    used += tag + 4
-    count += 1
+  if (!box || tags.every((right) => right <= box.right)) {
+    return
   }
 
-  visible.value = Math.max(1, count)
+  visible.value = Math.max(1, tags.filter((right) => right <= box.right - 44).length)
 }
 
 useResizeObserver(trigger, fit)
@@ -86,12 +81,6 @@ function create(code: string) {
 
 <template>
   <div ref="trigger" style="position: relative; min-width: 0">
-    <div ref="measure" class="sel-measure" aria-hidden="true">
-      <span v-for="option in chosen" :key="option.value" class="sel-tag"
-        ><span :class="option.tone ?? 'plain'" class="lc">{{ option.code }}</span>{{ option.label
-        }}<span class="x"><UIcon name="i-lucide-x" class="ic-13" /></span
-      ></span>
-    </div>
     <USelectMenu
       v-model="model"
       multiple

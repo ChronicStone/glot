@@ -5,6 +5,7 @@ defineProps<{
   icon?: string
   tone?: string
   side?: boolean
+  wide?: boolean
 }>()
 
 const open = defineModel<boolean>('open', { required: true })
@@ -21,7 +22,7 @@ const open = defineModel<boolean>('open', { required: true })
   >
     <template #content>
       <div class="scrim" @click="open = false" />
-      <div :class="side ? 'slide' : 'dialog'">
+      <div :class="[side ? 'slide' : 'dialog', { wide }]">
         <div class="dialog-h">
           <span v-if="icon" :class="tone" class="ico-tile"><UIcon :name="icon" /></span>
           <div>

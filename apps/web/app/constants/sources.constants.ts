@@ -1,0 +1,6 @@
+export const SOURCE_LAYOUTS = {
+  FILE_PER_LANGUAGE: 'FILE_PER_LANGUAGE',
+  FOLDER_PER_LANGUAGE: 'FOLDER_PER_LANGUAGE',
+} as const
+
+export const SOURCE_DEFAULT_FILE = 'messages.json'

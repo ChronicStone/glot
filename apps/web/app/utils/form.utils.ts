@@ -11,5 +11,9 @@ export function errorMessage(errors: readonly unknown[]) {
     return first
   }
 
+  if (first && typeof first === 'object' && 'code' in first && first.code === 'too_small') {
+    return 'Required.'
+  }
+
   return first && typeof first === 'object' && 'message' in first ? String(first.message) : ''
 }

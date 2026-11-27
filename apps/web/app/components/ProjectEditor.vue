@@ -4,6 +4,8 @@ import { projectCreateInputSchema, projectSourceInputSchema } from '@glot/contra
 import { SOURCE_KINDS } from '@glot/database/constants/projects'
 import { useForm } from '@tanstack/vue-form'
 import { useMutation } from '@tanstack/vue-query'
+import { SUGGESTED_LANGUAGES } from '../constants/languages.constants.ts'
+import { SOURCE_LAYOUTS } from '../constants/sources.constants.ts'
 
 const open = defineModel<boolean>('open', { required: true })
 
@@ -56,7 +58,11 @@ const defaultValues: Omit<ProjectUpdateInput, 'projectId'> = {
     {
       name: 'shared-base',
       kind: SOURCE_KINDS.VUE_I18N,
-      pathPattern: 'locales/{locale}.json',
+      pathPattern: sourcePattern({
+        folder: 'locales',
+        layout: SOURCE_LAYOUTS.FILE_PER_LANGUAGE,
+        fileName: '',
+      }),
       sourceLanguage,
       languages,
     },
@@ -90,8 +96,61 @@ function syncSources(changes: { sourceLanguage?: string; languages?: string[] })
   form.setFieldValue('sources', (sources) => sources.map((source) => ({ ...source, ...changes })))
 }
 
-function codes(input: string) {
-  return input.split(/[\s,]+/u).filter(Boolean)
+const editing = ref<number | undefined>(project ? undefined : 0)
+
+function languageOption(code: string) {
+  return { value: code, code, label: languageName(code), native: nativeLanguageName(code) }
+}
+
+const known = computed(() => [
+  ...new Set([...Object.values(SUGGESTED_LANGUAGES), ...form.state.values.languages]),
+])
+
+const sourceGroups = computed(() => [
+  { options: known.value.map((code) => ({ ...languageOption(code), tone: 'base' })) },
+])
+
+const languageGroups = computed(() => {
+  const chosen = form.state.values.languages
+  const source = form.state.values.sourceLanguage
+
+  return [
+    { label: 'Source', options: [{ ...languageOption(source), tone: 'base' }] },
+    {
+      label: 'In this project',
+      options: chosen.filter((code) => code !== source).map((code) => languageOption(code)),
+    },
+    {
+      label: 'Add',
+      options: known.value
+        .filter((code) => !chosen.includes(code))
+        .map((code) => languageOption(code)),
+    },
+  ].filter((group) => group.options.length > 0)
+})
+
+function updateShape(options: {
+  index: number
+  change: Partial<{ folder: string; layout: string; fileName: string }>
+}) {
+  form.setFieldValue(`sources[${options.index}].pathPattern`, (pattern) =>
+    sourcePattern({ ...sourceShape(pattern), ...options.change }),
+  )
+}
+
+function addSource() {
+  form.pushFieldValue('sources', {
+    name: '',
+    kind: SOURCE_KINDS.VUE_I18N,
+    pathPattern: sourcePattern({
+      folder: '',
+      layout: SOURCE_LAYOUTS.FILE_PER_LANGUAGE,
+      fileName: '',
+    }),
+    sourceLanguage: form.state.values.sourceLanguage,
+    languages: form.state.values.languages,
+  })
+  editing.value = form.state.values.sources.length - 1
 }
 </script>
 
@@ -99,6 +158,7 @@ function codes(input: string) {
   <AppDialog
     v-model:open="open"
     side
+    wide
     :title="project?.name ?? 'New project'"
     description="One project is one repository."
     icon="i-lucide-layers"
@@ -117,15 +177,15 @@ function codes(input: string) {
       >
         <div class="field">
           <span class="label">Name people see</span>
-          <label :class="{ 'is-error': field.state.meta.errors.length > 0 }" class="input"
+          <label :class="{ 'is-error': errorMessage(field.state.meta.errors) }" class="input"
             ><input
               :value="field.state.value"
               aria-label="Name"
               @input="field.handleChange(inputValue($event))"
           /></label>
-          <span v-if="errorMessage(field.state.meta.errors)" class="hint err">{{
-            errorMessage(field.state.meta.errors)
-          }}</span>
+          <span v-if="errorMessage(field.state.meta.errors)" class="hint err"
+            ><UIcon name="i-lucide-circle-alert" />{{ errorMessage(field.state.meta.errors) }}</span
+          >
         </div>
       </form.Field>
       <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px">
@@ -138,7 +198,9 @@ function codes(input: string) {
               placeholder="owner/name"
               aria-label="Repository"
           /></label>
-          <span v-if="repositoryError" class="hint err">{{ repositoryError }}</span>
+          <span v-if="repositoryError" class="hint err"
+            ><UIcon name="i-lucide-circle-alert" />{{ repositoryError }}</span
+          >
         </div>
         <form.Field
           v-slot="{ field }"
@@ -147,7 +209,7 @@ function codes(input: string) {
         >
           <div class="field">
             <span class="label">Branch</span>
-            <label :class="{ 'is-error': field.state.meta.errors.length > 0 }" class="input"
+            <label :class="{ 'is-error': errorMessage(field.state.meta.errors) }" class="input"
               ><UIcon name="i-lucide-git-branch" /><input
                 :value="field.state.value"
                 class="mono"
@@ -155,9 +217,11 @@ function codes(input: string) {
                 aria-label="Branch"
                 @input="field.handleChange(inputValue($event))"
             /></label>
-            <span v-if="errorMessage(field.state.meta.errors)" class="hint err">{{
-              errorMessage(field.state.meta.errors)
-            }}</span>
+            <span v-if="errorMessage(field.state.meta.errors)" class="hint err"
+              ><UIcon name="i-lucide-circle-alert" />{{
+                errorMessage(field.state.meta.errors)
+              }}</span
+            >
           </div>
         </form.Field>
       </div>
@@ -171,13 +235,13 @@ function codes(input: string) {
         >
           <div class="field">
             <span class="label">Source language</span>
-            <label class="input"
-              ><input
-                :value="field.state.value"
-                class="mono"
-                aria-label="Source language"
-                @input="field.handleChange(inputValue($event))"
-            /></label>
+            <AppSelect
+              :model-value="field.state.value"
+              :groups="sourceGroups"
+              search="Find a language"
+              placeholder="Source language"
+              @update:model-value="field.handleChange"
+            />
           </div>
         </form.Field>
         <form.Field
@@ -190,16 +254,20 @@ function codes(input: string) {
         >
           <div class="field">
             <span class="label">Languages</span>
-            <label class="input"
-              ><input
-                :value="field.state.value.join(' ')"
-                class="mono"
-                aria-label="Languages"
-                @input="field.handleChange(codes(inputValue($event)))"
-            /></label>
-            <span v-if="errorMessage(field.state.meta.errors)" class="hint err">{{
-              errorMessage(field.state.meta.errors)
-            }}</span>
+            <AppMultiSelect
+              :model-value="field.state.value"
+              :groups="languageGroups"
+              :locked="[form.state.values.sourceLanguage]"
+              search="Find a language or type a code"
+              placeholder="Languages"
+              create-languages
+              @update:model-value="field.handleChange"
+            />
+            <span v-if="errorMessage(field.state.meta.errors)" class="hint err"
+              ><UIcon name="i-lucide-circle-alert" />{{
+                errorMessage(field.state.meta.errors)
+              }}</span
+            >
           </div>
         </form.Field>
       </div>
@@ -212,77 +280,161 @@ function codes(input: string) {
             ></span
           >
           <div class="card" style="padding: 0">
-            <div
-              v-for="(_, index) in field.state.value"
-              :key="index"
-              class="src"
-              style="grid-template-columns: 20px minmax(0, 1fr) minmax(0, 1.6fr) auto"
-            >
+            <div v-for="(source, index) in field.state.value" :key="index" class="srcard">
               <UIcon name="i-lucide-grip-vertical" class="grip" />
-              <form.Field
-                v-slot="{ field: name }"
-                :name="`sources[${index}].name`"
-                :validators="{ onSubmit: projectSourceInputSchema.shape.name }"
-              >
-                <label class="input" style="height: 32px"
-                  ><input
-                    :value="name.state.value"
-                    aria-label="Source name"
-                    @input="name.handleChange(inputValue($event))"
-                /></label>
-                <span v-if="errorMessage(name.state.meta.errors)" class="hint err">{{
-                  errorMessage(name.state.meta.errors)
-                }}</span>
-              </form.Field>
-              <form.Field
-                v-slot="{ field: path }"
-                :name="`sources[${index}].pathPattern`"
-                :validators="{ onSubmit: projectSourceInputSchema.shape.pathPattern }"
-              >
-                <label
-                  :class="{ 'is-error': path.state.meta.errors.length > 0 }"
-                  class="input"
-                  style="height: 32px"
-                  ><input
-                    :value="path.state.value"
-                    class="mono"
-                    aria-label="Files"
-                    @input="path.handleChange(inputValue($event))"
-                /></label>
-                <span v-if="errorMessage(path.state.meta.errors)" class="hint err">{{
-                  errorMessage(path.state.meta.errors)
-                }}</span>
-              </form.Field>
-              <button
-                type="button"
-                class="btn btn-ghost btn-xs btn-icon"
-                aria-label="Remove the source"
-                :disabled="field.state.value.length < 2"
-                @click="field.removeValue(index)"
-              >
-                <UIcon name="i-lucide-x" />
-              </button>
+              <div style="min-width: 0">
+                <div class="nm">
+                  {{ source.name || 'New source' }}<span class="tag">{{ source.kind }}</span>
+                </div>
+                <SourceRule :path-pattern="source.pathPattern" />
+                <div class="langs">
+                  <span
+                    v-for="code in source.languages"
+                    :key="code"
+                    :class="code === source.sourceLanguage ? 'base' : 'plain'"
+                    class="lc"
+                    >{{ code }}</span
+                  >
+                </div>
+                <div v-if="editing === index" class="stack" style="gap: 12px; margin-top: 14px">
+                  <form.Field
+                    v-slot="{ field: name }"
+                    :name="`sources[${index}].name`"
+                    :validators="{ onSubmit: projectSourceInputSchema.shape.name }"
+                  >
+                    <div class="field">
+                      <span class="label">Name</span>
+                      <label
+                        :class="{ 'is-error': errorMessage(name.state.meta.errors) }"
+                        class="input"
+                        ><input
+                          :value="name.state.value"
+                          placeholder="Shared base"
+                          aria-label="Source name"
+                          @input="name.handleChange(inputValue($event))"
+                      /></label>
+                      <span v-if="errorMessage(name.state.meta.errors)" class="hint err"
+                        ><UIcon name="i-lucide-circle-alert" />{{
+                          errorMessage(name.state.meta.errors)
+                        }}</span
+                      >
+                    </div>
+                  </form.Field>
+                  <form.Field
+                    v-slot="{ field: path }"
+                    :name="`sources[${index}].pathPattern`"
+                    :validators="{ onSubmit: projectSourceInputSchema.shape.pathPattern }"
+                  >
+                    <div class="field">
+                      <span class="label">Folder of the language files</span>
+                      <label
+                        :class="{ 'is-error': errorMessage(path.state.meta.errors) }"
+                        class="input"
+                        ><UIcon name="i-lucide-folder" /><input
+                          :value="sourceShape(path.state.value).folder"
+                          class="mono"
+                          placeholder="packages/translations/i18n/locales"
+                          aria-label="Folder"
+                          @input="updateShape({ index, change: { folder: inputValue($event) } })"
+                      /></label>
+                      <span v-if="errorMessage(path.state.meta.errors)" class="hint err"
+                        ><UIcon name="i-lucide-circle-alert" />{{
+                          errorMessage(path.state.meta.errors)
+                        }}</span
+                      >
+                    </div>
+                    <div class="field">
+                      <span class="label">How the files are named</span>
+                      <div class="pk-layouts">
+                        <button
+                          type="button"
+                          :class="{
+                            on:
+                              sourceShape(path.state.value).layout ===
+                              SOURCE_LAYOUTS.FILE_PER_LANGUAGE,
+                          }"
+                          class="pk-layout"
+                          @click="
+                            updateShape({
+                              index,
+                              change: { layout: SOURCE_LAYOUTS.FILE_PER_LANGUAGE },
+                            })
+                          "
+                        >
+                          <b>One file per language</b
+                          ><span class="mini">…/<i>fr</i>.json<br />…/<i>en</i>.json</span>
+                        </button>
+                        <button
+                          type="button"
+                          :class="{
+                            on:
+                              sourceShape(path.state.value).layout ===
+                              SOURCE_LAYOUTS.FOLDER_PER_LANGUAGE,
+                          }"
+                          class="pk-layout"
+                          @click="
+                            updateShape({
+                              index,
+                              change: { layout: SOURCE_LAYOUTS.FOLDER_PER_LANGUAGE },
+                            })
+                          "
+                        >
+                          <b>One folder per language</b
+                          ><span class="mini"
+                            >…/<i>fr</i>/{{ sourceShape(path.state.value).fileName
+                            }}<br />…/<i>en</i>/{{ sourceShape(path.state.value).fileName }}</span
+                          >
+                        </button>
+                      </div>
+                    </div>
+                    <div
+                      v-if="
+                        sourceShape(path.state.value).layout === SOURCE_LAYOUTS.FOLDER_PER_LANGUAGE
+                      "
+                      class="field"
+                    >
+                      <span class="label">File inside each language folder</span>
+                      <label class="input" style="max-width: 280px"
+                        ><UIcon name="i-lucide-file-json" /><input
+                          :value="sourceShape(path.state.value).fileName"
+                          class="mono"
+                          aria-label="File name"
+                          @input="updateShape({ index, change: { fileName: inputValue($event) } })"
+                      /></label>
+                    </div>
+                  </form.Field>
+                </div>
+              </div>
+              <div class="row-flex" style="gap: 2px; align-self: flex-start">
+                <button
+                  type="button"
+                  class="btn btn-ghost btn-sm"
+                  @click="editing = editing === index ? undefined : index"
+                >
+                  <UIcon :name="editing === index ? 'i-lucide-check' : 'i-lucide-folder-pen'" />{{
+                    editing === index ? 'Done' : 'Change'
+                  }}
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-ghost btn-sm btn-icon"
+                  aria-label="Remove the source"
+                  :disabled="field.state.value.length < 2"
+                  @click="field.removeValue(index)"
+                >
+                  <UIcon name="i-lucide-x" />
+                </button>
+              </div>
             </div>
           </div>
           <button
             type="button"
             class="btn btn-ghost btn-sm"
             style="align-self: flex-start"
-            @click="
-              field.pushValue({
-                name: '',
-                kind: SOURCE_KINDS.VUE_I18N,
-                pathPattern: '',
-                sourceLanguage: form.getFieldValue('sourceLanguage'),
-                languages: form.getFieldValue('languages'),
-              })
-            "
+            @click="addSource"
           >
             <UIcon name="i-lucide-plus" />Add a source
           </button>
-          <span class="hint"
-            >Files with {locale} for the language, such as locales/{locale}.json.</span
-          >
         </div>
       </form.Field>
       <div v-if="serverError" class="banner fix">
