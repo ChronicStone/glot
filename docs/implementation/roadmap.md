@@ -9,13 +9,13 @@ V1 is complete when every slice below is Verified. Slices in the same wave run i
 | 1    | [Self-hosting](slices/self-hosting.md)                                                                 | Verified |
 | 1    | [App shell](slices/app-shell.md)                                                                       | Verified |
 | 2    | [Drafts and review](slices/drafts-and-review.md)                                                       | Verified |
-| 2    | [People and settings](slices/people-and-settings.md)                                                   | Planned  |
-| 3    | [Release train](slices/release-train.md)                                                               | Planned  |
-| 3    | [Glossary](slices/glossary.md)                                                                         | Planned  |
-| 4    | [AI fills](slices/ai-fills.md)                                                                         | Planned  |
-| 4    | [In-app editing](slices/in-app-editing.md)                                                             | Planned  |
-| 5    | [Emails and documents](slices/emails-and-documents.md)                                                 | Planned  |
-| 5    | [Home, notifications and reports](slices/home-notifications-reports.md)                                | Planned  |
+| 2    | [People and settings](slices/people-and-settings.md)                                                   | Verified |
+| 3    | [Release train](slices/release-train.md)                                                               | Verified |
+| 3    | [Glossary](slices/glossary.md)                                                                         | Verified |
+| 4    | [AI fills](slices/ai-fills.md)                                                                         | Verified |
+| 4    | [In-app editing](slices/in-app-editing.md)                                                             | Verified |
+| 5    | [Emails and documents](slices/emails-and-documents.md)                                                 | Verified |
+| 5    | [Home, notifications and reports](slices/home-notifications-reports.md)                                | Verified |
 | 6    | Publishing: build the MIT packages with `vp pack`, split browser-safe database exports, publish to npm | Planned  |
 
 ## Deferred

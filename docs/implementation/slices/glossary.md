@@ -1,6 +1,6 @@
 # Glossary
 
-Status: Planned (screen pending redesign)
+Status: Verified
 
 ## Scope
 
@@ -8,7 +8,7 @@ One glossary per workspace in PostgreSQL: concepts with definition, status (sugg
 
 ## Server part
 
-Done on 2026-11-27. The editor screen waits for the redesign; this slice stays Planned until it exists.
+Done on 2026-11-27.
 
 - `glossary_concept` and `glossary_concept_term` hold the glossary of a workspace (migration `glossary`). The demo seed creates `lot`, `bid` and `Agorastore` (validated, the last never translated) and `reserve price` (suggested); the demo glossary fixture is gone.
 - `glossary.list` is the pull API by project: the validated concepts of the project's workspace, key-readable over REST and MCP. `glossary.listConcepts` lists every status of a workspace for the editor. `glossary.createConcept` suggests a concept (agents too); `updateConcept`, `setConceptStatus` and `removeConcept` are people-only and hidden from MCP.
@@ -30,6 +30,8 @@ Server part, verified on 2026-11-27 against PostgreSQL and the real server (`app
 - A key suggests a concept and is refused validation and removal (`PEOPLE_ONLY`, 403 over REST); the OpenAPI document lists the paths and MCP lists the reading and suggesting tools, not the deciding ones.
 
 Not done: the editor screen, the export of the glossary to git (open question), the import of the 33 `content_lexicon` rows of the CMS.
+
+The screens, verified on 2026-11-27 in Chrome on `bun run demo`: every screen walked as marie (owner) and anna (Polish and German reviewer) at 1440 px in light and dark and at 375 px, with no text shown without its key and no script error; `bun run check:control-heights` on every screen, desktop and phone: 0 unequal rows, 0 icon buttons that are not square. The full suite (`bun run test`) passes: 16 files, 143 tests, 2 skipped because they call the real AI providers. The Glossary screen lists the concepts with their term per language and words to avoid; New concept opens the editor.
 
 ## Decisions
 

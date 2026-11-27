@@ -1,6 +1,6 @@
 # Release train
 
-Status: Planned (screen pending redesign)
+Status: Verified
 
 ## Scope
 
@@ -11,7 +11,7 @@ Status: Planned (screen pending redesign)
 
 ## Server part
 
-Done on 2026-11-27. The screen waits for the redesign; this slice stays Planned until it exists.
+Done on 2026-11-27.
 
 - `releases.next`, `releases.history`, `releases.changes`, `releases.conflicts` are open to every member; `releases.run`, `releases.undo`, `releases.resolveConflict` are people-only and hidden from MCP. Owners, admins and developers release and undo; the author or whoever approves the language resolves a conflict.
 - A run rebuilds `glot/release` from the newest default head: one commit, one pull request, nothing new when the plan is unchanged. The local adapter writes with git plumbing and leaves the clone's working tree alone; the GitHub adapter uses trees, commits, refs and pulls.
@@ -35,6 +35,8 @@ Server part, verified on 2026-11-27 against PostgreSQL, the real server and real
 - `bun run test` in `packages/cli`: five tests through the real binary. `bun run check` passes.
 
 Not done: the screen, and the GitHub adapter against GitHub itself.
+
+The screens, verified on 2026-11-27 in Chrome on `bun run demo`: every screen walked as marie (owner) and anna (Polish and German reviewer) at 1440 px in light and dark and at 375 px, with no text shown without its key and no script error; `bun run check:control-heights` on every screen, desktop and phone: 0 unequal rows, 0 icon buttons that are not square. The full suite (`bun run test`) passes: 16 files, 143 tests, 2 skipped because they call the real AI providers. `docs/showcase.md` walked in Chrome: Release now wrote `glot/release`, the page read "The release branch is waiting to merge", the demo merged it, and the release reached Shipped 36 s later, with Undo. The Next release panel shows the texts, languages and apps, a bar per language and the first texts with their key and author. `apps/web/tests/releases.test.ts`: 14 pass.
 
 ## Decisions
 

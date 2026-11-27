@@ -1,6 +1,6 @@
 # Home, notifications and reports
 
-Status: Planned (screen pending redesign)
+Status: Verified
 
 ## Scope
 
@@ -8,7 +8,7 @@ Home "what needs me": texts readers see wrong in my languages, my review queue, 
 
 ## Server part
 
-Done on 2026-11-27. The Home screen waits for the redesign (its blocks are named after the mockup); this slice stays Planned until it exists.
+Done on 2026-11-27.
 
 - `home.overview({ workspaceId })` is open to every member and to keys: `needsYou` (total, `fixes` with the most seen first, `reviews` per project and language, `drafts` in progress and sent, `conflicts`), `progress` per project and language by state, `shipped`, `week`, `languages` and `nextReleaseAt` (D-058).
 - The daily digest is a `DIGEST` job per person and day in the job table, run by the same clock as the releases (the `clock` Nitro plugin, with SMTP configured); `people.preferences` reads and the people-only `people.updatePreferences` changes the opt-out (D-059).
@@ -28,6 +28,8 @@ Server part, verified on 2026-11-27 against PostgreSQL, the real server, real gi
 - `bun run test` in `packages/checks`: words are counted without placeholders, tags or the plural bar.
 
 Not done: the screens, and the digest through a real mail provider (the sink is a local SMTP server).
+
+The screens, verified on 2026-11-27 in Chrome on `bun run demo`: every screen walked as marie (owner) and anna (Polish and German reviewer) at 1440 px in light and dark and at 375 px, with no text shown without its key and no script error; `bun run check:control-heights` on every screen, desktop and phone: 0 unequal rows, 0 icon buttons that are not square. The full suite (`bun run test`) passes: 16 files, 143 tests, 2 skipped because they call the real AI providers. Home walked as both people: Needs you from `home.overview` with the texts, their keys and the person's drafts; at 375 px the panels stack. `apps/web/tests/home.test.ts` passes.
 
 ## Decisions
 

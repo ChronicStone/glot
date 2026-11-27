@@ -1,6 +1,6 @@
 # AI fills
 
-Status: Planned (screen pending redesign)
+Status: Verified
 
 ## Scope
 
@@ -8,7 +8,7 @@ A provider interface with Anthropic and OpenAI adapters (keys per workspace, enc
 
 ## Server part
 
-Done on 2026-11-27. The AI settings screen and the Suggest and Fill actions wait for the redesign; this slice stays Planned until they exist.
+Done on 2026-11-27.
 
 - `ai.settings`, `ai.updateSettings`, `ai.setKey`, `ai.removeKey` and `ai.usage` are for owners and admins; the three writes are people-only and hidden from MCP. A key is never returned: only whether it is set and its last 4 characters (D-063).
 - `ai.suggest` and `ai.fillMissing` are open to anyone who may change the language, keys included (an agent may ask for AI fills, never approve). `ai.fills` lists a project's runs (D-065, D-066).
@@ -36,6 +36,8 @@ Server part, verified on 2026-11-27 against PostgreSQL, the real server, real gi
 - `bun run test` in `packages/checks`: the tokenizer round-trips placeholders, plural bars, links, literals, tags and broken sources byte for byte, and rejects missing, repeated, invented and broken tokens.
 
 Not done: the screens, and a real provider call, not run without a key.
+
+The screens, verified on 2026-11-27 in Chrome on `bun run demo`: every screen walked as marie (owner) and anna (Polish and German reviewer) at 1440 px in light and dark and at 375 px, with no text shown without its key and no script error; `bun run check:control-heights` on every screen, desktop and phone: 0 unequal rows, 0 icon buttons that are not square. The full suite (`bun run test`) passes: 16 files, 143 tests, 2 skipped because they call the real AI providers. Settings › AI saves a provider key and a monthly budget and refuses a negative one; Suggest shows a suggestion, the no-key state and the provider-down state; Fill missing counts only the texts AI would fill. `apps/web/tests/ai.test.ts`: 21 pass.
 
 ## Decisions
 
