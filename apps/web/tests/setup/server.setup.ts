@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process'
 import { createWriteStream } from 'node:fs'
-import { mkdtemp } from 'node:fs/promises'
+import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createGlotAuth } from '@glot/auth'
@@ -11,6 +11,7 @@ import { migrate } from 'drizzle-orm/node-postgres/migrator'
 import { Client } from 'pg'
 import type { TestProject } from 'vite-plus/test/node'
 import { WIDGET_TEST_ORIGINS } from '../fixtures/widget.fixtures.ts'
+import { startAiSink } from '../support/ai-sink.ts'
 
 const ADMIN_URL = process.env.GLOT_TEST_ADMIN_URL ?? 'postgres://glot:glot@localhost:54329/glot'
 const PORT = Number(process.env.GLOT_TEST_PORT ?? 3199)
@@ -68,6 +69,7 @@ export default async function setup(project: TestProject) {
   const directory = await mkdtemp(join(tmpdir(), 'glot-test-'))
   const repositories = join(directory, 'repositories')
   const { projectId, agentKey, repositoryPath } = await seed({ repositories })
+  const sink = await startAiSink()
   const log = join(directory, 'server.log')
   const output = createWriteStream(log)
 
@@ -78,7 +80,7 @@ export default async function setup(project: TestProject) {
         Object.entries(process.env).filter(([name]) => !/^(?:VITEST|TEST$|NODE_ENV$)/u.test(name)),
       ),
       NUXT_IGNORE_LOCK: '1',
-      GLOT_BUILD_DIR: `.nuxt-test-${PORT}`,
+      GLOT_BUILD_DIR: join(directory, 'nuxt'),
       DATABASE_URL,
       AUTH_SECRET,
       APP_URL: BASE_URL,
@@ -86,6 +88,8 @@ export default async function setup(project: TestProject) {
       GLOT_VERSION: 'test',
       WIDGET_ORIGINS: `${PLAYGROUND_URL},${WIDGET_TEST_ORIGINS.UAT},${WIDGET_TEST_ORIGINS.PRODUCTION}`,
       WIDGET_PRODUCTION_ORIGINS: WIDGET_TEST_ORIGINS.PRODUCTION,
+      ANTHROPIC_BASE_URL: sink.url,
+      OPENAI_BASE_URL: sink.url,
     },
   })
 
@@ -101,9 +105,13 @@ export default async function setup(project: TestProject) {
   project.provide('repositoriesRoot', repositories)
   project.provide('databaseUrl', DATABASE_URL)
   project.provide('playgroundUrl', PLAYGROUND_URL)
+  project.provide('aiSinkUrl', sink.url)
+  project.provide('authSecret', AUTH_SECRET)
 
-  return () => {
+  return async () => {
     server.kill()
+    await sink.close()
+    await rm(directory, { recursive: true, force: true })
   }
 }
 
@@ -117,5 +125,7 @@ declare module 'vite-plus/test' {
     repositoriesRoot: string
     databaseUrl: string
     playgroundUrl: string
+    aiSinkUrl: string
+    authSecret: string
   }
 }
