@@ -63,7 +63,10 @@ export class AiTranslatorService {
       })
 
       if (completion.stopped) {
-        await usage.record({
+        totals.inputTokens += completion.inputTokens
+        totals.outputTokens += completion.outputTokens
+
+        totals.costMicros += await usage.record({
           workspaceId: project.workspaceId,
           projectId: project.id,
           language,

@@ -1,7 +1,7 @@
 import { createServer } from 'node:http'
 import { freePort } from './smtp.ts'
 
-const HUGE_BYTES = 6_000_000
+const HUGE_BYTES = 600_000
 const DRIP_EVERY_MS = 200
 
 export async function startHostileAdapter(options: { redirectTo: string }) {

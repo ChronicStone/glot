@@ -22,7 +22,11 @@ export class PreviewAdapterService {
   async catalog(url: string) {
     try {
       const catalog = previewAdapterCatalogSchema.parse(
-        await this.#call({ url, path: PREVIEW_ADAPTER.TEMPLATES_PATH }),
+        await this.#call({
+          url,
+          path: PREVIEW_ADAPTER.TEMPLATES_PATH,
+          maxBytes: PREVIEW_ADAPTER.MAX_CATALOG_BYTES,
+        }),
       )
 
       this.#known.delete(url)
@@ -72,7 +76,12 @@ export class PreviewAdapterService {
     }
   }
 
-  async #call(options: { url: string; path: string; body?: unknown }): Promise<unknown> {
+  async #call(options: {
+    url: string
+    path: string
+    body?: unknown
+    maxBytes?: number
+  }): Promise<unknown> {
     const response = await fetch(`${options.url.replace(/\/+$/u, '')}${options.path}`, {
       method: options.body === undefined ? 'GET' : 'POST',
       headers: { 'content-type': 'application/json', accept: 'application/json' },
@@ -91,7 +100,7 @@ export class PreviewAdapterService {
     for await (const chunk of response.body) {
       size += chunk.byteLength
 
-      if (size > PREVIEW_ADAPTER.MAX_RESPONSE_BYTES) {
+      if (size > (options.maxBytes ?? PREVIEW_ADAPTER.MAX_RESPONSE_BYTES)) {
         throw new Error('The preview adapter answered more than allowed')
       }
 

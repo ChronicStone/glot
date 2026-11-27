@@ -6,6 +6,7 @@ export const PREVIEW_ADAPTER = {
   RENDER_PATH: '/render',
   SEND_TEST_PATH: '/send-test',
   MAX_RESPONSE_BYTES: 5_000_000,
+  MAX_CATALOG_BYTES: 500_000,
   KNOWN_CATALOGS: 200,
 } as const
 

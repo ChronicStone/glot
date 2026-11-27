@@ -1201,7 +1201,10 @@ test('a retry the provider refuses keeps what the first answer wrote, and fails 
   await scriptSink({
     url: sink,
     key: MAIN_KEY,
-    steps: [{ times: 1, corrupt: [{ id: 1, mode: 'drop' }] }, { stopReason: 'refusal' }],
+    steps: [
+      { times: 1, corrupt: [{ id: 1, mode: 'drop' }], usage: { input: 1000, output: 500 } },
+      { stopReason: 'refusal', usage: { input: 700, output: 300 } },
+    ],
   })
 
   const translated = await translator.translate({
@@ -1216,6 +1219,8 @@ test('a retry the provider refuses keeps what the first answer wrote, and fails 
     { value: null, problems: ['The AI provider declined to answer'] },
     { value: '[pl] Enregistrer', problems: [] },
   ])
+
+  expect(translated.usage).toMatchObject({ inputTokens: 1700, outputTokens: 800 })
 
   await scriptSink({
     url: sink,
