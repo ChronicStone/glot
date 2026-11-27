@@ -265,3 +265,18 @@ test('email links keep the order of the source', () => {
     }),
   ).toEqual(['LINKS'])
 })
+
+test('the label of an Outlook button inside a comment can be translated, its markup cannot change', () => {
+  const source = '<!--[if mso]><center style="color:#fff">Payer</center><![endif]-->'
+
+  expect(
+    codes({ source, target: '<!--[if mso]><center style="color:#fff">Pay</center><![endif]-->' }),
+  ).toEqual([])
+
+  expect(
+    codes({
+      source,
+      target: '<!--[if mso]><center style="color:#fff" onclick="x()">Pay</center><![endif]-->',
+    }),
+  ).toEqual(['MARKUP'])
+})

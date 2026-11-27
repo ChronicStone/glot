@@ -12,6 +12,10 @@ const STRAY_MARKUP_PATTERN = /<(?:\/?[a-zA-Z][a-zA-Z0-9-]*|!|\?|\/)[^<>]*/gu
 
 const HTML_COMMENT_PATTERN = /<!--[\s\S]*?-->/gu
 
+const ABRUPT_COMMENT_PATTERN = /--!>|<!--->|<!-->/u
+
+const COMMENT_TEXT_PATTERN = />[^<]*</gu
+
 const VOID_ELEMENTS = new Set<string>(Object.values(HTML_VOID_ELEMENTS))
 
 export function htmlTagsOf(message: string): HtmlTag[] {
@@ -95,6 +99,14 @@ export function withoutHtmlComments(message: string) {
   return message.replace(HTML_COMMENT_PATTERN, ' ')
 }
 
-export function bareClosersOf(message: string) {
-  return withoutHtmlTags(message).split('>').length - 1
+export function equalsOutsideTagsOf(message: string) {
+  return withoutHtmlTags(message).split('=').length - 1
+}
+
+export function hasAbruptComment(message: string) {
+  return ABRUPT_COMMENT_PATTERN.test(message)
+}
+
+export function commentMarkupOf(comment: string) {
+  return comment.replaceAll(COMMENT_TEXT_PATTERN, '><')
 }

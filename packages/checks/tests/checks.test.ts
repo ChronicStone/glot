@@ -521,3 +521,65 @@ test('links keep the order of the source, so a confirm link cannot become the ca
     codes({ source, target: '<a href="{cancel}">Confirm</a> or <a href="{confirm}">cancel</a>' }),
   ).toEqual(['LINKS'])
 })
+
+test('a comment cannot be closed early to let a tag out', () => {
+  const source = 'Bonjour <!-- note --> toi'
+
+  for (const target of [
+    'Hello <!--><img src=x onerror=alert(1)>--> you',
+    'Hello <!-- note --!><img src=x onerror=alert(1)>--> you',
+    'Hello <!---><img src=x onerror=alert(1)>--> you',
+  ]) {
+    expect(codes({ source, target })).toEqual(['HTML_TAGS'])
+  }
+})
+
+test('text after a linked text cannot add attributes to a tag the linked text leaves open', () => {
+  expect(
+    codes({
+      source: '@:ineq <b>vrai</b>',
+      target: '@:ineq onmouseover=alert(1) style=position:fixed;inset:0 <b>true</b>',
+    }),
+  ).toEqual(['HTML_TAGS'])
+
+  expect(codes({ source: '@:ineq > 3', target: '@:ineq onmouseover=alert(1) > 3' })).toEqual([
+    'HTML_TAGS',
+  ])
+
+  expect(codes({ source: '2 + 2 = 4', target: '2 + 2 = 4' })).toEqual([])
+})
+
+test('links keep their whole order in every plural form', () => {
+  const source =
+    '<a href="{confirm}">un</a> <a href="{cancel}">non</a> | <a href="{confirm}">deux</a> <a href="{cancel}">non</a>'
+
+  expect(
+    codes({
+      source,
+      target:
+        '<a href="{confirm}">one</a> <a href="{cancel}">no</a> | <a href="{cancel}">two</a> <a href="{confirm}">no</a>',
+    }),
+  ).toEqual(['LINKS'])
+
+  expect(
+    codes({
+      source: '<a href="{confirm}">a</a> <a href="{cancel}">b</a> <a href="{confirm}">c</a>',
+      target: '<a href="{confirm}">a</a> <a href="{confirm}">c</a> <a href="{cancel}">b</a>',
+    }),
+  ).toEqual(['LINKS'])
+})
+
+test('a > or a comment in prose is fine when the source has its own way of saying it', () => {
+  expect(
+    codes({ source: 'Paramètres › Notifications', target: 'Settings > Notifications' }),
+  ).toEqual([])
+
+  expect(
+    checkText({
+      source: '<!-- 1 --> {n} lot | <!-- 2 --> {n} lots',
+      target: '<!-- 1 --> {n} partia | <!-- 2 --> {n} partie | <!-- 2 --> {n} partii',
+      avoid: [],
+      language: 'pl',
+    }),
+  ).toEqual([])
+})

@@ -7,7 +7,9 @@ import {
 } from '../constants/syntax.constants.ts'
 import type { CheckCode, CheckFailure, Syntax } from '../types/checks.types.ts'
 import {
-  bareClosersOf,
+  commentMarkupOf,
+  equalsOutsideTagsOf,
+  hasAbruptComment,
   htmlCommentsOf,
   htmlLinksOf,
   htmlMarkupOf,
@@ -76,55 +78,32 @@ function isMessageLink(link: string) {
 }
 
 function markupKey(form: string, freeValues: readonly string[]) {
-  return htmlMarkupOf(form, { freeValues }).join('\n')
+  return [
+    ...htmlMarkupOf(withoutHtmlComments(form), { freeValues }),
+    ...htmlCommentsOf(form).map(commentMarkupOf),
+  ].join('\n')
 }
 
-function counterpart(input: {
+function counterpartIndex(input: {
   source: string[]
   target: string[]
   index: number
   freeValues: readonly string[]
 }) {
-  const form = input.target[input.index] ?? ''
-
   if (input.source.length === input.target.length) {
-    return input.source[input.index] ?? ''
+    return input.index
   }
 
-  const key = markupKey(form, input.freeValues)
+  const key = markupKey(input.target[input.index] ?? '', input.freeValues)
+  const found = input.source.findIndex((form) => markupKey(form, input.freeValues) === key)
 
-  return (
-    input.source.find((candidate) => markupKey(candidate, input.freeValues) === key) ??
-    input.source.at(-1) ??
-    ''
-  )
-}
-
-function firstSeen(links: string[]) {
-  return [...new Set(links)]
-}
-
-function commentProblems(input: { source: string[]; target: string[]; exact: boolean }) {
-  const source = input.source.flatMap(htmlCommentsOf)
-  const target = input.target.flatMap(htmlCommentsOf)
-
-  if (input.exact) {
-    const comments = mismatch({ source, target })
-
-    return comments ? [`The comments must stay as the source writes them. ${comments}`] : []
-  }
-
-  return target.length > source.length
-    ? ['A comment is not in the source text.']
-    : target.length < source.length
-      ? ['A comment of the source text is missing.']
-      : []
+  return found === -1 ? input.source.length - 1 : found
 }
 
 function markupFailures(input: {
   source: string[]
   target: string[]
-  links: { source: string[]; target: string[] }
+  links: { source: string[][]; target: string[][] }
   freeValues: readonly string[]
   exactStray: boolean
   strayIntoPlaceholder: boolean
@@ -139,22 +118,38 @@ function markupFailures(input: {
   const sourceStray = source.flatMap(strayMarkupOf)
   const sourceSegments = new Set(sourceStray.map(({ markup }) => markup))
   const sourceOpeners = new Set(sourceStray.map(({ markup }) => strayOpenerOf(markup)))
-  const sourceClosers = source.some((form) => bareClosersOf(form) > 0)
-
-  const problems = new Set<string>(
-    commentProblems({ source: input.source, target: input.target, exact: input.exactStray }),
-  )
+  const sourceEquals = Math.max(0, ...source.map(equalsOutsideTagsOf))
+  const problems = new Set<string>()
 
   if (input.strayIntoPlaceholder) {
     problems.add('A < runs into a placeholder or a linked text, which could finish it as a tag.')
   }
 
+  if (input.target.some(hasAbruptComment) && !input.source.some(hasAbruptComment)) {
+    problems.add('A comment is closed in a way that lets markup out of it.')
+  }
+
+  const counterparts = target.map((_, index) =>
+    counterpartIndex({
+      source: input.source,
+      target: input.target,
+      index,
+      freeValues: input.freeValues,
+    }),
+  )
+
   target.forEach((form, index) => {
-    const counterpartForm = counterpart({ ...input, source, target, index })
+    const at = counterparts[index] ?? 0
+    const counterpartForm = source[at] ?? ''
 
     const markup = mismatch({
       source: htmlMarkupOf(counterpartForm, { freeValues: input.freeValues }),
       target: htmlMarkupOf(form, { freeValues: input.freeValues }),
+    })
+
+    const comments = mismatch({
+      source: htmlCommentsOf(input.source[at] ?? '').map(commentMarkupOf),
+      target: htmlCommentsOf(input.target[index] ?? '').map(commentMarkupOf),
     })
 
     const stray = strayMarkupOf(form).filter(({ markup: found, closed }) =>
@@ -169,8 +164,12 @@ function markupFailures(input: {
       )
     }
 
-    if (!sourceClosers && bareClosersOf(form) > 0) {
-      problems.add('A > is not in the source text: it could close a tag.')
+    if (stray.length === 0 && equalsOutsideTagsOf(form) > sourceEquals) {
+      problems.add('A = outside a tag is not in the source text: it could add an attribute.')
+    }
+
+    if (comments) {
+      problems.add(`The comments must keep the markup of the source text. ${comments}`)
     }
 
     if (!markup && htmlTagsNest(counterpartForm) && !htmlTagsNest(form)) {
@@ -186,20 +185,32 @@ function markupFailures(input: {
     failures.push({ code: input.code, message: [input.heading, ...problems].join(' ') })
   }
 
-  const sourceLinks = new Set(input.links.source)
-  const refused = input.links.target.filter((link) => !sourceLinks.has(link) && !input.isLink(link))
-  const kept = firstSeen(input.links.target.filter((link) => sourceLinks.has(link)))
-  const expected = firstSeen(input.links.source).filter((link) => kept.includes(link))
+  const sourceLinks = new Set(input.links.source.flat())
+
+  const refused = input.links.target
+    .flat()
+    .filter((link) => !sourceLinks.has(link) && !input.isLink(link))
+
+  const reordered = input.links.target.some((links, index) => {
+    const kept = links.filter((link) => sourceLinks.has(link))
+    const present = new Set(kept)
+
+    const expected = (input.links.source[counterparts[index] ?? 0] ?? []).filter((link) =>
+      present.has(link),
+    )
+
+    return kept.join('\n') !== expected.join('\n')
+  })
 
   if (refused.length > 0) {
     failures.push({
       code: CHECK_CODES.LINKS,
       message: `${input.linkRule} Not allowed: ${refused.join(' ')}.`,
     })
-  } else if (kept.join('\n') !== expected.join('\n')) {
+  } else if (reordered) {
     failures.push({
       code: CHECK_CODES.LINKS,
-      message: `The links must keep the order of the source text: ${expected.join(', ')}.`,
+      message: 'The links must keep the order of the source text.',
     })
   }
 
@@ -231,7 +242,7 @@ function checkTemplate(input: { source: string; target: string; avoid: string[];
     ...markupFailures({
       source: [templateRendered(input.source)],
       target: [templateRendered(input.target)],
-      links: { source: htmlLinksOf(input.source), target: htmlLinksOf(input.target) },
+      links: { source: [htmlLinksOf(input.source)], target: [htmlLinksOf(input.target)] },
       freeValues: [],
       exactStray: true,
       strayIntoPlaceholder: false,
@@ -318,8 +329,8 @@ export function checkText(input: {
         source: (source.problem
           ? [input.source]
           : renderedForms(source.forms, { written: true })
-        ).flatMap(htmlLinksOf),
-        target: renderedForms(target.forms, { written: true }).flatMap(htmlLinksOf),
+        ).map(htmlLinksOf),
+        target: renderedForms(target.forms, { written: true }).map(htmlLinksOf),
       },
       freeValues: Object.values(MESSAGE_LOCALIZED_ATTRIBUTES),
       exactStray: false,
