@@ -1,3 +1,4 @@
+import { aiContract } from './ai.contract.ts'
 import { draftsContract } from './drafts.contract.ts'
 import { glossaryContract } from './glossary.contract.ts'
 import { healthContract } from './health.contract.ts'
@@ -22,4 +23,5 @@ export const contract = {
   home: homeContract,
   reports: reportsContract,
   widget: widgetContract,
+  ai: aiContract,
 }

@@ -2,6 +2,9 @@ export { contract } from './contracts/index.ts'
 
 export {
   ADMIN_ONLY_ERRORS,
+  AI_ERRORS,
+  AI_FILL_STATUSES,
+  AI_SETUP_ERRORS,
   AUTHORIZATION_HEADER,
   BEARER_PREFIX,
   CONFLICT_REASONS,

@@ -19,3 +19,5 @@ export type * from './home.types.ts'
 export type * from './reports.types.ts'
 
 export type * from './widget.types.ts'
+
+export type * from './ai.types.ts'

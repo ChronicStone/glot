@@ -16,6 +16,9 @@ export const PEOPLE_ONLY_PROCEDURES = {
   REMOVE_PERSON: 'people.remove',
   UPDATE_MY_PREFERENCES: 'people.updatePreferences',
   ISSUE_WIDGET_TOKEN: 'widget.token',
+  UPDATE_AI_SETTINGS: 'ai.updateSettings',
+  SET_AI_KEY: 'ai.setKey',
+  REMOVE_AI_KEY: 'ai.removeKey',
 } as const
 
 export const NOT_FOUND_ERRORS = { NOT_FOUND: { message: 'Not found' } }
@@ -55,6 +58,29 @@ export const GLOSSARY_ERRORS = {
     message: 'Only an owner, an admin or a reviewer of the languages involved changes the glossary',
   },
   CONFLICT: { message: 'A concept with this name already exists' },
+}
+
+export const AI_FILL_STATUSES = {
+  QUEUED: 'QUEUED',
+  RUNNING: 'RUNNING',
+  DONE: 'DONE',
+  PARTIAL: 'PARTIAL',
+  FAILED: 'FAILED',
+} as const
+
+export const AI_SETUP_ERRORS = {
+  ...NOT_FOUND_ERRORS,
+  FORBIDDEN: { message: 'Only an owner or an admin sets up AI' },
+}
+
+export const AI_ERRORS = {
+  ...LANGUAGE_RIGHTS_ERRORS,
+  CONFLICT: {
+    message:
+      'AI cannot run now: there is no key, the monthly budget is reached, or nothing is missing',
+  },
+  BAD_GATEWAY: { message: 'The AI provider could not answer' },
+  UNPROCESSABLE_CONTENT: { message: 'The AI answer broke a placeholder and was refused' },
 }
 
 export const WIDGET_ERRORS = {

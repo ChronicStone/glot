@@ -11,6 +11,7 @@ export const draftSchema = draftSelectSchema
     value: true,
     authorId: true,
     status: true,
+    aiWritten: true,
     updatedAt: true,
   })
   .extend({
@@ -21,7 +22,7 @@ export const draftSchema = draftSelectSchema
   })
 
 export const draftSaveInputSchema = draftInsertSchema
-  .pick({ projectId: true, textId: true, value: true })
+  .pick({ projectId: true, textId: true, value: true, aiWritten: true })
   .extend({ language: languageCodeSchema, value: draftInsertSchema.shape.value.min(1) })
 
 export const draftRefInputSchema = draftSelectSchema

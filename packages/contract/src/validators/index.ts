@@ -21,3 +21,5 @@ export * from './home.validator.ts'
 export * from './reports.validator.ts'
 
 export * from './widget.validator.ts'
+
+export * from './ai.validator.ts'
