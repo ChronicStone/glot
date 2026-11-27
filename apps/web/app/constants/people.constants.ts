@@ -14,6 +14,7 @@ export const SETTINGS_LINKS = {
   PROJECTS: { label: 'Projects', to: '/settings/projects', icon: 'i-lucide-folder-git-2' },
   KEYS: { label: 'API keys', to: '/settings/keys', icon: 'i-lucide-key-round' },
   AI: { label: 'AI', to: '/settings/ai', icon: 'i-lucide-sparkle' },
+  WORKSPACE: { label: 'Workspace', to: '/settings/workspace', icon: 'i-lucide-building-2' },
 } as const
 
 export const AVATAR_COLORS = {
