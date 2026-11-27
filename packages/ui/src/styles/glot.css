@@ -3470,6 +3470,15 @@
   font-size: 11.5px;
   color: var(--glot-ink-3);
 }
+.seg.fade-r {
+  mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
+}
+.seg.fade-l {
+  mask-image: linear-gradient(90deg, transparent, #000 28px);
+}
+.seg.fade-l.fade-r {
+  mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent);
+}
 .text-key {
   display: inline-flex;
   align-items: center;

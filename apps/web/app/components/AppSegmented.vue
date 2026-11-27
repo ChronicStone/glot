@@ -6,19 +6,32 @@ defineProps<{
 
 const model = defineModel<TValue>({ required: true })
 const track = useTemplateRef<HTMLDivElement>('track')
+const { arrivedState, measure } = useScroll(track)
+const { width } = useElementSize(track)
+
+const fades = computed(() => {
+  const overflows = (track.value?.scrollWidth ?? 0) > width.value + 1
+
+  return {
+    'fade-l': overflows && !arrivedState.left,
+    'fade-r': overflows && !arrivedState.right,
+  }
+})
+
+watch(width, () => measure())
 
 watch(
   model,
   async () => {
     await nextTick()
-    track.value?.querySelector('.on')?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+    track.value?.querySelector('.on')?.scrollIntoView({ block: 'nearest', inline: 'center' })
   },
   { flush: 'post' },
 )
 </script>
 
 <template>
-  <div ref="track" :class="{ 'seg-sm': small }" class="seg" role="tablist">
+  <div ref="track" :class="[{ 'seg-sm': small }, fades]" class="seg" role="tablist">
     <button
       v-for="item in items"
       :key="item.value"
