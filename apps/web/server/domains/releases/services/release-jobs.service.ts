@@ -30,6 +30,7 @@ export class ReleaseJobsService {
 
     await this.#db.jobs.updateMany({
       where: {
+        kind: JOB_KINDS.RELEASE,
         status: JOB_STATUSES.RUNNING,
         startedAt: { lt: new Date(now.getTime() - RELEASE_CLOCK.STUCK_JOB_MS) },
       },
@@ -46,7 +47,11 @@ export class ReleaseJobsService {
     })
 
     for (const job of due) {
-      await this.#perform({ job, project: byId.get(job.projectId), now })
+      await this.#perform({
+        job,
+        project: job.projectId ? byId.get(job.projectId) : undefined,
+        now,
+      })
     }
 
     const open = await this.#db.releases.findMany({ where: { status: RELEASE_STATUSES.OPEN } })

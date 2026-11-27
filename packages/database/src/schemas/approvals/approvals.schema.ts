@@ -1,5 +1,14 @@
 import { sql } from 'drizzle-orm'
-import { boolean, index, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core'
+import {
+  boolean,
+  index,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core'
 import { projects } from '../projects/projects.schema.ts'
 import { releases } from '../releases/releases.schema.ts'
 import { user } from '../users/users.schema.ts'
@@ -21,6 +30,7 @@ export const approvals = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
     selfApproved: boolean().notNull().default(false),
+    words: integer().notNull().default(0),
     releaseId: uuid().references(() => releases.id, { onDelete: 'set null' }),
     releasedAt: timestamp({ withTimezone: true }),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),

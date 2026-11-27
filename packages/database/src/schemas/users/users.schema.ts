@@ -10,6 +10,7 @@ export const user = pgTable(
     emailVerified: boolean().notNull().default(false),
     image: text(),
     locale: text().notNull().default(DEFAULT_LOCALE),
+    receivesDigest: boolean().notNull().default(true),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
