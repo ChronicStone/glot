@@ -1,5 +1,8 @@
-import { spawn } from 'node:child_process'
-import { DEMO_SIGN_IN_PATTERN } from '../constants/demo.constants.ts'
+import { execFile, spawn } from 'node:child_process'
+import { promisify } from 'node:util'
+import { DEMO_MERGE, DEMO_SIGN_IN_PATTERN } from '../constants/demo.constants.ts'
+
+const run = promisify(execFile)
 
 export function startService(options: {
   name: string
@@ -53,4 +56,44 @@ export async function waitForUrl(url: string) {
   }
 
   throw new Error(`${url} did not answer`)
+}
+
+export function mergeReleases(directory: string) {
+  async function git(args: string[]) {
+    return run('git', ['-C', directory, ...args]).then(
+      ({ stdout }) => ({ ok: true, out: stdout.trim() }),
+      () => ({ ok: false, out: '' }),
+    )
+  }
+
+  async function merge() {
+    const release = await git(['rev-parse', '--verify', '--quiet', DEMO_MERGE.RELEASE_BRANCH])
+
+    const merged = await git([
+      'merge-base',
+      '--is-ancestor',
+      DEMO_MERGE.RELEASE_BRANCH,
+      DEMO_MERGE.INTO,
+    ])
+
+    if (!release.ok || merged.ok) {
+      return
+    }
+
+    const done = await git(['merge', '--ff-only', DEMO_MERGE.RELEASE_BRANCH])
+
+    process.stdout.write(
+      done.ok
+        ? `[demo] ${DEMO_MERGE.RELEASE_BRANCH} merged into ${DEMO_MERGE.INTO}, as a developer merges the release pull request\n`
+        : `[demo] ${DEMO_MERGE.RELEASE_BRANCH} cannot be fast-forwarded into ${DEMO_MERGE.INTO}\n`,
+    )
+  }
+
+  const timer = setInterval(merge, DEMO_MERGE.EVERY_MS)
+
+  return {
+    stop() {
+      clearInterval(timer)
+    },
+  }
 }

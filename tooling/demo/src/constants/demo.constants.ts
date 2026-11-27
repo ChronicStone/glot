@@ -16,3 +16,9 @@ export const DEMO_PEOPLE = {
 } as const
 
 export const DEMO_SIGN_IN_PATTERN = /Sign-in link for (\S+): (\S+)/u
+
+export const DEMO_MERGE = {
+  RELEASE_BRANCH: 'glot/release',
+  INTO: 'main',
+  EVERY_MS: 5000,
+} as const

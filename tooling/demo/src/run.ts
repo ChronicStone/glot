@@ -14,7 +14,7 @@ import {
   DEMO_POSTGRES_URL,
   DEMO_REPOSITORIES_FOLDER,
 } from './constants/demo.constants.ts'
-import { startService, waitForUrl } from './utils/demo.utils.ts'
+import { mergeReleases, startService, waitForUrl } from './utils/demo.utils.ts'
 
 const root = resolve(import.meta.dirname, '../../..')
 const offset = Number(process.env.GLOT_DEMO_OFFSET ?? 0)
@@ -93,7 +93,10 @@ const app = startService({
   },
 })
 
+const merger = mergeReleases(directory)
+
 async function stop(code: number) {
+  merger.stop()
   glot.stop()
   app.stop()
   await previews.close()
@@ -118,6 +121,7 @@ Glot is ready.
   Demo app      ${appUrl}/pl/lots/48213?glot
   Emails        ${glotUrl}/projects/${project.id}/emails
   Repository    ${directory}
+                Released texts are merged into main within seconds, as a developer would merge the pull request.
 
   Owner         ${DEMO_PEOPLE.OWNER}
   Reviewer      ${DEMO_PEOPLE.REVIEWER} (Polish and German)
