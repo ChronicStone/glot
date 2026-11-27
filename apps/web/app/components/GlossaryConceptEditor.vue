@@ -6,16 +6,24 @@ import { useMutation } from '@tanstack/vue-query'
 
 const open = defineModel<boolean>('open', { required: true })
 
-const { concept, workspaceId, languages } = defineProps<{
+const { concept, workspaceId, languages, editable, details } = defineProps<{
   concept?: GlossaryTerm | undefined
   workspaceId: string
   languages: string[]
+  editable: string[]
+  details: boolean
 }>()
 
 const emit = defineEmits<{ saved: [conceptId: string] }>()
 const { $api, $queryClient } = useNuxtApp()
 const toast = useToast()
 const serverError = ref<string>('')
+const rowLanguages = [...new Set([...languages, ...Object.keys(concept?.terms ?? {})])]
+const locked = rowLanguages.some((language) => !editable.includes(language))
+
+const yours = new Intl.ListFormat('en', { type: 'conjunction' }).format(
+  rowLanguages.flatMap((language) => (editable.includes(language) ? [languageName(language)] : [])),
+)
 
 async function saved(result: GlossaryTerm) {
   await $queryClient.invalidateQueries({ queryKey: $api.glossary.key() })
@@ -46,7 +54,7 @@ const form = useForm({
     definition: concept?.definition ?? '',
     neverTranslate: concept?.neverTranslate ?? false,
     notes: concept?.notes ?? '',
-    rows: languages.map((language) => ({
+    rows: rowLanguages.map((language) => ({
       language,
       term: concept?.terms[language]?.term ?? '',
       plural: concept?.terms[language]?.plural ?? '',
@@ -106,9 +114,12 @@ const submitting = form.useSelector((state) => state.isSubmitting)
       >
         <div class="field">
           <span class="label">Concept</span>
-          <label :class="{ 'is-error': errorMessage(field.state.meta.errors) }" class="input"
+          <label
+            :class="{ 'is-error': errorMessage(field.state.meta.errors), 'is-disabled': !details }"
+            class="input"
             ><input
               :value="field.state.value"
+              :disabled="!details"
               placeholder="lot"
               aria-label="Concept"
               @input="field.handleChange(inputValue($event))"
@@ -121,9 +132,10 @@ const submitting = form.useSelector((state) => state.isSubmitting)
       <form.Field v-slot="{ field }" name="definition">
         <div class="field">
           <span class="label">What it means</span>
-          <label class="input textarea">
+          <label :class="{ 'is-disabled': !details }" class="input textarea">
             <textarea
               :value="field.state.value"
+              :disabled="!details"
               rows="2"
               placeholder="An item sold at auction. Never a plot of land."
               aria-label="Definition"
@@ -146,6 +158,7 @@ const submitting = form.useSelector((state) => state.isSubmitting)
             type="button"
             role="switch"
             :aria-checked="field.state.value"
+            :disabled="!details"
             aria-labelledby="never-translated"
             :class="{ on: field.state.value }"
             class="switch"
@@ -159,20 +172,22 @@ const submitting = form.useSelector((state) => state.isSubmitting)
           <div class="term-row head">
             <span /><span>Word</span><span>Plural</span><span>Never use</span>
           </div>
-          <div v-for="(language, index) in languages" :key="language" class="term-row">
+          <div v-for="(language, index) in rowLanguages" :key="language" class="term-row">
             <span class="lc plain">{{ language }}</span>
             <form.Field v-slot="{ field }" :name="`rows[${index}].term`">
-              <label class="input"
+              <label :class="{ 'is-disabled': !editable.includes(language) }" class="input"
                 ><input
                   :value="field.state.value"
+                  :disabled="!editable.includes(language)"
                   :aria-label="`${languageName(language)} word`"
                   @input="field.handleChange(inputValue($event))"
               /></label>
             </form.Field>
             <form.Field v-slot="{ field }" :name="`rows[${index}].plural`">
-              <label class="input"
+              <label :class="{ 'is-disabled': !editable.includes(language) }" class="input"
                 ><input
                   :value="field.state.value"
+                  :disabled="!editable.includes(language)"
                   :aria-label="`${languageName(language)} plural`"
                   @input="field.handleChange(inputValue($event))"
               /></label>
@@ -181,12 +196,14 @@ const submitting = form.useSelector((state) => state.isSubmitting)
               <AppTagInput
                 :model-value="field.state.value"
                 :label="`${languageName(language)} words to avoid`"
+                :disabled="!editable.includes(language)"
                 placeholder="Type and press Enter"
                 @update:model-value="field.handleChange"
               />
             </form.Field>
           </div>
         </div>
+        <span v-if="locked" class="hint">You change {{ yours }} only.</span>
       </div>
       <div v-if="serverError" class="banner fix">
         <UIcon name="i-lucide-triangle-alert" /><span>{{ serverError }}</span>

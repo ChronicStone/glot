@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const model = defineModel<string[]>({ required: true })
 
-defineProps<{ placeholder?: string; label: string }>()
+defineProps<{ placeholder?: string; label: string; disabled?: boolean }>()
 
 const draft = ref<string>('')
 
@@ -23,10 +23,11 @@ function removeLast() {
 </script>
 
 <template>
-  <label class="input tag-input">
+  <label :class="{ 'is-disabled': disabled }" class="input tag-input">
     <span v-for="word in model" :key="word" class="avoid-tag"
       ><s>{{ word }}</s
       ><button
+        v-if="!disabled"
         type="button"
         class="x"
         :aria-label="`Remove ${word}`"
@@ -36,7 +37,8 @@ function removeLast() {
     ></span>
     <input
       v-model="draft"
-      :placeholder="model.length === 0 ? placeholder : ''"
+      :disabled="disabled"
+      :placeholder="model.length === 0 && !disabled ? placeholder : ''"
       :aria-label="label"
       @keydown.enter.prevent="add"
       @keydown.,.prevent="add"

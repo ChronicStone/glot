@@ -8,7 +8,7 @@ import { GLOSSARY_FILTERS, GLOSSARY_STATUS_PILLS } from '../constants/glossary.c
 const { $api, $queryClient } = useNuxtApp()
 const toast = useToast()
 const { workspace } = useCurrentWorkspace()
-const { managesPeople } = useAccess()
+const { suggests, languages: mine, decides } = useGlossaryRights()
 const { projects } = useCurrentProject()
 const search = ref<string>('')
 const filter = ref<string>(GLOSSARY_FILTERS.ALL)
@@ -141,7 +141,7 @@ function edit(concept: GlossaryTerm | undefined) {
       <div class="gd">
         <div class="actions-row">
           <AppSegmented
-            v-if="managesPeople"
+            v-if="decides(selected)"
             :model-value="selected.status"
             :items="
               statuses.map((status) => ({
@@ -154,7 +154,7 @@ function edit(concept: GlossaryTerm | undefined) {
           />
           <span class="g-grow" />
           <button
-            v-if="managesPeople"
+            v-if="suggests"
             type="button"
             class="btn btn-ghost btn-sm"
             @click="edit(selected)"
@@ -162,7 +162,7 @@ function edit(concept: GlossaryTerm | undefined) {
             <UIcon name="i-lucide-pencil" />Edit
           </button>
           <button
-            v-if="managesPeople"
+            v-if="decides(selected)"
             type="button"
             class="btn btn-ghost btn-sm btn-icon"
             aria-label="Remove the concept"
@@ -217,7 +217,7 @@ function edit(concept: GlossaryTerm | undefined) {
       <span><UIcon name="i-lucide-shield-check" />Checked before each release</span>
     </template>
     <template #actions>
-      <button v-if="managesPeople" type="button" class="btn btn-primary" @click="edit(undefined)">
+      <button v-if="suggests" type="button" class="btn btn-primary" @click="edit(undefined)">
         <UIcon name="i-lucide-plus" />New concept
       </button>
     </template>
@@ -247,7 +247,7 @@ function edit(concept: GlossaryTerm | undefined) {
             <p>A concept is a word your product must always translate the same way, like “lot”.</p>
             <div class="row-flex">
               <button
-                v-if="managesPeople"
+                v-if="suggests"
                 type="button"
                 class="btn btn-outline btn-sm"
                 @click="edit(undefined)"
@@ -296,6 +296,8 @@ function edit(concept: GlossaryTerm | undefined) {
       :concept="editing"
       :workspace-id="workspace.id"
       :languages="languages"
+      :editable="mine"
+      :details="!editing || decides(editing)"
       @saved="selectedId = $event"
     />
     <UDrawer v-model:open="sheetOpen" :ui="{ content: 'panel h-[88dvh]' }">
