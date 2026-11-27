@@ -33,3 +33,22 @@ export const ROLE_DESCRIPTIONS = {
   [WORKSPACE_ROLES.REVIEWER]: 'Writes and approves their languages',
   [WORKSPACE_ROLES.VIEWER]: 'Reads and comments',
 } as const
+
+export const ACCESS_ENDS = {
+  NONE: { id: 'NONE', months: 0, label: 'No end', icon: 'i-lucide-infinity' },
+  ONE_MONTH: { id: 'ONE_MONTH', months: 1, label: 'In 1 month', icon: 'i-lucide-calendar-clock' },
+  THREE_MONTHS: {
+    id: 'THREE_MONTHS',
+    months: 3,
+    label: 'In 3 months',
+    icon: 'i-lucide-calendar-clock',
+  },
+  SIX_MONTHS: {
+    id: 'SIX_MONTHS',
+    months: 6,
+    label: 'In 6 months',
+    icon: 'i-lucide-calendar-clock',
+  },
+  ONE_YEAR: { id: 'ONE_YEAR', months: 12, label: 'In a year', icon: 'i-lucide-calendar-clock' },
+  DATE: { id: 'DATE', months: 0, label: 'On a date…', icon: 'i-lucide-calendar-days' },
+} as const

@@ -4,7 +4,7 @@ import { personInviteInputSchema } from '@glot/contract/validators'
 import { WORKSPACE_ROLES } from '@glot/database/constants/workspaces'
 import { useForm } from '@tanstack/vue-form'
 import { useMutation } from '@tanstack/vue-query'
-import { ROLE_DESCRIPTIONS, ROLE_LABELS } from '../constants/people.constants.ts'
+import { ACCESS_ENDS, ROLE_DESCRIPTIONS, ROLE_LABELS } from '../constants/people.constants.ts'
 
 const open = defineModel<boolean>('open', { required: true })
 
@@ -72,6 +72,47 @@ const form = useForm({
 })
 
 const submitting = form.useSelector((state) => state.isSubmitting)
+
+const shortDate = new Intl.DateTimeFormat('en-GB', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+})
+
+const accessEnd = ref<string>(person?.expiresAt ? ACCESS_ENDS.DATE.id : ACCESS_ENDS.NONE.id)
+
+function monthsAhead(months: number) {
+  const date = new Date()
+
+  date.setMonth(date.getMonth() + months)
+  date.setHours(23, 59, 59, 0)
+
+  return date
+}
+
+const accessGroups = computed(() => [
+  {
+    options: Object.values(ACCESS_ENDS).map((choice) => ({
+      value: choice.id,
+      label: choice.label,
+      icon: choice.icon,
+      iconTone: choice.id === accessEnd.value ? 'check' : '',
+      ...(choice.id === ACCESS_ENDS.NONE.id ? { description: 'Until someone removes them' } : {}),
+      ...(choice.id === ACCESS_ENDS.DATE.id ? { description: 'Pick the exact day' } : {}),
+      ...(choice.months > 0 ? { context: shortDate.format(monthsAhead(choice.months)) } : {}),
+    })),
+  },
+])
+
+function chooseAccessEnd(id: string) {
+  accessEnd.value = id
+
+  const choice = Object.values(ACCESS_ENDS).find((item) => item.id === id)
+
+  if (choice && id !== ACCESS_ENDS.DATE.id) {
+    form.setFieldValue('expiresAt', choice.months > 0 ? monthsAhead(choice.months) : null)
+  }
+}
 
 function dateInput(value: Date | null) {
   return value ? value.toISOString().slice(0, 10) : ''
@@ -186,14 +227,23 @@ function dateValue(input: string) {
       <form.Field v-slot="{ field }" name="expiresAt">
         <div class="field">
           <span class="label">Access ends</span>
-          <label class="input" style="max-width: 260px"
-            ><UIcon name="i-lucide-calendar" /><input
-              type="date"
-              :value="dateInput(field.state.value ?? null)"
-              aria-label="Access ends"
-              @input="field.handleChange(dateValue(inputValue($event)))"
-          /></label>
-          <span class="hint">Leave empty for ongoing access.</span>
+          <div class="row-flex" style="gap: 8px; align-items: flex-start">
+            <div style="width: 320px">
+              <AppSelect
+                :model-value="accessEnd"
+                :groups="accessGroups"
+                placeholder="Access ends"
+                @update:model-value="chooseAccessEnd"
+              />
+            </div>
+            <label v-if="accessEnd === ACCESS_ENDS.DATE.id" class="input" style="width: 180px"
+              ><UIcon name="i-lucide-calendar" /><input
+                type="date"
+                :value="dateInput(field.state.value ?? null)"
+                aria-label="Access ends on"
+                @input="field.handleChange(dateValue(inputValue($event)))"
+            /></label>
+          </div>
         </div>
       </form.Field>
     </form>
