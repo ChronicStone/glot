@@ -1,6 +1,7 @@
 import { createParser } from '@intlify/message-compiler'
 import type { LinkedNode, MessageNode } from '@intlify/message-compiler'
 import {
+  LINK_MARK,
   MESSAGE_NODE_TYPES,
   SYNTAXES,
   SYNTAX_PROBLEMS,
@@ -145,6 +146,18 @@ export function gluedLinksOf(form: MessageNode) {
 
 export function hasLinks(forms: MessageNode[]) {
   return forms.some((form) => form.items.some((item) => item.type === MESSAGE_NODE_TYPES.LINKED))
+}
+
+export function linkMarkedForms(forms: MessageNode[]) {
+  return forms.map((form) =>
+    form.items
+      .map((item) =>
+        item.type === MESSAGE_NODE_TYPES.LINKED
+          ? LINK_MARK
+          : renderedItem(item, { written: false }),
+      )
+      .join(''),
+  )
 }
 
 export function renderedForms(forms: MessageNode[], options: { written: boolean }) {

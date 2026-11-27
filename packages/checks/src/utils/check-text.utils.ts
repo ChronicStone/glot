@@ -13,6 +13,8 @@ import {
   hasAbruptComment,
   htmlCommentsOf,
   isActiveAttribute,
+  linksInsideTags,
+  rawTextElementsOf,
   htmlLinksOf,
   htmlMarkupOf,
   htmlTagsNest,
@@ -24,6 +26,7 @@ import {
 import {
   gluedLinksOf,
   hasLinks,
+  linkMarkedForms,
   parseMessage,
   placeholdersOf,
   plainTextOf,
@@ -57,6 +60,13 @@ function mismatch(options: { source: string[]; target: string[] }) {
     ...(missing.length > 0 ? [`Missing from this text: ${missing.join(' ')}.`] : []),
     ...(extra.length > 0 ? [`Not in the source text: ${extra.join(' ')}.`] : []),
   ].join(' ')
+}
+
+function mergedByCode(failures: CheckFailure[]) {
+  return [...Map.groupBy(failures, ({ code }) => code)].map(([code, found]) => ({
+    code,
+    message: found.map(({ message }) => message).join(' '),
+  }))
 }
 
 function isTemplateLink(link: string) {
@@ -370,6 +380,14 @@ export function checkText(input: {
     )
   })
 
+  if (linkMarkedForms(target.forms).some((form) => linksInsideTags(form) > 0)) {
+    failures.push({
+      code: CHECK_CODES.HTML_TAGS,
+      message:
+        'A linked text sits inside a tag: its words would become attributes. Move it out of the tag.',
+    })
+  }
+
   if (source.problem && hasLinks(target.forms)) {
     failures.push({
       code: CHECK_CODES.PLACEHOLDERS,
@@ -416,30 +434,47 @@ export function checkText(input: {
     }),
   )
 
-  return failures
+  return mergedByCode(failures)
 }
+
+const SOURCE_HEADING = 'The source text leaves markup open:'
 
 export function checkSource(input: { source: string; syntax?: Syntax }) {
   if (input.syntax === SYNTAXES.HANDLEBARS_HTML) {
     return []
   }
 
-  const failures = checkText({
-    source: input.source,
-    target: input.source,
-    avoid: [],
-    syntax: input.syntax ?? SYNTAXES.VUE_I18N,
-  })
+  const parsed = parseMessage(input.source)
+  const forms = parsed.problem ? [input.source] : renderedForms(parsed.forms, { written: false })
+
+  const markup = parsed.problem
+    ? strayMarkupOf(withoutHtmlComments(input.source)).map(({ markup: found }) => found)
+    : checkText({
+        source: input.source,
+        target: input.source,
+        avoid: [],
+        syntax: SYNTAXES.VUE_I18N,
+      })
+        .filter(({ code }) => code === CHECK_CODES.HTML_TAGS)
+        .map(({ message }) => message.replace(/^The HTML tags must match the source text\. ?/u, ''))
+
+  const problems = [
+    ...markup,
+    ...(hasAbruptComment(input.source)
+      ? ['A comment is closed in a way that lets markup out of it.']
+      : []),
+    ...(forms.some((form) => !htmlTagsNest(withoutHtmlComments(form)))
+      ? ['A tag is not closed, or closes out of order.']
+      : []),
+    ...rawTextElementsOf(input.source).map(
+      (name) => `<${name}> holds raw text, not a message: keep it out of translated texts.`,
+    ),
+  ]
 
   return [
-    ...failures.filter(({ code }) => code === CHECK_CODES.HTML_TAGS),
-    ...(hasAbruptComment(input.source)
-      ? [
-          {
-            code: CHECK_CODES.HTML_TAGS,
-            message: 'A comment is closed in a way that lets markup out of it.',
-          },
-        ]
+    ...(parsed.problem ? [{ code: CHECK_CODES.SYNTAX, message: parsed.problem }] : []),
+    ...(problems.length > 0
+      ? [{ code: CHECK_CODES.HTML_TAGS, message: [SOURCE_HEADING, ...problems].join(' ') }]
       : []),
   ]
 }

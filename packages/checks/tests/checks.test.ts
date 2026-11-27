@@ -474,11 +474,15 @@ test('a stray < the source has never lets a tag close after it, nor a placeholde
 
   const source = 'Bienvenue sur @:brand <a href="/aide">Aide</a> {name} {0}'
 
-  for (const href of ["@:brand{''}", '{name}', '{0}']) {
+  for (const href of ['{name}', '{0}']) {
     expect(
       codes({ source, target: `Welcome to @:brand <a href="${href}">Help</a> {name} {0}` }),
     ).toEqual(['LINKS'])
   }
+
+  expect(
+    codes({ source, target: `Welcome to @:brand <a href="@:brand{''}">Help</a> {name} {0}` }),
+  ).toEqual(['HTML_TAGS', 'LINKS'])
 })
 
 test('a failure names a placeholder as the translator wrote it', () => {
@@ -750,4 +754,36 @@ test('a source text that leaves markup open is reported, so a broken source neve
   ]) {
     expect(checkSource({ source })).toEqual([])
   }
+})
+
+test('a linked text cannot sit inside a tag, and a source that does not parse is reported with its open markup', () => {
+  for (const source of ['Voir <i @:b >', "Voir <i @:{'b'}>", `Voir <i title="@:{'b'}">x</i>`]) {
+    expect(checkSource({ source }).map(({ code }) => code)).toContain('HTML_TAGS')
+  }
+
+  expect(
+    codes({ source: 'Voir <i title="x">y</i> @:b', target: 'See <i title="x" @:b>y</i>' }),
+  ).toContain('HTML_TAGS')
+
+  expect(
+    checkSource({ source: 'Écrivez à aide@agorastore.fr <i' }).map(({ code }) => code),
+  ).toEqual(['SYNTAX', 'HTML_TAGS'])
+
+  expect(checkSource({ source: 'Voir <a href="{url}">le lot</a>' })).toEqual([])
+})
+
+test('a source with a comment in a quoted attribute, a raw-text element or an unclosed tag is reported', () => {
+  for (const source of [
+    `<i title="<!--"><u title='x-->">`,
+    '<textarea><!--</textarea><u title=x-->',
+    '<style>b{}',
+    'Voir <b>gras',
+  ]) {
+    expect(checkSource({ source }).map(({ code }) => code)).toContain('HTML_TAGS')
+  }
+
+  expect(checkSource({ source: 'Voir <b>gras</b> <!-- note --> fin' })).toEqual([])
+  expect(
+    checkSource({ source: '<a href="mailto:aide@agorastore.fr">' }).map(({ code }) => code),
+  ).toContain('SYNTAX')
 })

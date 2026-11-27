@@ -2,6 +2,8 @@ import {
   ACTIVE_ATTRIBUTES,
   EVENT_ATTRIBUTE_PREFIX,
   HTML_VOID_ELEMENTS,
+  LINK_MARK,
+  RAW_TEXT_ELEMENTS,
 } from '../constants/syntax.constants.ts'
 import type { HtmlTag } from '../types/checks.types.ts'
 
@@ -13,6 +15,13 @@ const HTML_ATTRIBUTE_PATTERN = /([^\s"'<>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|(
 const STRAY_MARKUP_PATTERN = /<(?:\/?[a-zA-Z][a-zA-Z0-9-]*|!|\?|\/)[^<>]*/gu
 
 const HTML_COMMENT_PATTERN = /<!--[\s\S]*?-->/gu
+
+const MARKUP_TOKEN_PATTERN = new RegExp(
+  `${HTML_COMMENT_PATTERN.source}|${HTML_TAG_PATTERN.source}`,
+  'gu',
+)
+
+const RAW_TEXT = new Set<string>(Object.values(RAW_TEXT_ELEMENTS))
 
 const ABRUPT_COMMENT_PATTERN = /--!>|<!--->|<!-->/u
 
@@ -96,11 +105,19 @@ export function strayMarkupOf(message: string) {
 }
 
 export function htmlCommentsOf(message: string) {
-  return [...message.matchAll(HTML_COMMENT_PATTERN)].map((match) => match[0])
+  return [...message.matchAll(MARKUP_TOKEN_PATTERN)].flatMap((match) =>
+    match[0].startsWith('<!--') ? [match[0]] : [],
+  )
 }
 
 export function withoutHtmlComments(message: string) {
-  return message.replace(HTML_COMMENT_PATTERN, ' ')
+  return message.replace(MARKUP_TOKEN_PATTERN, (token) => (token.startsWith('<!--') ? ' ' : token))
+}
+
+export function rawTextElementsOf(message: string) {
+  return htmlTagsOf(withoutHtmlComments(message)).flatMap(({ name }) =>
+    RAW_TEXT.has(name) ? [name] : [],
+  )
 }
 
 export function equalsTokensOf(message: string) {
@@ -141,4 +158,11 @@ export function markedFreeValuesOf(message: string, options: { freeValues: reado
       options.freeValues.includes(name) && /[<>]/u.test(value) ? [value] : [],
     ),
   )
+}
+
+export function linksInsideTags(message: string) {
+  return [
+    ...[...message.matchAll(HTML_TAG_PATTERN)].map((match) => match[0]),
+    ...strayMarkupOf(message).map(({ markup }) => markup),
+  ].filter((markup) => markup.includes(LINK_MARK)).length
 }

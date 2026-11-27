@@ -16,6 +16,8 @@ export const MESSAGE_LINK_PROTOCOLS = {
 
 export const RAW_PLACEHOLDER_PREFIX = 'raw-'
 
+export const LINK_MARK = '\uE000'
+
 export const MESSAGE_LOCALIZED_ATTRIBUTES = {
   HREF: 'href',
   TITLE: 'title',
@@ -38,6 +40,19 @@ export const ACTIVE_ATTRIBUTES = {
 } as const
 
 export const EVENT_ATTRIBUTE_PREFIX = 'on'
+
+export const RAW_TEXT_ELEMENTS = {
+  TEXTAREA: 'textarea',
+  TITLE: 'title',
+  SCRIPT: 'script',
+  STYLE: 'style',
+  XMP: 'xmp',
+  IFRAME: 'iframe',
+  NOEMBED: 'noembed',
+  NOFRAMES: 'noframes',
+  NOSCRIPT: 'noscript',
+  PLAINTEXT: 'plaintext',
+} as const
 
 export const HTML_VOID_ELEMENTS = {
   AREA: 'area',
