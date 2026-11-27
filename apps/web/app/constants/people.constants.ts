@@ -13,6 +13,7 @@ export const SETTINGS_LINKS = {
   PEOPLE: { label: 'People', to: '/settings/people', icon: 'i-lucide-users' },
   PROJECTS: { label: 'Projects', to: '/settings/projects', icon: 'i-lucide-folder-git-2' },
   KEYS: { label: 'API keys', to: '/settings/keys', icon: 'i-lucide-key-round' },
+  AI: { label: 'AI', to: '/settings/ai', icon: 'i-lucide-sparkle' },
 } as const
 
 export const AVATAR_COLORS = {
