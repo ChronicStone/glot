@@ -58,7 +58,7 @@ const fixRows = computed(() =>
     title: ` in ${languageName(item.language)}`,
     value: item.value ?? item.source.value,
     sub: item.reason.message,
-    key: item.key.path.join('.'),
+    key: item.key,
     meta: `${item.shownIn.length} ${item.shownIn.length === 1 ? 'app' : 'apps'}`,
     action: 'Fix',
     primary: true,
@@ -257,8 +257,11 @@ const reviewedShare = computed(() => {
                   >{{ row.title }}
                 </div>
                 <div class="r-sub r-line">
-                  <span v-if="row.key" class="key">{{ row.key }}</span
-                  ><span v-if="row.key" class="faint">·</span
+                  <AppTextKey
+                    v-if="row.key"
+                    :source="row.key.source"
+                    :path="row.key.path.join('.')"
+                  /><span v-if="row.key" class="faint">·</span
                   ><span class="r-rest">{{ row.sub }}</span>
                 </div>
               </div>
@@ -282,10 +285,12 @@ const reviewedShare = computed(() => {
               <div v-for="draft in drafts" :key="draft.draftId" class="r">
                 <span class="lc plain">{{ draft.language }}</span>
                 <div class="g-grow" style="min-width: 0">
-                  <div class="r-title"><span class="key">{{ draft.key.path.join('.') }}</span></div>
+                  <div class="r-title">
+                    <AppTextKey :source="draft.key.source" :path="draft.key.path.join('.')" />
+                  </div>
                   <div class="r-sub">
                     {{ draft.status === DRAFT_STATUSES.DRAFT ? 'Saved' : 'Sent' }}
-                    {{ formatTimeAgo(new Date(draft.updatedAt)) }} · {{ draft.key.source }}
+                    {{ formatTimeAgo(new Date(draft.updatedAt)) }} · {{ draft.projectName }}
                   </div>
                 </div>
                 <button

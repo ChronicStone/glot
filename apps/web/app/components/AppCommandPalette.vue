@@ -83,7 +83,7 @@ const groups = computed<
       items: (texts.data.value?.items ?? []).map((text) => ({
         id: text.id,
         label: text.source.value,
-        sub: text.key.path.join('.'),
+        sub: `${text.key.source} · ${text.key.path.join('.')}`,
         icon: 'i-lucide-text',
         to: `/projects/${project.value?.id}/texts?text=${text.id}`,
         translations: text.translations,
@@ -183,10 +183,12 @@ watch(open, (value) => {
               @mousemove="active = flat.indexOf(item)"
               @click="run(item)"
             >
-              <UIcon :name="item.icon" /><span
-                >{{ parts(item.label).before }}<mark>{{ parts(item.label).match }}</mark
-                >{{ parts(item.label).after }}</span
-              ><span v-if="item.sub" class="muted key" style="font-size: 12px">{{ item.sub }}</span>
+              <UIcon :name="item.icon" /><span class="cmdk-t"
+                ><span
+                  >{{ parts(item.label).before }}<mark>{{ parts(item.label).match }}</mark
+                  >{{ parts(item.label).after }}</span
+                ><span v-if="item.sub" class="key">{{ item.sub }}</span></span
+              >
               <span v-if="item.translations || item.count" class="right"
                 ><GlotStateStrip v-if="item.translations" :translations="item.translations" /><span
                   v-if="item.count"

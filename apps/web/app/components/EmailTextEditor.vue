@@ -81,6 +81,7 @@ watch(value, (next) => emit('typing', next))
       <span class="g-grow" />
       <span v-if="byline" class="muted" style="font-size: 12px">{{ byline }}</span>
     </div>
+    <AppTextKey :source="text.key.source" :path="text.key.path.join('.')" copyable />
     <form.Field v-if="canWrite || canApprove" v-slot="{ field }" name="value">
       <GlotMessageField
         :model-value="field.state.value"
@@ -144,12 +145,13 @@ watch(value, (next) => emit('typing', next))
         <UIcon name="i-lucide-lock" class="ic-13" />Placeholders stay as chips · links need a
         Developer
       </div>
-      <AiSuggest
-        :target="{ projectId: project?.id ?? '', textId: text.id, language }"
-        :syntax="text.syntax"
-        style="width: 100%"
-        @use="field.handleChange"
-      />
+      <div style="width: 100%; display: flex; flex-direction: column">
+        <AiSuggest
+          :target="{ projectId: project?.id ?? '', textId: text.id, language }"
+          :syntax="text.syntax"
+          @use="field.handleChange"
+        />
+      </div>
       <div
         v-if="language !== text.source.language"
         class="well"

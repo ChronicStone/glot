@@ -346,10 +346,19 @@ watch(currentLanguage, () => {
                 ><span class="row-flex"
                   ><span class="lc miss">{{ currentLanguage }}</span
                   ><AppStatePill :state="TEXT_STATES.MISSING" /></span
-                ><GlotTextValue :value="text.source.value" :syntax="text.syntax" class="muted"
+                ><GlotTextValue
+                  :value="text.source.value"
+                  :syntax="text.syntax"
+                  class="muted" /><AppTextKey
+                  :source="text.key.source"
+                  :path="text.key.path.join('.')"
               /></span>
               <template v-else
-                ><GlotTextValue :value="valueOf(text.id)" :syntax="text.syntax" /><i
+                ><span class="et-v"
+                  ><GlotTextValue :value="valueOf(text.id)" :syntax="text.syntax" /><AppTextKey
+                    :source="text.key.source"
+                    :path="text.key.path.join('.')" /></span
+                ><i
                   v-if="stateOf(text.id)"
                   :class="`bg-${TEXT_STATE_CLASSES[stateOf(text.id) ?? TEXT_STATES.MISSING]}`"
                   class="dot"

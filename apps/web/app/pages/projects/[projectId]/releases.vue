@@ -405,7 +405,10 @@ useIntervalFn(() => {
                   <span class="lc plain">{{ change.language }}</span>
                   <div class="g-grow" style="min-width: 0">
                     <div class="r-sub">
-                      <span class="key">{{ keyOfTextId(change.textId).path }}</span>
+                      <AppTextKey
+                        :source="keyOfTextId(change.textId).source"
+                        :path="keyOfTextId(change.textId).path"
+                      />
                     </div>
                     <div class="ellipsis" style="font-size: 13px">
                       <del v-if="change.previousValue" class="muted">{{
