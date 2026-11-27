@@ -14,7 +14,7 @@ function messagesOf(options: { files: Map<string, string>; path: string }) {
     : new Map(
         flattenMessages(parseJsonFile({ path: options.path, content }))
           .filter(({ value }) => value.trim())
-          .map(({ path, value }) => [path.join('.'), value]),
+          .map(({ path, value }) => [JSON.stringify(path), { path, value }]),
       )
 }
 
@@ -37,8 +37,8 @@ export function checkCatalog(options: {
     const path = languagePath({ pattern: options.pattern, language })
     const target = messagesOf({ files: options.files, path })
 
-    for (const [key, text] of source ?? []) {
-      const translated = target?.get(key)
+    for (const [id, text] of source ?? []) {
+      const translated = target?.get(id)
 
       if (translated === undefined) {
         continue
@@ -47,11 +47,17 @@ export function checkCatalog(options: {
       checked += 1
 
       for (const failure of checkText({
-        source: text,
-        target: translated,
+        source: text.value,
+        target: translated.value,
         avoid: options.avoid[language] ?? [],
       })) {
-        failures.push({ path, key, language, code: failure.code, message: failure.message })
+        failures.push({
+          path,
+          key: text.path.join('.'),
+          language,
+          code: failure.code,
+          message: failure.message,
+        })
       }
     }
   }

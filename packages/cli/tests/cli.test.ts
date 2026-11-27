@@ -166,3 +166,24 @@ test('a missing source file stops the run with exit code 2, whatever the languag
     expect(result.stderr).toContain('orphans/fr.json')
   }
 })
+
+test('a key with a dot and a nested key are two texts', async () => {
+  await write({ path: 'dotted/fr.json', content: { 'a.b': 'Un {n}', a: { b: 'Deux' } } })
+  await write({ path: 'dotted/en.json', content: { 'a.b': 'One', a: { b: 'Two {z}' } } })
+
+  const result = await glot([
+    'check',
+    '--source',
+    'dotted/{locale}.json',
+    '--source-language',
+    'fr',
+    '--languages',
+    'fr,en',
+  ])
+
+  expect(result.code).toBe(1)
+  expect(
+    result.stdout.split('\n').filter((line) => line.startsWith('dotted/en.json')),
+  ).toHaveLength(2)
+  expect(result.stdout.split('\n').at(-2)).toBe('2 texts checked, 2 failures.')
+})
