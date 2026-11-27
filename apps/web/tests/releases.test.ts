@@ -19,6 +19,7 @@ import { LocalGitReader } from '../server/domains/catalogs/services/local-git-re
 import { ReleaseJobsService } from '../server/domains/releases/services/release-jobs.service.ts'
 import { ReleaseRunnerService } from '../server/domains/releases/services/release-runner.service.ts'
 import { GITHUB_RELEASE } from './fixtures/github-release.fixtures.ts'
+import { dropDatabase } from './support/database.ts'
 import { signInByMagicLink, withCookie } from './support/session.ts'
 
 const run = promisify(execFile)
@@ -43,6 +44,8 @@ let formatProjectId = ''
 let formatRepository = ''
 let jamProjectId = ''
 let jamRepository = ''
+let arrayProjectId = ''
+let arrayRepository = ''
 let seeded = { pl: '', fr: '', main: '' }
 let developerKey = ''
 
@@ -195,6 +198,11 @@ beforeAll(async () => {
     repository: 'glot/release-jam',
   })
 
+  const arrayProject = await seedDemoProject(connection.db, {
+    workspaceId: workspace.id,
+    repository: 'glot/release-array',
+  })
+
   const auth = createGlotAuth({
     baseURL: baseUrl,
     database: connection.drizzle,
@@ -210,6 +218,7 @@ beforeAll(async () => {
   projectId = project.id
   formatProjectId = formatProject.id
   jamProjectId = jamProject.id
+  arrayProjectId = arrayProject.id
 
   repository = (
     await seedDemoRepository({ root: inject('repositoriesRoot'), repository: 'glot/release-train' })
@@ -224,6 +233,10 @@ beforeAll(async () => {
 
   jamRepository = (
     await seedDemoRepository({ root: inject('repositoriesRoot'), repository: 'glot/release-jam' })
+  ).directory
+
+  arrayRepository = (
+    await seedDemoRepository({ root: inject('repositoriesRoot'), repository: 'glot/release-array' })
   ).directory
 
   seeded = {
@@ -741,6 +754,43 @@ test('undo is refused while another change to the text is approved or in conflic
   expect(conflicts.items).toMatchObject([{ draft: { id: draft.id, status: 'CONFLICT' } }])
 })
 
+test('an array index past the end of the target file is never written, one at the end is appended', async () => {
+  const projectId = arrayProjectId
+
+  const withItems = (items: string[]) => (content: string) =>
+    `${JSON.stringify({ ...JSON.parse(content), items }, null, 2)}\n`
+
+  await commitUpstream({
+    directory: arrayRepository,
+    path: FR,
+    edit: withItems(['aa', 'bb', 'cc', 'dd', 'ee', 'ff']),
+  })
+
+  await commitUpstream({ directory: arrayRepository, path: PL, edit: withItems(['aa', 'bb']) })
+  await as('Dave').projects.sync({ projectId })
+
+  await approveDraft({ project: projectId, source: 'cc', value: 'cc-pl' })
+  const past = await approveDraft({ project: projectId, source: 'ff', value: 'ff-pl' })
+
+  await expect(as('Dave').releases.run({ projectId })).resolves.toMatchObject({ changes: 1 })
+
+  const written = JSON.parse(
+    await show({ directory: arrayRepository, path: PL, ref: 'glot/release' }),
+  )
+
+  expect(written.items).toEqual(['aa', 'bb', 'cc-pl'])
+
+  const connection = createDatabase({ connectionString: inject('databaseUrl') })
+
+  try {
+    await expect(
+      connection.db.drafts.findFirst({ where: { id: past.draft.id } }),
+    ).resolves.toMatchObject({ status: 'CONFLICT' })
+  } finally {
+    await connection.close()
+  }
+})
+
 test('values are replaced and added in place in a file with its own formatting', async () => {
   const original = [
     '﻿{',
@@ -946,7 +996,7 @@ test('the twice-a-day clock releases once per slot and a second tick changes not
     expect((await db.jobs.findMany()).map(({ status }) => status)).toEqual(['DONE', 'DONE'])
   } finally {
     await connection.close()
-    await admin.query(`DROP DATABASE IF EXISTS ${name} WITH (FORCE)`)
+    await dropDatabase({ admin, name })
     await admin.end()
     await rm(root, { recursive: true, force: true })
   }

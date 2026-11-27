@@ -12,6 +12,7 @@ import { CatalogService } from '../server/domains/catalogs/services/catalog.serv
 import { LocalGitReader } from '../server/domains/catalogs/services/local-git-reader.service.ts'
 import type { GitPublication } from '../server/domains/catalogs/types/catalog.types.ts'
 import { ReleaseRunnerService } from '../server/domains/releases/services/release-runner.service.ts'
+import { dropDatabase } from './support/database.ts'
 
 const ADMIN_URL = process.env.GLOT_TEST_ADMIN_URL ?? 'postgres://glot:glot@localhost:54329/glot'
 const DATABASE_NAME = `glot_integrity_${process.pid}`
@@ -34,23 +35,9 @@ beforeAll(async () => {
   })
 })
 
-async function connectionsLeft() {
-  const { rows } = await admin.query(
-    'select count(*)::int as count from pg_stat_activity where datname = $1',
-    [DATABASE_NAME],
-  )
-
-  return rows[0].count as number
-}
-
 afterAll(async () => {
   await connection.close()
-
-  for (let attempt = 0; attempt < 50 && (await connectionsLeft()) > 0; attempt += 1) {
-    await new Promise((resolve) => setTimeout(resolve, 100))
-  }
-
-  await admin.query(`DROP DATABASE IF EXISTS ${DATABASE_NAME} WITH (FORCE)`)
+  await dropDatabase({ admin, name: DATABASE_NAME })
   await admin.end()
   await rm(root, { recursive: true, force: true })
 })

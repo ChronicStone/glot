@@ -20,7 +20,18 @@ function locate(options: { root: Node | undefined; path: string[] }) {
   let node = options.root
 
   for (const segment of options.path) {
-    segments.push(node?.type === 'array' ? Number(segment) : segment)
+    if (node?.type === 'array') {
+      const index = Number(segment)
+
+      if (!Number.isInteger(index) || index < 0 || index > (node.children?.length ?? 0)) {
+        throw new Error(`${segment} is not a place in the array`)
+      }
+
+      segments.push(index)
+    } else {
+      segments.push(segment)
+    }
+
     node = childOf({ node, segment })
   }
 
