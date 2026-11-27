@@ -229,3 +229,44 @@ test('changing a role without saying when access ends is refused, so the end dat
     expect.objectContaining({ id: jan?.id, expiresAt: new Date('2027-03-31T00:00:00Z') }),
   )
 })
+
+test('an owner renames the workspace; a writer cannot, and a name is required', async () => {
+  const owner = createGlotClient({ url: baseUrl, fetch: withCookie(ownerCookie) })
+
+  await expect(
+    owner.people.updateWorkspace({ workspaceId, name: '  Translators EU  ' }),
+  ).resolves.toEqual({
+    id: workspaceId,
+    name: 'Translators EU',
+  })
+
+  await expect(owner.people.updateWorkspace({ workspaceId, name: '   ' })).rejects.toMatchObject({
+    code: 'BAD_REQUEST',
+  })
+
+  await owner.people.invite({
+    workspaceId,
+    email: 'wren@glot.test',
+    role: 'writer',
+    languages: ['de'],
+  })
+
+  const writer = createGlotClient({
+    url: baseUrl,
+    fetch: withCookie(await signInByMagicLink('wren@glot.test')),
+  })
+
+  await expect(writer.people.updateWorkspace({ workspaceId, name: 'Mine' })).rejects.toMatchObject({
+    code: 'FORBIDDEN',
+  })
+
+  const listed = await fetch(`${baseUrl}/api/auth/organization/list`, {
+    headers: { cookie: ownerCookie },
+  })
+
+  const workspaces: unknown = await listed.json()
+
+  expect(workspaces).toEqual(
+    expect.arrayContaining([expect.objectContaining({ id: workspaceId, name: 'Translators EU' })]),
+  )
+})

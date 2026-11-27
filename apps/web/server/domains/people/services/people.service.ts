@@ -4,6 +4,7 @@ import type {
   PersonUpdateInput,
   Preferences,
   WorkspaceRefInput,
+  WorkspaceUpdateInput,
 } from '@glot/contract'
 import type { WorkspaceRole } from '@glot/database/types/workspaces'
 import { ORPCError } from '@orpc/server'
@@ -79,6 +80,16 @@ export class PeopleService {
       .throw()
 
     return { receivesDigest: user.receivesDigest }
+  }
+
+  async updateWorkspace(input: WorkspaceUpdateInput) {
+    await this.#access.requireManager({ workspaceId: input.workspaceId })
+
+    const workspace = await this.#context.db.workspaces
+      .update({ where: { id: input.workspaceId }, data: { name: input.name } })
+      .throw()
+
+    return { id: workspace.id, name: workspace.name }
   }
 
   async invite(input: PersonInviteInput) {

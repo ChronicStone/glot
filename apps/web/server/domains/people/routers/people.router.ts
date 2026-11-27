@@ -12,6 +12,9 @@ export const peopleRouter = {
   updatePreferences: procedures.people.updatePreferences.handler(({ input, context }) =>
     new PeopleService(context).updatePreferences(input),
   ),
+  updateWorkspace: procedures.people.updateWorkspace.handler(({ input, context }) =>
+    new PeopleService(context).updateWorkspace(input),
+  ),
   invite: procedures.people.invite.handler(({ input, context }) =>
     new PeopleService(context).invite(input),
   ),
