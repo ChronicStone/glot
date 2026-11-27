@@ -151,3 +151,22 @@ test('texts are found by their key as well as by their words', async () => {
   expect(page.items.map((text) => text.key.path.join('.'))).toContain('actions.save')
   expect(page.items.every((text) => text.key.path.join('.').includes('actions.save'))).toBe(true)
 })
+
+test('a malformed page cursor is a bad request, not a server error', async () => {
+  const anna = createGlotClient({ url: baseUrl, fetch: withCookie(sessionCookie) })
+  const releaseId = '01a21a3c-8830-71e1-8f67-cce838251e71'
+
+  for (const call of [
+    () => anna.texts.search({ projectId, cursor: 'abc' }),
+    () => anna.reviews.queue({ projectId, language: 'pl', cursor: 'abc' }),
+    () => anna.releases.history({ projectId, cursor: '1.5' }),
+    () => anna.releases.conflicts({ projectId, cursor: '-1' }),
+    () => anna.releases.changes({ projectId, releaseId, cursor: '99999999999999999999' }),
+  ]) {
+    await expect(call()).rejects.toMatchObject({ code: 'BAD_REQUEST' })
+  }
+
+  await expect(anna.texts.search({ projectId, limit: 1, cursor: '1' })).resolves.toMatchObject({
+    items: expect.any(Array),
+  })
+})

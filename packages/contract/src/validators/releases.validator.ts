@@ -2,6 +2,7 @@ import { releaseChangeSelectSchema, releaseSelectSchema } from '@glot/database/v
 import * as z from 'zod'
 import { CONFLICT_REASONS, CONFLICT_RESOLUTIONS } from '../constants/contract.constants.ts'
 import { draftRefInputSchema, draftSchema } from './drafts.validator.ts'
+import { textSearchInputSchema } from './texts.validator.ts'
 
 export const conflictReasonSchema = z.enum(CONFLICT_REASONS)
 
@@ -11,7 +12,7 @@ export const releaseProjectInputSchema = releaseSelectSchema.pick({ projectId: t
 
 export const releasePageInputSchema = releaseProjectInputSchema.extend({
   limit: z.coerce.number().int().min(1).max(100).default(20),
-  cursor: z.string().optional(),
+  cursor: textSearchInputSchema.shape.cursor,
 })
 
 export const releaseSchema = releaseSelectSchema

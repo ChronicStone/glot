@@ -52,7 +52,11 @@ export const textSearchInputSchema = textRefInputSchema.pick({ projectId: true }
   state: textStateSchema.optional(),
   language: languageCodeSchema.optional().describe('The language the state filter applies to.'),
   limit: z.coerce.number().int().min(1).max(200).default(50),
-  cursor: z.string().optional(),
+  cursor: z
+    .string()
+    .regex(/^\d{1,9}$/u, 'Use the cursor of the previous page')
+    .optional()
+    .describe('The nextCursor of the previous page.'),
 })
 
 export const textPageSchema = z.object({
