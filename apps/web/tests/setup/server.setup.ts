@@ -10,6 +10,7 @@ import { seedDemoRepository } from '@glot/seed/repository'
 import { migrate } from 'drizzle-orm/node-postgres/migrator'
 import { Client } from 'pg'
 import type { TestProject } from 'vite-plus/test/node'
+import { WIDGET_TEST_ORIGINS } from '../fixtures/widget.fixtures.ts'
 
 const ADMIN_URL = process.env.GLOT_TEST_ADMIN_URL ?? 'postgres://glot:glot@localhost:54329/glot'
 const PORT = Number(process.env.GLOT_TEST_PORT ?? 3199)
@@ -17,6 +18,7 @@ const DATABASE_NAME = `glot_test_${PORT}`
 const DATABASE_URL = ADMIN_URL.replace(/\/glot$/u, `/${DATABASE_NAME}`)
 const BASE_URL = `http://localhost:${PORT}`
 const AUTH_SECRET = 'glot-test-secret-that-is-at-least-32-characters'
+const PLAYGROUND_URL = `http://localhost:${PORT + 1}`
 
 async function resetDatabase() {
   const admin = new Client({ connectionString: ADMIN_URL })
@@ -82,6 +84,8 @@ export default async function setup(project: TestProject) {
       APP_URL: BASE_URL,
       GLOT_GIT_ROOT: repositories,
       GLOT_VERSION: 'test',
+      WIDGET_ORIGINS: `${PLAYGROUND_URL},${WIDGET_TEST_ORIGINS.UAT},${WIDGET_TEST_ORIGINS.PRODUCTION}`,
+      WIDGET_PRODUCTION_ORIGINS: WIDGET_TEST_ORIGINS.PRODUCTION,
     },
   })
 
@@ -96,6 +100,7 @@ export default async function setup(project: TestProject) {
   project.provide('repositoryPath', repositoryPath)
   project.provide('repositoriesRoot', repositories)
   project.provide('databaseUrl', DATABASE_URL)
+  project.provide('playgroundUrl', PLAYGROUND_URL)
 
   return () => {
     server.kill()
@@ -111,5 +116,6 @@ declare module 'vite-plus/test' {
     repositoryPath: string
     repositoriesRoot: string
     databaseUrl: string
+    playgroundUrl: string
   }
 }

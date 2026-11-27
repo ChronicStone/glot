@@ -1,5 +1,12 @@
 import * as z from 'zod'
 
+function originList(list: string) {
+  return list
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+}
+
 export const env = z
   .object({
     DATABASE_URL: z.url(),
@@ -18,6 +25,8 @@ export const env = z
     GITHUB_TOKEN: z.string().optional(),
     MIGRATIONS_FOLDER: z.string().optional(),
     GLOT_VERSION: z.string().default('0.0.0'),
+    WIDGET_ORIGINS: z.string().default('').transform(originList),
+    WIDGET_PRODUCTION_ORIGINS: z.string().default('').transform(originList),
   })
   .refine(({ SMTP_URL, MAIL_FROM }) => !SMTP_URL || Boolean(MAIL_FROM), {
     message: 'MAIL_FROM is required with SMTP_URL',

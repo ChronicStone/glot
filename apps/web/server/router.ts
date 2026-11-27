@@ -9,6 +9,7 @@ import { releasesRouter } from './domains/releases/routers/releases.router.ts'
 import { contributionsRouter } from './domains/contributions/routers/contributions.router.ts'
 import { reviewsRouter } from './domains/reviews/routers/reviews.router.ts'
 import { textsRouter } from './domains/texts/routers/texts.router.ts'
+import { widgetRouter } from './domains/widget/routers/widget.router.ts'
 
 export const router = procedures.router({
   health: healthRouter,
@@ -21,4 +22,5 @@ export const router = procedures.router({
   people: peopleRouter,
   home: homeRouter,
   reports: contributionsRouter,
+  widget: widgetRouter,
 })

@@ -59,6 +59,16 @@ export const textSearchInputSchema = textRefInputSchema.pick({ projectId: true }
     .describe('The nextCursor of the previous page.'),
 })
 
+export const textsByKeysInputSchema = textRefInputSchema.pick({ projectId: true }).extend({
+  keys: z
+    .array(z.string().min(1))
+    .min(1)
+    .max(1000)
+    .describe("Keys as the app's code calls them, dotted: marketplace.itemCard.outbid."),
+})
+
+export const textListSchema = z.object({ items: z.array(textSchema) })
+
 export const textPageSchema = z.object({
   items: z.array(textSchema),
   total: z.number().int(),

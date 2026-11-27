@@ -17,3 +17,5 @@ export type * from './releases.types.ts'
 export type * from './home.types.ts'
 
 export type * from './reports.types.ts'
+
+export type * from './widget.types.ts'

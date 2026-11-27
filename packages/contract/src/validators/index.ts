@@ -19,3 +19,5 @@ export * from './releases.validator.ts'
 export * from './home.validator.ts'
 
 export * from './reports.validator.ts'
+
+export * from './widget.validator.ts'

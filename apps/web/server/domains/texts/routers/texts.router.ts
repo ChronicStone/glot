@@ -6,4 +6,7 @@ export const textsRouter = {
     new TextsService(context).search(input),
   ),
   get: procedures.texts.get.handler(({ input, context }) => new TextsService(context).get(input)),
+  byKeys: procedures.texts.byKeys.handler(({ input, context }) =>
+    new TextsService(context).byKeys(input),
+  ),
 }

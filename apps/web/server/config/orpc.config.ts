@@ -8,6 +8,7 @@ import { onError, ORPCError } from '@orpc/server'
 import { RPCHandler } from '@orpc/server/fetch'
 import { ZodToJsonSchemaConverter } from '@orpc/zod'
 import { env } from '../env.ts'
+import { widgetSurfaceRouter } from '../domains/widget/routers/widget-surface.router.ts'
 import { router } from '../router.ts'
 
 const converters = [new ZodToJsonSchemaConverter()]
@@ -31,6 +32,11 @@ export const openapiGenerator = new OpenAPIGenerator({ converters })
 export const rpcHandler = new RPCHandler(router, {
   errorStatusMap,
   interceptors,
+})
+
+export const widgetRpcHandler = new RPCHandler(widgetSurfaceRouter, {
+  errorStatusMap,
+  interceptors: [onError((error) => console.error('WIDGET RPC ERROR', error))],
 })
 
 export const restHandler = new OpenAPIHandler(router, {

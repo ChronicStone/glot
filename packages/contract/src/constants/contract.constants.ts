@@ -15,6 +15,7 @@ export const PEOPLE_ONLY_PROCEDURES = {
   UPDATE_PERSON: 'people.update',
   REMOVE_PERSON: 'people.remove',
   UPDATE_MY_PREFERENCES: 'people.updatePreferences',
+  ISSUE_WIDGET_TOKEN: 'widget.token',
 } as const
 
 export const NOT_FOUND_ERRORS = { NOT_FOUND: { message: 'Not found' } }
@@ -54,6 +55,11 @@ export const GLOSSARY_ERRORS = {
     message: 'Only an owner, an admin or a reviewer of the languages involved changes the glossary',
   },
   CONFLICT: { message: 'A concept with this name already exists' },
+}
+
+export const WIDGET_ERRORS = {
+  ...NOT_FOUND_ERRORS,
+  FORBIDDEN: { message: 'This app cannot sign in to Glot from here' },
 }
 
 export const ADMIN_ONLY_ERRORS = { FORBIDDEN: { message: 'Only an admin can do this' } }

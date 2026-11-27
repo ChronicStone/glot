@@ -1,5 +1,5 @@
 import { checkText, checkWords } from '@glot/checks'
-import type { Text, TextRefInput, TextSearchInput } from '@glot/contract'
+import type { Text, TextRefInput, TextSearchInput, TextsByKeysInput } from '@glot/contract'
 import type { Draft, User } from '@glot/database'
 import { DRAFT_STATUSES } from '@glot/database/constants/drafts'
 import { TEXT_STATES } from '@glot/database/constants/texts'
@@ -62,6 +62,13 @@ export class TextsService {
     }
 
     return text
+  }
+
+  async byKeys(input: TextsByKeysInput) {
+    const keys = new Set(input.keys)
+    const texts = await this.all(input.projectId)
+
+    return { items: texts.filter((text) => keys.has(text.key.path.join('.'))) }
   }
 
   words(workspaceId: string) {

@@ -30,6 +30,10 @@ export class ProjectsService {
   }
 
   async findAccessible(projectId: string) {
+    if (this.#context.widget && this.#context.widget.projectId !== projectId) {
+      throw new ORPCError('NOT_FOUND')
+    }
+
     const project = await this.#context.db.projects.findFirst({
       where: {
         id: projectId,

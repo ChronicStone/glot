@@ -5,6 +5,8 @@ import type {
   textSchema,
   textRefInputSchema,
   textSearchInputSchema,
+  textListSchema,
+  textsByKeysInputSchema,
   translationSchema,
 } from '../validators/texts.validator.ts'
 
@@ -19,3 +21,7 @@ export type TextPage = z.infer<typeof textPageSchema>
 export type TextSearchInput = z.infer<typeof textSearchInputSchema>
 
 export type TextRefInput = z.infer<typeof textRefInputSchema>
+
+export type TextsByKeysInput = z.infer<typeof textsByKeysInputSchema>
+
+export type TextList = z.infer<typeof textListSchema>

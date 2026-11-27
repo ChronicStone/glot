@@ -2,10 +2,12 @@ import { oc } from '@orpc/contract'
 import { openapi } from '@orpc/openapi'
 import { NOT_FOUND_ERRORS } from '../constants/contract.constants.ts'
 import {
+  textListSchema,
   textPageSchema,
   textRefInputSchema,
   textSchema,
   textSearchInputSchema,
+  textsByKeysInputSchema,
 } from '../validators/texts.validator.ts'
 
 export const textsContract = {
@@ -36,5 +38,20 @@ export const textsContract = {
     )
     .input(textRefInputSchema)
     .output(textSchema)
+    .errors(NOT_FOUND_ERRORS),
+  byKeys: oc
+    .meta(
+      openapi({
+        method: 'POST',
+        path: '/projects/{projectId}/texts/by-keys',
+        operationId: 'getTextsByKeys',
+        summary: 'Get texts by their keys',
+        description:
+          "Get the texts an app shows, by the keys its code calls them with (dotted, such as marketplace.itemCard.outbid), in every language with their states and your draft. A key matches every text whose path joins to it, so ['a.b'] and ['a', 'b'] both answer a.b.",
+        tags: ['texts'],
+      }),
+    )
+    .input(textsByKeysInputSchema)
+    .output(textListSchema)
     .errors(NOT_FOUND_ERRORS),
 }

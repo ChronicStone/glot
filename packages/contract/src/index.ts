@@ -14,6 +14,7 @@ export {
   PROJECT_ERRORS,
   RELEASE_ERRORS,
   REVIEW_REASONS,
+  WIDGET_ERRORS,
 } from './constants/contract.constants.ts'
 
 export type * from './types/index.ts'
