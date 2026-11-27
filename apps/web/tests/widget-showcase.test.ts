@@ -283,6 +283,123 @@ test('a host Nuxt UI modal stays open and keeps its hands off while a member wor
   await context.close()
 }, 90_000)
 
+async function dragBy(options: { page: Page; selector: string; dx: number; dy: number }) {
+  const box = await shadow(options.page, options.selector).boundingBox()
+
+  if (!box) throw new Error(`${options.selector} is not on screen`)
+
+  const from = { x: box.x + Math.min(24, box.width / 2), y: box.y + box.height / 2 }
+
+  await options.page.mouse.move(from.x, from.y)
+  await options.page.mouse.down()
+
+  for (let step = 1; step <= 10; step += 1) {
+    await options.page.mouse.move(
+      from.x + (options.dx * step) / 10,
+      from.y + (options.dy * step) / 10,
+    )
+  }
+
+  await options.page.mouse.up()
+}
+
+async function shoot(options: { page: Page; name: string }) {
+  if (process.env.GLOT_RECORD) {
+    await options.page.screenshot({ path: `/tmp/ui-shots/glot-move/${options.name}.png` })
+  }
+}
+
+test('the pill drags anywhere, a click still opens it, and it stays where it was put', async () => {
+  const context = await signedInContext({ name: 'Wanda' })
+  const page = await context.newPage()
+  const launcher = shadow(page, '[data-glot=launcher]')
+
+  await page.goto(`${LOT_PAGE}?glot`)
+  const popup = await signWidgetIn({ page, context })
+
+  await popup.waitForEvent('close', { timeout: 20_000 })
+  await expect.poll(() => launcher.textContent(), POLL).toContain('to check')
+
+  const before = await launcher.boundingBox()
+
+  await dragBy({ page, selector: '[data-glot=launcher]', dx: 500, dy: -600 })
+  const after = await launcher.boundingBox()
+
+  expect(Math.round((after?.x ?? 0) - (before?.x ?? 0))).toBe(500)
+  expect(Math.round((after?.y ?? 0) - (before?.y ?? 0))).toBe(-600)
+  expect(await shadow(page, '[data-glot=drawer]').count()).toBe(0)
+  await shoot({ page, name: '02-pill-dragged' })
+
+  await page.reload()
+  await expect.poll(async () => (await launcher.boundingBox())?.x, POLL).toBe(after?.x)
+
+  await page.setViewportSize({ width: 600, height: 400 })
+  await expect
+    .poll(async () => {
+      const box = await launcher.boundingBox()
+
+      return !!box && box.x + box.width <= 600 && box.y + box.height <= 400
+    }, POLL)
+    .toBe(true)
+
+  await launcher.click()
+  await expect.poll(() => shadow(page, '[data-glot=drawer]').count(), POLL).toBe(1)
+
+  await context.close()
+}, 90_000)
+
+test('the panel docks left or right by its header or its dock button, and steps aside from the text being edited', async () => {
+  const context = await signedInContext({ name: 'Wanda' })
+  const page = await context.newPage()
+  const drawer = shadow(page, '[data-glot=drawer]')
+  const dock = shadow(page, '[data-glot=dock]')
+
+  await page.goto(`${LOT_PAGE}?glot`)
+  const popup = await signWidgetIn({ page, context })
+
+  await popup.waitForEvent('close', { timeout: 20_000 })
+  await shadow(page, '[data-glot=launcher]').click()
+  await expect.poll(() => drawer.getAttribute('data-side'), POLL).toBe('right')
+  await shoot({ page, name: '03-docked-right' })
+  expect(await shadow(page, '.w-foot').textContent()).toContain(`Wanda · ${new URL(demoUrl).host}`)
+
+  await dragBy({ page, selector: '.w-head b', dx: -1000, dy: 20 })
+  await expect.poll(() => drawer.getAttribute('data-side'), POLL).toBe('left')
+  expect((await drawer.boundingBox())?.x).toBe(12)
+  await shoot({ page, name: '04-docked-left' })
+
+  await page.reload()
+  await shadow(page, '[data-glot=launcher]').click()
+  await expect.poll(() => drawer.getAttribute('data-side'), POLL).toBe('left')
+  expect(await dock.getAttribute('aria-label')).toBe('Dock to the right')
+
+  await dock.focus()
+  await page.keyboard.press('Enter')
+  await expect.poll(() => drawer.getAttribute('data-side'), POLL).toBe('right')
+
+  await page.setViewportSize({ width: 1100, height: 900 })
+  await shoot({ page, name: '05-text-under-panel' })
+  await shadow(page, `[data-glot=row][data-key="${KEY}"] .t`).click()
+  await expect.poll(() => drawer.getAttribute('data-side'), POLL).toBe('left')
+
+  const panel = await drawer.boundingBox()
+  const text = await page.locator('main .bid > div').first().boundingBox()
+
+  expect((panel?.x ?? 0) + (panel?.width ?? 0)).toBeLessThan(text?.x ?? 0)
+  await shoot({ page, name: '06-stepped-aside' })
+
+  await shadow(page, '[data-glot=editor] [aria-label=Close]').click()
+  await expect.poll(() => drawer.getAttribute('data-side'), POLL).toBe('right')
+
+  await page.setViewportSize({ width: 375, height: 812 })
+  await expect.poll(() => drawer.getAttribute('data-side'), POLL).toBe(null)
+  expect(await dock.count()).toBe(0)
+  expect((await drawer.boundingBox())?.width).toBe(375)
+  await shoot({ page, name: '07-phone-sheet' })
+
+  await context.close()
+}, 90_000)
+
 test('a member fixes a Polish text in the page, sends it for review, and after the release the app shows it', async () => {
   const video = process.env.GLOT_RECORD ? join(scratch, 'video') : undefined
   const context = await signedInContext({ name: 'Wanda', video })
