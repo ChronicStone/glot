@@ -76,7 +76,9 @@ export function mergeReleases(directory: string) {
       DEMO_MERGE.INTO,
     ])
 
-    if (!release.ok || merged.ok) {
+    const head = await git(['symbolic-ref', '--short', 'HEAD'])
+
+    if (!release.ok || merged.ok || head.out !== DEMO_MERGE.INTO) {
       return
     }
 
