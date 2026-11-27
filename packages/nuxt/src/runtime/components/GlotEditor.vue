@@ -7,9 +7,9 @@ import { TEXT_STATE_CLASSES, TEXT_STATE_LABELS } from '@glot/ui/constants'
 import { useMediaQuery } from '@vueuse/core'
 import { computed, onBeforeUnmount, ref, useTemplateRef, watch } from 'vue'
 import type { Composer } from 'vue-i18n'
-import { NARROW_SCREEN, PLURAL, WIDGET_LAYOUT } from '../constants/widget.constants.ts'
+import { DOCK_SIDES, NARROW_SCREEN, PLURAL, WIDGET_LAYOUT } from '../constants/widget.constants.ts'
 import { nestMessage, withoutPath } from '../utils/message.utils.ts'
-import type { PageHit } from '../types/widget.types.ts'
+import type { DockSide, PageHit } from '../types/widget.types.ts'
 import { measureLine } from '../utils/fit.utils.ts'
 import { pluralForms, pluralLabels } from '../utils/plural.utils.ts'
 import { translationIn } from '../utils/text.utils.ts'
@@ -23,7 +23,7 @@ const props = defineProps<{
   language: string
   anchor: DOMRect | null
   hit: PageHit | null
-  drawerOpen: boolean
+  drawerSide: DockSide | null
   memberId: string
   projectId: string
   canWrite: boolean
@@ -172,11 +172,19 @@ const position = computed(() => {
     return { left: '0px', right: '0px', bottom: '0px', width: 'auto' }
   }
 
-  const space = props.drawerOpen ? WIDGET_LAYOUT.DRAWER_SPACE : 0
-  const maxLeft = window.innerWidth - space - WIDGET_LAYOUT.EDITOR_WIDTH - WIDGET_LAYOUT.EDGE
+  const minLeft =
+    props.drawerSide === DOCK_SIDES.LEFT
+      ? WIDGET_LAYOUT.DRAWER_SPACE + WIDGET_LAYOUT.EDGE
+      : WIDGET_LAYOUT.EDGE
+
+  const maxLeft =
+    window.innerWidth -
+    (props.drawerSide === DOCK_SIDES.RIGHT ? WIDGET_LAYOUT.DRAWER_SPACE : 0) -
+    WIDGET_LAYOUT.EDITOR_WIDTH -
+    WIDGET_LAYOUT.EDGE
 
   if (!props.anchor) {
-    return { left: `${Math.max(maxLeft, WIDGET_LAYOUT.EDGE)}px`, top: '80px' }
+    return { left: `${Math.max(maxLeft, minLeft)}px`, top: '80px' }
   }
 
   const below = props.anchor.bottom + WIDGET_LAYOUT.EDITOR_GAP
@@ -184,7 +192,7 @@ const position = computed(() => {
   const top = fits ? below : props.anchor.top - WIDGET_LAYOUT.EDITOR_GAP - height.value
 
   return {
-    left: `${Math.max(WIDGET_LAYOUT.EDGE, Math.min(props.anchor.left, maxLeft))}px`,
+    left: `${Math.max(minLeft, Math.min(props.anchor.left, maxLeft))}px`,
     top: `${Math.max(WIDGET_LAYOUT.EDGE, top)}px`,
   }
 })

@@ -1,5 +1,7 @@
 import type { Text, Translation, WidgetSession } from '@glot/contract'
+import type { ValueOf } from '@glot/utils/types'
 import type { ComponentInternalInstance } from 'vue'
+import type { DOCK_SIDES } from '../constants/widget.constants.ts'
 
 export interface KeyLog {
   owners: Map<number, Map<string, string>>
@@ -57,4 +59,11 @@ export interface PageRow {
   value: string
   reason: string
   clickable: boolean
+}
+
+export type DockSide = ValueOf<typeof DOCK_SIDES>
+
+export interface ScreenPoint {
+  x: number
+  y: number
 }

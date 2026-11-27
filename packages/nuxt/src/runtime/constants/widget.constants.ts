@@ -70,3 +70,18 @@ export const VUE_I18N_FORM_LABELS = {
   TWO: ['1', 'other'],
   THREE: ['0', '1', '2+'],
 } as const
+
+export const DRAG = {
+  THRESHOLD: 4,
+  IGNORE: 'button, a, select, input, [contenteditable]',
+} as const
+
+export const DOCK_SIDES = {
+  LEFT: 'left',
+  RIGHT: 'right',
+} as const
+
+export const LAYOUT_STORAGE = {
+  LAUNCHER: 'glot:launcher:',
+  DOCK: 'glot:dock:',
+} as const

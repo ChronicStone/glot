@@ -4,7 +4,10 @@ import GlotMark from '@glot/ui/components/GlotMark.vue'
 import GlotTextValue from '@glot/ui/components/GlotTextValue.vue'
 import { TEXT_STATE_CLASSES } from '@glot/ui/constants'
 import { computed, ref, useTemplateRef } from 'vue'
-import type { PageRow } from '../types/widget.types.ts'
+import { usePointerDrag } from '../composables/use-pointer-drag.ts'
+import { DOCK_SIDES, DRAG } from '../constants/widget.constants.ts'
+import type { DockSide, PageRow } from '../types/widget.types.ts'
+import { nearerSide, otherSide } from '../utils/layout.utils.ts'
 import GlotIcon from './GlotIcon.vue'
 import GlotKey from './GlotKey.vue'
 
@@ -17,11 +20,48 @@ const props = defineProps<{
   place: string
   glotUrl: string
   unreachable: boolean
+  side: DockSide | null
 }>()
 
-const emit = defineEmits<{ close: []; pick: [row: PageRow]; language: [code: string] }>()
+const emit = defineEmits<{
+  close: []
+  pick: [row: PageRow]
+  language: [code: string]
+  dock: [side: DockSide]
+}>()
 
 const list = useTemplateRef<HTMLDivElement>('list')
+const panel = useTemplateRef<HTMLElement>('panel')
+const head = useTemplateRef<HTMLDivElement>('head')
+const shift = ref<{ dx: number; dy: number } | null>(null)
+
+usePointerDrag({
+  handle: computed(() => (props.side ? head.value : null)),
+  ignore: DRAG.IGNORE,
+  onMove: (delta) => {
+    shift.value = delta
+  },
+  onEnd: () => {
+    const rect = panel.value?.getBoundingClientRect()
+
+    shift.value = null
+
+    if (rect) emit('dock', nearerSide(rect))
+  },
+})
+
+const placement = computed(() => {
+  if (!props.side) return {}
+
+  const sides = props.side === DOCK_SIDES.LEFT ? { left: '12px', right: 'auto' } : {}
+
+  const moving = shift.value
+    ? { transform: `translate(${shift.value.dx}px, ${shift.value.dy}px)`, zIndex: 6 }
+    : {}
+
+  return { ...sides, ...moving }
+})
+
 const showReviewed = ref<boolean>(false)
 
 const clickable = computed(() => props.rows.filter((row) => row.clickable))
@@ -62,8 +102,20 @@ function jump(id: string) {
 </script>
 
 <template>
-  <aside class="w-drawer glot-w" data-glot="drawer">
-    <div class="w-head">
+  <aside
+    ref="panel"
+    class="w-drawer glot-w"
+    data-glot="drawer"
+    :data-side="side"
+    :style="placement"
+  >
+    <div
+      ref="head"
+      class="w-head"
+      :style="
+        side ? { cursor: shift ? 'grabbing' : 'grab', userSelect: 'none', touchAction: 'none' } : {}
+      "
+    >
       <span class="mark"><GlotMark /></span><b>On this page</b>
       <div class="right">
         <div v-if="languages.length <= 4" class="seg seg-sm" data-glot="languages">
@@ -86,6 +138,17 @@ function jump(id: string) {
         >
           <option v-for="code in languages" :key="code" :value="code">{{ code }}</option>
         </select>
+        <button
+          v-if="side"
+          type="button"
+          class="btn btn-ghost btn-sm btn-icon"
+          data-glot="dock"
+          :aria-label="side === DOCK_SIDES.LEFT ? 'Dock to the right' : 'Dock to the left'"
+          :title="side === DOCK_SIDES.LEFT ? 'Dock to the right' : 'Dock to the left'"
+          @click="emit('dock', otherSide(side))"
+        >
+          <GlotIcon :name="side === DOCK_SIDES.LEFT ? 'panel-right' : 'panel-left'" />
+        </button>
         <button
           type="button"
           class="btn btn-ghost btn-sm btn-icon"

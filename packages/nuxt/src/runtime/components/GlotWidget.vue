@@ -7,6 +7,7 @@ import type { App } from 'vue'
 import type { Composer } from 'vue-i18n'
 import { usePageHits } from '../composables/use-page-hits.ts'
 import { usePageTexts } from '../composables/use-page-texts.ts'
+import { useWidgetLayout } from '../composables/use-widget-layout.ts'
 import { useWidgetSession } from '../composables/use-widget-session.ts'
 import { NARROW_SCREEN } from '../constants/widget.constants.ts'
 import type {
@@ -16,6 +17,7 @@ import type {
   PlacedHit,
   WidgetOptions,
 } from '../types/widget.types.ts'
+import { coveredBy, otherSide } from '../utils/layout.utils.ts'
 import { contains } from '../utils/page-hits.utils.ts'
 import { canSetLocale } from '../utils/i18n.utils.ts'
 import { nestMessage } from '../utils/message.utils.ts'
@@ -38,6 +40,7 @@ const drawerOpen = ref<boolean>(false)
 const editing = ref<{ key: string; hitId: string | null } | null>(null)
 const hovered = ref<PlacedHit | null>(null)
 const narrow = useMediaQuery(NARROW_SCREEN)
+const layout = useWidgetLayout(props.options.project)
 
 const { session, client, failure, signingIn, signIn } = useWidgetSession(props.options)
 const { texts, unreachable, replace } = usePageTexts({ session, client, log: props.log })
@@ -156,6 +159,15 @@ const hoverLabel = computed(() => {
   const rect = placed.value.find(({ hit }) => hit.id === current.hit.id)?.rect ?? current.rect
 
   return { key, left: rect.left, top: Math.max(4, rect.top - 30) }
+})
+
+const drawerSide = computed(() => {
+  if (narrow.value || !drawerOpen.value) return null
+
+  const rect = anchored.value?.rect
+  const docked = layout.dock.value
+
+  return editing.value && rect && coveredBy({ rect, side: docked }) ? otherSide(docked) : docked
 })
 
 const editedText = computed(() => (editing.value ? texts.value.get(editing.value.key) : undefined))
@@ -331,7 +343,7 @@ onBeforeUnmount(() => {
     :language="language"
     :anchor="anchored?.rect ?? null"
     :hit="anchored?.hit ?? null"
-    :drawer-open="drawerOpen"
+    :drawer-side="drawerSide"
     :member-id="memberId"
     :project-id="session.project.id"
     :can-write="session.languages.includes(language)"
@@ -350,12 +362,14 @@ onBeforeUnmount(() => {
     :place="host.ownerDocument.location.host"
     :glot-url="`${options.url}/projects/${session.project.id}/texts`"
     :unreachable="unreachable"
+    :side="drawerSide"
     @close="
       drawerOpen = false;
       editing = null
     "
     @pick="pick"
     @language="switchLanguage"
+    @dock="layout.dock.value = $event"
   />
   <GlotLauncher
     v-if="!drawerOpen"
@@ -363,6 +377,8 @@ onBeforeUnmount(() => {
     :fix="fixCount"
     :check="checkCount"
     :status="launcherStatus"
+    :position="layout.launcher.value"
+    @move="layout.launcher.value = $event"
     @open="openLauncher"
   />
 </template>

@@ -26,4 +26,6 @@ export const WIDGET_ICONS = {
   OPEN: 'arrow-up-right',
   GLOSSARY: 'book-open-text',
   FITS: 'ruler',
+  DOCK_LEFT: 'panel-left',
+  DOCK_RIGHT: 'panel-right',
 } as const
