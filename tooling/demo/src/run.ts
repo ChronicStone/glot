@@ -17,10 +17,13 @@ import {
 import { startService, waitForUrl } from './utils/demo.utils.ts'
 
 const root = resolve(import.meta.dirname, '../../..')
-const databaseUrl = `${DEMO_POSTGRES_URL}/${DEMO_DATABASE}`
-const repositories = resolve(root, DEMO_REPOSITORIES_FOLDER)
-const glotUrl = `http://localhost:${DEMO_PORTS.GLOT}`
-const appUrl = `http://localhost:${DEMO_PORTS.APP}`
+const offset = Number(process.env.GLOT_DEMO_OFFSET ?? 0)
+const suffix = offset ? `-${offset}` : ''
+const database = offset ? `${DEMO_DATABASE}_${offset}` : DEMO_DATABASE
+const databaseUrl = `${DEMO_POSTGRES_URL}/${database}`
+const repositories = resolve(root, `${DEMO_REPOSITORIES_FOLDER}${suffix}`)
+const glotUrl = `http://localhost:${DEMO_PORTS.GLOT + offset}`
+const appUrl = `http://localhost:${DEMO_PORTS.APP + offset}`
 
 execFileSync('docker', ['compose', '-p', 'glot', 'up', '-d', '--wait', 'postgres'], {
   cwd: root,
@@ -31,9 +34,9 @@ const admin = new pg.Client({ connectionString: `${DEMO_POSTGRES_URL}/glot` })
 
 await admin.connect()
 
-await admin.query(`DROP DATABASE IF EXISTS ${DEMO_DATABASE} WITH (FORCE)`)
+await admin.query(`DROP DATABASE IF EXISTS ${database} WITH (FORCE)`)
 
-await admin.query(`CREATE DATABASE ${DEMO_DATABASE}`)
+await admin.query(`CREATE DATABASE ${database}`)
 
 await admin.end()
 
@@ -44,7 +47,7 @@ await migrate(connection.drizzle, {
 })
 
 const previews = await startPreviewDemo({
-  port: DEMO_PORTS.PREVIEW,
+  port: DEMO_PORTS.PREVIEW + offset,
   onTest: (line) => process.stdout.write(`[preview] ${line}\n`),
 })
 
@@ -60,7 +63,7 @@ await connection.close()
 
 const glot = startService({
   name: 'glot',
-  command: ['bunx', 'nuxt', 'dev', '--port', String(DEMO_PORTS.GLOT)],
+  command: ['bunx', 'nuxt', 'dev', '--port', String(DEMO_PORTS.GLOT + offset)],
   cwd: resolve(root, 'apps/web'),
   env: {
     DATABASE_URL: databaseUrl,
@@ -69,20 +72,20 @@ const glot = startService({
     GLOT_GIT_ROOT: repositories,
     GLOT_CLOCK: 'on',
     WIDGET_ORIGINS: appUrl,
-    GLOT_BUILD_DIR: '.nuxt-demo',
+    GLOT_BUILD_DIR: `.nuxt-demo${suffix}`,
     NUXT_IGNORE_LOCK: '1',
   },
 })
 
 const app = startService({
   name: 'app',
-  command: ['bunx', 'nuxt', 'dev', '--port', String(DEMO_PORTS.APP)],
+  command: ['bunx', 'nuxt', 'dev', '--port', String(DEMO_PORTS.APP + offset)],
   cwd: resolve(root, 'apps/demo'),
   env: {
     GLOT_URL: glotUrl,
     GLOT_PROJECT: project.repository,
     GLOT_LOCALES_DIR: directory,
-    DEMO_BUILD_DIR: '.nuxt-demo',
+    DEMO_BUILD_DIR: `.nuxt-demo${suffix}`,
     NUXT_IGNORE_LOCK: '1',
   },
 })
