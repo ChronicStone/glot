@@ -260,6 +260,18 @@ test('an owner renames the workspace; a writer cannot, and a name is required', 
     code: 'FORBIDDEN',
   })
 
+  const created = await authCall({
+    cookie: ownerCookie,
+    path: '/api-key/create',
+    body: { name: 'Rename agent' },
+  })
+
+  const agent = createGlotClient({ url: baseUrl, token: created.body.key })
+
+  await expect(agent.people.updateWorkspace({ workspaceId, name: 'Agents' })).rejects.toMatchObject(
+    { code: 'PEOPLE_ONLY' },
+  )
+
   const listed = await fetch(`${baseUrl}/api/auth/organization/list`, {
     headers: { cookie: ownerCookie },
   })
