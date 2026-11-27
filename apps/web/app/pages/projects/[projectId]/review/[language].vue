@@ -437,7 +437,9 @@ defineShortcuts({
             ><span class="faint">·</span>{{ current.text.key.source }}<span class="faint">·</span
             >{{ languageName(current.text.source.language) }}
           </div>
-          <div class="rv-fr"><GlotTextValue :value="current.text.source.value" /></div>
+          <div class="rv-fr">
+            <GlotTextValue :value="current.text.source.value" :syntax="current.text.syntax" />
+          </div>
           <div class="rv-lbl">
             {{ languageName(language) }} · rendered with the app’s plural rules
           </div>
@@ -464,7 +466,7 @@ defineShortcuts({
                       @keydown.enter.prevent="editor.handleSubmit()"
                   /></label>
                 </editor.Field>
-                <GlotTextValue v-else :value="form.value" />
+                <GlotTextValue v-else :value="form.value" :syntax="current.text.syntax" />
               </div>
               <div class="pill-slot" />
             </div>

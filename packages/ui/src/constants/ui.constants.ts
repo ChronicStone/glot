@@ -20,3 +20,20 @@ export const TEXT_STATE_LABELS = {
   [TEXT_STATES.NEEDS_FIX]: 'Needs a fix',
   [TEXT_STATES.MISSING]: 'Missing',
 } as const
+
+export const TEMPLATE_TOKEN_CLOSERS = {
+  '{{{': '}}}',
+  '{{': '}}',
+  '[[': ']]',
+} as const
+
+export const HTML_TAG_PATTERN = /(<\/?[a-zA-Z][a-zA-Z0-9-]*\b[^<>]*>)/u
+
+export const HTML_TAG_LABELS = {
+  a: 'link',
+  b: 'bold',
+  strong: 'bold',
+  i: 'italic',
+  em: 'italic',
+  br: 'line break',
+} as const

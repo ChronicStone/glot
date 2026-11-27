@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Syntax } from '@glot/checks'
 import type { Translation } from '@glot/contract'
 import { DRAFT_STATUSES } from '@glot/database/constants/drafts'
 import GlotTextValue from '@glot/ui/components/GlotTextValue.vue'
@@ -11,6 +12,7 @@ const { translation, working, editable, ownDraft, fieldError } = defineProps<{
   editable: boolean
   ownDraft: boolean
   fieldError?: string | undefined
+  syntax?: Syntax | undefined
 }>()
 
 const emit = defineEmits<{ select: [] }>()
@@ -62,7 +64,7 @@ const byline = computed(() => {
       <slot name="editor" />
     </div>
     <div v-else-if="translation.value" class="val">
-      <GlotTextValue :value="translation.value" />
+      <GlotTextValue :value="translation.value" :syntax="syntax" />
     </div>
     <div v-else class="val muted" style="font-size: 13px">
       No {{ languageName(translation.language) }} text yet.
@@ -77,7 +79,7 @@ const byline = computed(() => {
       <div class="well" style="margin-top: 10px">
         <div class="hint">{{ translation.draft.authorName }} sent this for review</div>
         <div class="val" style="margin-top: 2px">
-          <GlotTextValue :value="translation.draft.value" />
+          <GlotTextValue :value="translation.draft.value" :syntax="syntax" />
         </div>
       </div>
       <div v-for="failure in translation.draft.failures" :key="failure.code" class="check-fail">

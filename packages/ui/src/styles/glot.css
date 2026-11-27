@@ -769,6 +769,26 @@
   padding: 0 14px;
   font-size: var(--glot-t-15);
 }
+.msg-field {
+  height: auto;
+  min-height: var(--ctl-h);
+  align-items: flex-start;
+  padding-block: 6px;
+}
+.msg-edit {
+  flex: 1;
+  min-width: 0;
+  outline: none;
+  line-height: 22px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.ph.tag {
+  color: var(--glot-ink-3);
+  background: var(--glot-tile);
+  box-shadow: none;
+  font-family: var(--glot-font-mono);
+}
 .textarea {
   min-height: 76px;
   height: auto;

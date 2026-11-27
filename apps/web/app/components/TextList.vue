@@ -119,7 +119,7 @@ defineExpose({
       @click="emit('select', text.id)"
     >
       <div style="min-width: 0">
-        <div class="fr"><GlotTextValue :value="text.source.value" /></div>
+        <div class="fr"><GlotTextValue :value="text.source.value" :syntax="text.syntax" /></div>
         <div class="sub">
           <span class="key">{{ text.key.path.join('.') }}</span><span class="faint">·</span
           ><span>{{ text.key.source }}</span>
@@ -151,7 +151,7 @@ defineExpose({
               hoveredTranslation.language
             }}</span>
             <span v-if="hoveredTranslation.value" class="ellipsis"
-              ><GlotTextValue :value="hoveredTranslation.value"
+              ><GlotTextValue :value="hoveredTranslation.value" :syntax="hovered?.text.syntax"
             /></span>
             <span v-else class="muted">Not written yet</span>
           </div>

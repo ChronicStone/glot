@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Text } from '@glot/contract'
 import { TEXT_STATES } from '@glot/database/constants/texts'
+import GlotMessageField from '@glot/ui/components/GlotMessageField.vue'
 import GlotTextValue from '@glot/ui/components/GlotTextValue.vue'
 import { TEXT_STATE_CLASSES } from '@glot/ui/constants'
 import { useMutation } from '@tanstack/vue-query'
@@ -76,14 +77,13 @@ defineShortcuts({
 <template>
   <DefineEditor>
     <form.Field v-slot="{ field }" name="value">
-      <label :class="{ 'is-error': error }" class="input is-focus"
-        ><input
-          :value="field.state.value"
-          :aria-label="`${languageName(working?.language ?? '')} text`"
-          :aria-invalid="Boolean(error)"
-          autocomplete="off"
-          @input="field.handleChange(inputValue($event))"
-      /></label>
+      <GlotMessageField
+        :model-value="field.state.value"
+        :syntax="text.syntax"
+        :label="`${languageName(working?.language ?? '')} text`"
+        :invalid="Boolean(error)"
+        @update:model-value="field.handleChange"
+      />
       <p v-if="error" class="hint err" role="alert">{{ error }}</p>
     </form.Field>
   </DefineEditor>
@@ -112,7 +112,7 @@ defineShortcuts({
       <UIcon name="i-lucide-x" />
     </button>
   </div>
-  <div class="insp-fr"><GlotTextValue :value="text.source.value" /></div>
+  <div class="insp-fr"><GlotTextValue :value="text.source.value" :syntax="text.syntax" /></div>
   <div class="insp-where">
     <span class="w"><UIcon name="i-lucide-file-json" class="ic-13" />{{ text.key.source }}</span>
     <span v-for="app in text.shownIn" :key="app" class="w"><b>{{ app }}</b></span>
@@ -127,6 +127,7 @@ defineShortcuts({
       :editable="canWrite || canApprove"
       :own-draft="own && translation.language === working?.language"
       :field-error="translation.language === working?.language ? error : undefined"
+      :syntax="text.syntax"
       @select="chosen = translation.language"
     >
       <template #editor><UseEditor /></template>
@@ -168,6 +169,7 @@ defineShortcuts({
         :editable="canWrite || canApprove"
         :own-draft="false"
         :field-error="translation.language === working?.language ? error : undefined"
+        :syntax="text.syntax"
         @select="chosen = translation.language"
       >
         <template #editor><UseEditor /></template>
