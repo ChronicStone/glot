@@ -27,6 +27,8 @@ const glotUrl = `http://localhost:${DEMO_PORTS.GLOT + offset}`
 const appUrl = `http://localhost:${DEMO_PORTS.APP + offset}`
 
 const authSecret = process.env.AUTH_SECRET ?? randomBytes(32).toString('hex')
+const smtpUrl = `smtp://127.0.0.1:${process.env.GLOT_SMTP_PORT ?? DEMO_MAIL.SMTP_PORT}`
+const inboxUrl = `http://localhost:${process.env.GLOT_MAILPIT_PORT ?? DEMO_MAIL.INBOX_PORT}`
 
 execFileSync('docker', ['compose', '-p', 'glot', 'up', '-d', '--wait', 'postgres', 'mailpit'], {
   cwd: root,
@@ -76,7 +78,7 @@ const glot = startService({
     GLOT_GIT_ROOT: repositories,
     GLOT_CLOCK: 'on',
     WIDGET_ORIGINS: appUrl,
-    SMTP_URL: DEMO_MAIL.SMTP_URL,
+    SMTP_URL: smtpUrl,
     MAIL_FROM: DEMO_MAIL.FROM,
     GLOT_BUILD_DIR: `.nuxt-demo${suffix}`,
     NUXT_IGNORE_LOCK: '1',
@@ -123,7 +125,7 @@ Glot is ready.
   Glot          ${glotUrl}
   Demo app      ${appUrl}/pl/lots/48213?glot
   Emails        ${glotUrl}/projects/${project.id}/emails
-  Inbox         ${DEMO_MAIL.INBOX}
+  Inbox         ${inboxUrl}
   Repository    ${directory}
                 Released texts are merged into main within seconds, as a developer would merge the pull request.
 

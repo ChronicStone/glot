@@ -24,7 +24,7 @@ export const DEMO_MERGE = {
 } as const
 
 export const DEMO_MAIL = {
-  SMTP_URL: 'smtp://127.0.0.1:1026',
-  INBOX: 'http://localhost:8026',
+  SMTP_PORT: '1026',
+  INBOX_PORT: '8026',
   FROM: 'Glot <glot@glot.test>',
 } as const

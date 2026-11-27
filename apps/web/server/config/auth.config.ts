@@ -9,7 +9,9 @@ const smtpSender = mail ? createSmtpMagicLinkSender(mail) : undefined
 const sendMagicLinkEmail: SendMagicLinkEmail | undefined = import.meta.dev
   ? async (message) => {
       console.warn(`Sign-in link for ${message.to}: ${message.targetUrl}`)
-      await smtpSender?.(message)
+      await smtpSender?.(message).catch((error: unknown) => {
+        console.warn(`The sign-in email to ${message.to} was not sent: ${String(error)}`)
+      })
     }
   : smtpSender
 
