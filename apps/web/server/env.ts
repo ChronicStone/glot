@@ -20,6 +20,8 @@ export const env = z
       .or(z.literal(''))
       .optional(),
     MAIL_FROM: z.string().optional(),
+    ANTHROPIC_BASE_URL: z.url().default('https://api.anthropic.com'),
+    OPENAI_BASE_URL: z.url().default('https://api.openai.com'),
     GLOT_GIT_ROOT: z.string().optional(),
     GLOT_CLOCK: z.enum(['on', 'off']).optional(),
     GITHUB_TOKEN: z.string().optional(),

@@ -414,7 +414,12 @@ export class ReviewsService {
       if (mine) {
         await tx.drafts.update({
           where: { id: mine.id },
-          data: { value: change.value, status: DRAFT_STATUSES.APPROVED, ...change.base },
+          data: {
+            value: change.value,
+            aiWritten: false,
+            status: DRAFT_STATUSES.APPROVED,
+            ...change.base,
+          },
         })
 
         return

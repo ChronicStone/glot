@@ -1,4 +1,5 @@
 import { procedures } from './config/procedures.config.ts'
+import { aiRouter } from './domains/ai/routers/ai.router.ts'
 import { draftsRouter } from './domains/drafts/routers/drafts.router.ts'
 import { glossaryRouter } from './domains/glossary/routers/glossary.router.ts'
 import { healthRouter } from './domains/health/routers/health.router.ts'
@@ -23,4 +24,5 @@ export const router = procedures.router({
   home: homeRouter,
   reports: contributionsRouter,
   widget: widgetRouter,
+  ai: aiRouter,
 })

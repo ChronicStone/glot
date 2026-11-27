@@ -12,6 +12,7 @@ export function draftView(options: { draft: Draft; authorName: string; failures:
     authorId: draft.authorId,
     authorName: options.authorName,
     status: draft.status,
+    aiWritten: draft.aiWritten,
     updatedAt: draft.updatedAt,
     failures: options.failures,
   }

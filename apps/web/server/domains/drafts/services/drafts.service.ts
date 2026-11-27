@@ -46,7 +46,12 @@ export class DraftsService {
       ? await this.#context.db.drafts
           .update({
             where: { id: active.id },
-            data: { value: input.value, status: DRAFT_STATUSES.DRAFT, ...base },
+            data: {
+              value: input.value,
+              aiWritten: input.aiWritten ?? false,
+              status: DRAFT_STATUSES.DRAFT,
+              ...base,
+            },
           })
           .throw()
       : await this.#context.db.drafts.create({
@@ -55,6 +60,7 @@ export class DraftsService {
             textId: input.textId,
             language: input.language,
             value: input.value,
+            aiWritten: input.aiWritten ?? false,
             authorId,
             ...base,
           },

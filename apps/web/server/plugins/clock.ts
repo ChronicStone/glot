@@ -1,7 +1,9 @@
+import { ai } from '../config/ai.config.ts'
 import { auth } from '../config/auth.config.ts'
 import { catalog, git } from '../config/catalog.config.ts'
 import { database } from '../config/database.config.ts'
 import { mailer } from '../config/mail.config.ts'
+import { AiFillJobsService } from '../domains/ai/services/ai-fill-jobs.service.ts'
 import { DigestJobsService } from '../domains/digests/services/digest-jobs.service.ts'
 import { RELEASE_CLOCK } from '../domains/releases/constants/releases.constants.ts'
 import { ReleaseJobsService } from '../domains/releases/services/release-jobs.service.ts'
@@ -20,13 +22,18 @@ export default defineNitroPlugin(() => {
 
   const digests = mailer
     ? new DigestJobsService({
-        context: { auth, db: database.db, catalog, git },
+        context: { auth, db: database.db, catalog, git, ai },
         send: mailer,
         appUrl: env.APP_URL,
       })
     : undefined
 
+  const fills = new AiFillJobsService({
+    context: { auth, db: database.db, catalog, git, ai },
+  })
+
   let ticking = false
+  let filling = false
 
   setInterval(() => {
     if (ticking) {
@@ -44,6 +51,21 @@ export default defineNitroPlugin(() => {
       .catch((error: unknown) => console.warn('The digest clock failed', error))
       .finally(() => {
         ticking = false
+      })
+  }, RELEASE_CLOCK.TICK_MS).unref()
+
+  setInterval(() => {
+    if (filling) {
+      return
+    }
+
+    filling = true
+
+    fills
+      .tick({ now: new Date() })
+      .catch((error: unknown) => console.warn('The AI fill clock failed', error))
+      .finally(() => {
+        filling = false
       })
   }, RELEASE_CLOCK.TICK_MS).unref()
 })

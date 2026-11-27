@@ -88,7 +88,7 @@ export class TextsService {
     const project = await new ProjectsService(this.#context).findAccessible(projectId)
     const userId = actorUserId(this.#context.actor)
 
-    const [catalog, pending, appSources, drafts, words] = await Promise.all([
+    const [catalog, pending, appSources, drafts, aiReleased, words] = await Promise.all([
       this.#context.catalog.read(project),
       this.#context.db.approvals.findMany({ where: { projectId } }),
       this.#context.db.projectAppSources.findMany({
@@ -105,6 +105,9 @@ export class TextsService {
         },
         include: { author: true },
         orderBy: { updatedAt: 'asc' },
+      }),
+      this.#context.db.drafts.findMany({
+        where: { projectId, aiWritten: true, status: DRAFT_STATUSES.RELEASED },
       }),
       this.words(project.workspaceId),
     ])
@@ -135,6 +138,10 @@ export class TextsService {
       draftsByPair.set(key, [...(draftsByPair.get(key) ?? []), draft])
     }
 
+    const aiWrittenValues = new Set(
+      aiReleased.map((draft) => `${pairKey(draft)}|${hashText(draft.value)}`),
+    )
+
     const shownIn = new Map<string, string[]>()
 
     for (const { app, source } of appSources.toSorted((a, b) =>
@@ -156,6 +163,7 @@ export class TextsService {
           approvedBy,
           reviewerNames,
           selfApproved,
+          aiWrittenValues,
           drafts: draftsByPair.get(pairKey({ textId: entry.id, language: translation.language })),
           words,
         }),
@@ -169,6 +177,7 @@ export class TextsService {
     approvedBy: Map<string, string>
     reviewerNames: Map<string, string>
     selfApproved: Set<string>
+    aiWrittenValues: Set<string>
     drafts: Array<Draft & { author: User }> | undefined
     words: GlossaryWords
   }) {
@@ -209,7 +218,12 @@ export class TextsService {
       reviewedBy,
       reviewerName: reviewedBy === null ? null : (options.reviewerNames.get(reviewedBy) ?? null),
       selfApproved: reviewedBy !== null && key !== null && options.selfApproved.has(key),
-      aiWritten: false,
+      aiWritten: approvedDraft
+        ? approvedDraft.aiWritten
+        : translation.hash !== null &&
+          options.aiWrittenValues.has(
+            `${pairKey({ textId: entry.id, language: translation.language })}|${translation.hash}`,
+          ),
       draft: shown
         ? draftView({
             draft: shown,
