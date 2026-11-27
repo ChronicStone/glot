@@ -74,5 +74,8 @@ export const glossaryStatusInputSchema = glossaryConceptRefInputSchema.extend({
 
 export const glossaryRightsSchema = z.object({
   suggest: z.boolean().describe('True when you can suggest concepts and change their terms.'),
-  languages: z.array(languageCodeSchema).describe('The languages whose terms you can change.'),
+  anyLanguage: z.boolean().describe('True when you can change the terms of every language.'),
+  languages: z
+    .array(languageCodeSchema)
+    .describe('The languages whose terms you can change, when not every language.'),
 })

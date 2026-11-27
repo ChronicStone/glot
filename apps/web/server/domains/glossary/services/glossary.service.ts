@@ -7,6 +7,7 @@ import type {
   GlossaryStatusInput,
   WorkspaceRefInput,
 } from '@glot/contract'
+import { GLOSSARY_ERRORS } from '@glot/contract'
 import { GLOSSARY_TERM_STATUSES } from '@glot/database/constants/glossary'
 import type { GlossaryTermStatus } from '@glot/database/types/glossary'
 import { ORPCError } from '@orpc/server'
@@ -54,22 +55,7 @@ export class GlossaryService {
       input.workspaceId,
     )
 
-    const projects = await this.#context.db.projects.findMany({
-      where: { workspaceId: input.workspaceId },
-    })
-
-    const concepts = await this.#concepts({ workspaceId: input.workspaceId })
-
-    return glossaryRightsOf({
-      role: membership.role,
-      languages: membership.languages,
-      workspaceLanguages: [
-        ...new Set([
-          ...projects.flatMap(({ sourceLanguage, languages }) => [sourceLanguage, ...languages]),
-          ...concepts.flatMap(({ terms }) => Object.keys(terms)),
-        ]),
-      ],
-    })
+    return glossaryRightsOf({ role: membership.role, languages: membership.languages })
   }
 
   async wordsToCheck(workspaceId: string) {
@@ -225,7 +211,7 @@ export class GlossaryService {
         touched: options.touched,
       })
     ) {
-      throw new ORPCError('FORBIDDEN')
+      throw new ORPCError('FORBIDDEN', { message: GLOSSARY_ERRORS.FORBIDDEN.message })
     }
   }
 

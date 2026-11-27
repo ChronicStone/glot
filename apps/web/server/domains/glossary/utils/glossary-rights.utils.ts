@@ -69,11 +69,7 @@ export function mayChangeLanguages(options: {
   )
 }
 
-export function glossaryRightsOf(options: {
-  role: WorkspaceRole
-  languages: string[] | null
-  workspaceLanguages: string[]
-}) {
+export function glossaryRightsOf(options: { role: WorkspaceRole; languages: string[] | null }) {
   const anyLanguage = Object.values<string>(GLOSSARY_ANY_LANGUAGE_ROLES).includes(options.role)
 
   const suggest = mayChangeLanguages({
@@ -84,6 +80,7 @@ export function glossaryRightsOf(options: {
 
   return {
     suggest,
-    languages: anyLanguage ? options.workspaceLanguages : suggest ? (options.languages ?? []) : [],
+    anyLanguage,
+    languages: anyLanguage || !suggest ? [] : (options.languages ?? []),
   }
 }

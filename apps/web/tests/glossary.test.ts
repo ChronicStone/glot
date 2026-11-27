@@ -430,22 +430,36 @@ test('owners edit every language, reviewers the languages they review, writers a
 })
 
 test('the glossary screen learns what each person may change: owners every language, reviewers theirs, writers and viewers nothing', async () => {
-  const owner = await as('Olga').glossary.rights({ workspaceId })
-
-  expect(owner.suggest).toBe(true)
-  expect(owner.languages).toEqual(expect.arrayContaining(['fr', 'de', 'pl']))
+  await expect(as('Olga').glossary.rights({ workspaceId })).resolves.toEqual({
+    suggest: true,
+    anyLanguage: true,
+    languages: [],
+  })
 
   await expect(as('Rita').glossary.rights({ workspaceId })).resolves.toEqual({
     suggest: true,
+    anyLanguage: false,
     languages: ['pl'],
   })
 
   for (const name of ['Gina', 'Vic']) {
     await expect(as(name).glossary.rights({ workspaceId })).resolves.toEqual({
       suggest: false,
+      anyLanguage: false,
       languages: [],
     })
   }
+
+  await expect(
+    as('Rita').glossary.createConcept({
+      workspaceId,
+      name: 'auction house',
+      terms: { de: words({ term: 'Auktionshaus' }) },
+    }),
+  ).rejects.toMatchObject({
+    code: 'FORBIDDEN',
+    message: 'Only an owner, an admin or a reviewer of the languages involved changes the glossary',
+  })
 })
 
 test('a concept name is unique in a workspace whatever its case, and a stranger sees nothing', async () => {
