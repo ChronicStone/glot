@@ -4,7 +4,7 @@ import { personInviteInputSchema } from '@glot/contract/validators'
 import { WORKSPACE_ROLES } from '@glot/database/constants/workspaces'
 import { useForm } from '@tanstack/vue-form'
 import { useMutation } from '@tanstack/vue-query'
-import { ROLE_LABELS } from '../constants/people.constants.ts'
+import { ROLE_DESCRIPTIONS, ROLE_LABELS } from '../constants/people.constants.ts'
 
 const open = defineModel<boolean>('open', { required: true })
 
@@ -17,11 +17,7 @@ const { $api, $queryClient } = useNuxtApp()
 const toast = useToast()
 const languages = useWorkspaceLanguages()
 
-const roles = Object.values(WORKSPACE_ROLES).map((role) => ({
-  value: role,
-  label: ROLE_LABELS[role],
-  disabled: role === WORKSPACE_ROLES.OWNER,
-}))
+const roles = Object.values(WORKSPACE_ROLES).filter((role) => role !== WORKSPACE_ROLES.OWNER)
 
 async function saved(message: string) {
   await $queryClient.invalidateQueries({ queryKey: $api.people.key() })
@@ -77,100 +73,143 @@ function dateValue(input: string) {
 </script>
 
 <template>
-  <UModal
+  <AppDialog
     v-model:open="open"
     :title="person ? person.user.name : 'Invite someone'"
-    :description="person ? person.user.email : 'They get a sign-in link by email.'"
+    :description="
+      person
+        ? person.user.email
+        : 'They get a sign-in link by email. Nothing is shared until they sign in.'
+    "
+    :icon="person ? 'i-lucide-user-cog' : 'i-lucide-user-plus'"
   >
-    <template #body>
-      <form id="person-form" class="flex flex-col gap-4" @submit.prevent.stop="form.handleSubmit()">
-        <template v-if="!person">
-          <form.Field v-slot="{ field }" name="email">
-            <UFormField
-              label="Email"
-              required
-              :error="field.state.meta.errors[0]?.message ?? false"
-            >
-              <UInput
-                :model-value="field.state.value"
+    <form
+      id="person-form"
+      class="stack"
+      style="gap: 16px"
+      @submit.prevent.stop="form.handleSubmit()"
+    >
+      <div v-if="!person" style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px">
+        <form.Field v-slot="{ field }" name="email">
+          <div class="field">
+            <span class="label">Email</span>
+            <label :class="{ 'is-error': field.state.meta.errors.length > 0 }" class="input"
+              ><UIcon name="i-lucide-at-sign" /><input
+                :value="field.state.value"
                 type="email"
-                class="w-full"
                 autofocus
-                @update:model-value="field.handleChange"
+                aria-label="Email"
+                @input="field.handleChange(inputValue($event))"
                 @blur="field.handleBlur"
-              />
-            </UFormField>
-          </form.Field>
-          <form.Field v-slot="{ field }" name="name">
-            <UFormField label="Name">
-              <UInput
-                :model-value="field.state.value ?? ''"
-                class="w-full"
-                @update:model-value="(name: string) => field.handleChange(name || undefined)"
-              />
-            </UFormField>
-          </form.Field>
-        </template>
-        <form.Field v-slot="{ field }" name="role">
-          <UFormField label="Role">
-            <USelect
-              :model-value="field.state.value"
-              :items="roles"
-              class="w-full"
-              @update:model-value="field.handleChange"
-            />
-          </UFormField>
+            /></label>
+            <span v-if="field.state.meta.errors[0]" class="hint err">{{
+              field.state.meta.errors[0]?.message
+            }}</span>
+          </div>
         </form.Field>
-        <form.Field v-slot="{ field }" name="languages">
-          <UFormField label="Languages they change">
-            <div class="flex flex-col gap-3">
-              <USwitch
-                :model-value="field.state.value === null"
-                label="Every language"
-                @update:model-value="(every: boolean) => field.handleChange(every ? null : [])"
-              />
-              <UCheckboxGroup
-                v-if="field.state.value !== null"
-                :model-value="field.state.value"
-                :items="languages"
-                orientation="horizontal"
-                variant="card"
-                :ui="{ item: 'font-mono' }"
-                @update:model-value="field.handleChange"
-              />
-            </div>
-          </UFormField>
+        <form.Field v-slot="{ field }" name="name">
+          <div class="field">
+            <span class="label">Name</span>
+            <label class="input"
+              ><input
+                :value="field.state.value ?? ''"
+                aria-label="Name"
+                @input="field.handleChange(inputValue($event) || undefined)"
+            /></label>
+          </div>
         </form.Field>
-        <form.Field v-slot="{ field }" name="expiresAt">
-          <UFormField label="Access until" hint="Leave empty for ongoing access">
-            <UInput
-              :model-value="dateInput(field.state.value ?? null)"
+      </div>
+      <form.Field v-slot="{ field }" name="role">
+        <div class="field">
+          <span class="label">Role</span>
+          <div class="role-cards">
+            <button
+              v-for="role in roles"
+              :key="role"
+              type="button"
+              :class="{ on: field.state.value === role }"
+              class="role-card"
+              @click="field.handleChange(role)"
+            >
+              <b>{{ ROLE_LABELS[role] }}</b><span>{{ ROLE_DESCRIPTIONS[role] }}</span>
+            </button>
+          </div>
+        </div>
+      </form.Field>
+      <form.Field v-slot="{ field }" name="languages">
+        <div class="field">
+          <span class="label">Languages they change</span>
+          <div class="toggles">
+            <button
+              type="button"
+              :class="{ on: field.state.value === null }"
+              class="tog"
+              @click="field.handleChange(field.state.value === null ? [] : null)"
+            >
+              <UIcon v-if="field.state.value === null" name="i-lucide-check" class="ic-13" />All
+              languages
+            </button>
+            <button
+              v-for="code in languages"
+              :key="code"
+              type="button"
+              :class="{ on: field.state.value?.includes(code), dis: field.state.value === null }"
+              class="tog"
+              :disabled="field.state.value === null"
+              @click="
+                field.handleChange(
+                  field.state.value?.includes(code)
+                    ? field.state.value.filter((item) => item !== code)
+                    : [...(field.state.value ?? []), code],
+                )
+              "
+            >
+              <UIcon
+                v-if="field.state.value?.includes(code)"
+                name="i-lucide-check"
+                class="ic-13"
+              /><span class="mono">{{ code }}</span>{{ languageName(code) }}
+            </button>
+          </div>
+        </div>
+      </form.Field>
+      <form.Field v-slot="{ field }" name="expiresAt">
+        <div class="field">
+          <span class="label">Access ends</span>
+          <label class="input" style="max-width: 260px"
+            ><UIcon name="i-lucide-calendar" /><input
               type="date"
-              class="w-full"
-              @update:model-value="(input: string) => field.handleChange(dateValue(input))"
-            />
-          </UFormField>
-        </form.Field>
-      </form>
-    </template>
+              :value="dateInput(field.state.value ?? null)"
+              aria-label="Access ends"
+              @input="field.handleChange(dateValue(inputValue($event)))"
+          /></label>
+          <span class="hint">Leave empty for ongoing access.</span>
+        </div>
+      </form.Field>
+    </form>
     <template #footer>
-      <UButton
+      <button
         v-if="person"
-        label="Remove"
-        color="error"
-        variant="ghost"
-        :loading="remove.isPending.value"
+        type="button"
+        class="btn btn-ghost"
+        style="color: var(--glot-fix)"
+        :class="{ 'is-loading': remove.isPending.value }"
         @click="remove.mutate({ membershipId: person.id })"
-      />
-      <span class="flex-1" />
-      <UButton label="Cancel" color="neutral" variant="ghost" @click="open = false" />
-      <UButton
+      >
+        <UIcon name="i-lucide-user-x" />Remove
+      </button>
+      <span class="g-grow" />
+      <button type="button" class="btn btn-ghost" @click="open = false">Cancel</button>
+      <button
         type="submit"
         form="person-form"
-        color="neutral"
-        :label="person ? 'Save' : 'Send invitation'"
-        :loading="submitting"
-      />
+        class="btn btn-primary"
+        :class="{ 'is-loading': submitting }"
+      >
+        <UIcon :name="person ? 'i-lucide-check' : 'i-lucide-send'" />{{
+          person ? 'Save' : 'Send invite'
+        }}
+      </button>
     </template>
-  </UModal>
+  </AppDialog>
 </template>

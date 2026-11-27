@@ -13,19 +13,15 @@ defineSlots<Record<`cell-${string}`, (props: { row: TData }) => unknown>>()
 </script>
 
 <template>
-  <table class="w-full border-separate border-spacing-0 text-left">
+  <table class="tbl ptbl">
     <thead>
       <tr v-for="group in table.getHeaderGroups()" :key="group.id">
-        <th
-          v-for="header in group.headers"
-          :key="header.id"
-          scope="col"
-          class="border-b border-line px-3 pt-3.5 pb-2.5 text-xs font-medium whitespace-nowrap text-ink-3 first:pl-6 last:pr-5"
-        >
+        <th v-for="header in group.headers" :key="header.id" scope="col" style="padding-top: 16px">
           <button
             v-if="header.column.getCanSort()"
             type="button"
-            class="inline-flex items-center gap-1 hover:text-ink"
+            class="row-flex"
+            style="gap: 4px"
             @click="header.column.toggleSorting()"
           >
             <FlexRender :header="header" />
@@ -34,7 +30,7 @@ defineSlots<Record<`cell-${string}`, (props: { row: TData }) => unknown>>()
               :name="
                 header.column.getIsSorted() === 'asc' ? 'i-lucide-arrow-up' : 'i-lucide-arrow-down'
               "
-              class="size-3"
+              class="ic-13"
             />
           </button>
           <FlexRender v-else-if="!header.isPlaceholder" :header="header" />
@@ -44,28 +40,21 @@ defineSlots<Record<`cell-${string}`, (props: { row: TData }) => unknown>>()
     <tbody>
       <template v-if="loading">
         <tr v-for="line in [56, 44, 62]" :key="line">
-          <td
-            v-for="column in table.getAllLeafColumns()"
-            :key="column.id"
-            class="border-b border-line px-3 py-4 first:pl-6 last:pr-5"
-          >
-            <USkeleton class="h-3" :style="{ width: `${line}%` }" />
+          <td v-for="column in table.getAllLeafColumns()" :key="column.id">
+            <div class="sk" :style="{ height: '12px', width: `${line}%` }" />
           </td>
         </tr>
       </template>
       <tr v-else-if="table.getRowModel().rows.length === 0">
-        <td
-          :colspan="table.getAllLeafColumns().length"
-          class="px-6 pt-14 pb-16 text-center text-ink-3"
-        >
-          {{ empty }}
+        <td :colspan="table.getAllLeafColumns().length">
+          <div class="empty"><p>{{ empty }}</p></div>
         </td>
       </tr>
-      <tr v-for="row in table.getRowModel().rows" v-else :key="row.id" class="group">
+      <tr v-for="row in table.getRowModel().rows" v-else :key="row.id">
         <td
           v-for="cell in row.getAllCells()"
           :key="cell.id"
-          class="border-b border-line px-3 py-3 align-middle text-sm text-ink transition-colors duration-[120ms] group-last:border-b-0 group-hover:bg-hover first:pl-6 last:pr-5"
+          :class="{ r: cell.column.id === 'actions' }"
         >
           <slot :name="`cell-${cell.column.id}`" :row="row.original">
             <FlexRender :cell="cell" />

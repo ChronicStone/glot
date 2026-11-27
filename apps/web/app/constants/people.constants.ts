@@ -24,3 +24,12 @@ export const AVATAR_COLORS = {
   SKY: '#5e94b8',
   SLATE: '#8a94a6',
 } as const
+
+export const ROLE_DESCRIPTIONS = {
+  [WORKSPACE_ROLES.OWNER]: 'Everything, including the workspace',
+  [WORKSPACE_ROLES.ADMIN]: 'People, projects and every language',
+  [WORKSPACE_ROLES.DEVELOPER]: 'Links, markup, shared email blocks',
+  [WORKSPACE_ROLES.WRITER]: 'Writes French and given languages',
+  [WORKSPACE_ROLES.REVIEWER]: 'Writes and approves their languages',
+  [WORKSPACE_ROLES.VIEWER]: 'Reads and comments',
+} as const

@@ -32,49 +32,62 @@ watch(open, (isOpen) => {
 </script>
 
 <template>
-  <UModal
+  <AppDialog
     v-model:open="open"
-    :title="created ? 'Copy the key now' : 'New API key'"
-    :description="created ? 'It is shown only once.' : 'For an agent, a script or CI.'"
+    :title="created ? 'Copy this key now' : 'Create a key'"
+    :description="
+      created
+        ? 'You won’t see it again. Store it in your CI secrets.'
+        : 'For an agent, a script or CI.'
+    "
+    :icon="created ? 'i-lucide-check' : 'i-lucide-key-round'"
+    :tone="created ? 'ok' : ''"
   >
-    <template #body>
-      <div v-if="created" class="flex gap-2">
-        <UInput :model-value="created" readonly class="flex-1 font-mono" />
-        <UButton
-          :icon="copied ? 'i-lucide-check' : 'i-lucide-copy'"
-          :label="copied ? 'Copied' : 'Copy'"
-          color="neutral"
-          variant="outline"
-          @click="copy(created)"
-        />
-      </div>
-      <form v-else id="key-form" @submit.prevent.stop="form.handleSubmit()">
-        <form.Field v-slot="{ field }" name="name">
-          <UFormField label="Name" :error="field.state.meta.errors[0]?.message ?? false">
-            <UInput
-              :model-value="field.state.value"
-              placeholder="Release agent"
-              class="w-full"
+    <div v-if="created" class="keywell">
+      <span>{{ created }}</span
+      ><button type="button" class="btn btn-primary btn-sm" @click="copy(created)">
+        <UIcon :name="copied ? 'i-lucide-check' : 'i-lucide-copy'" />{{
+          copied ? 'Copied' : 'Copy'
+        }}
+      </button>
+    </div>
+    <form v-else id="key-form" @submit.prevent.stop="form.handleSubmit()">
+      <form.Field v-slot="{ field }" name="name">
+        <div class="field">
+          <span class="label">Name</span>
+          <label :class="{ 'is-error': field.state.meta.errors.length > 0 }" class="input"
+            ><input
+              :value="field.state.value"
+              placeholder="CI agent"
               autofocus
-              @update:model-value="field.handleChange"
-            />
-          </UFormField>
-        </form.Field>
-      </form>
-    </template>
+              aria-label="Name"
+              @input="field.handleChange(inputValue($event))"
+          /></label>
+          <span v-if="field.state.meta.errors[0]" class="hint err">{{
+            field.state.meta.errors[0]?.message
+          }}</span>
+        </div>
+      </form.Field>
+    </form>
     <template #footer>
-      <span class="flex-1" />
-      <UButton v-if="created" label="Done" color="neutral" @click="open = false" />
+      <span class="muted" style="font-size: 13px">{{
+        created ? 'Lost it? Revoke it and create another.' : ''
+      }}</span>
+      <span class="g-grow" />
+      <button v-if="created" type="button" class="btn btn-primary" @click="open = false">
+        Done
+      </button>
       <template v-else>
-        <UButton label="Cancel" color="neutral" variant="ghost" @click="open = false" />
-        <UButton
+        <button type="button" class="btn btn-ghost" @click="open = false">Cancel</button>
+        <button
           type="submit"
           form="key-form"
-          label="Create key"
-          color="neutral"
-          :loading="submitting"
-        />
+          class="btn btn-primary"
+          :class="{ 'is-loading': submitting }"
+        >
+          Create key
+        </button>
       </template>
     </template>
-  </UModal>
+  </AppDialog>
 </template>
