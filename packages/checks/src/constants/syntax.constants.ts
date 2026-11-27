@@ -24,6 +24,23 @@ export const MESSAGE_LOCALIZED_ATTRIBUTES = {
   LANG: 'lang',
 } as const
 
+export const ACTIVE_ATTRIBUTES = {
+  STYLE: 'style',
+  HREF: 'href',
+  SRC: 'src',
+  SRCSET: 'srcset',
+  SRCDOC: 'srcdoc',
+  ACTION: 'action',
+  FORMACTION: 'formaction',
+  XLINK_HREF: 'xlink:href',
+  POSTER: 'poster',
+  BACKGROUND: 'background',
+  DATA: 'data',
+  IS: 'is',
+} as const
+
+export const EVENT_ATTRIBUTE_PREFIX = 'on'
+
 export const HTML_VOID_ELEMENTS = {
   AREA: 'area',
   BASE: 'base',

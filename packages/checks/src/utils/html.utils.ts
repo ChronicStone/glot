@@ -1,4 +1,8 @@
-import { HTML_VOID_ELEMENTS } from '../constants/syntax.constants.ts'
+import {
+  ACTIVE_ATTRIBUTES,
+  EVENT_ATTRIBUTE_PREFIX,
+  HTML_VOID_ELEMENTS,
+} from '../constants/syntax.constants.ts'
 import type { HtmlTag } from '../types/checks.types.ts'
 
 const HTML_TAG_PATTERN =
@@ -14,7 +18,11 @@ const ABRUPT_COMMENT_PATTERN = /--!>|<!--->|<!-->/u
 
 const COMMENT_DIRECTIVE_PATTERN = /\[[^\]]*\]/gu
 
-const EQUALS_TOKEN_PATTERN = /([A-Za-z0-9_-]*)\s*=/gu
+const EQUALS_TOKEN_PATTERN = /([A-Za-z0-9_:-]*)\s*=/gu
+
+const LEADING_EQUALS_PATTERN = /^\s*=/u
+
+const ACTIVE = new Set<string>(Object.values(ACTIVE_ATTRIBUTES))
 
 const VOID_ELEMENTS = new Set<string>(Object.values(HTML_VOID_ELEMENTS))
 
@@ -110,10 +118,21 @@ export function hasAbruptComment(message: string) {
 }
 
 export function commentMarkupOf(comment: string) {
+  const inner = comment.slice(4, -3)
+
   return [
-    ...[...comment.matchAll(HTML_TAG_PATTERN)].map((match) => match[0]),
-    ...(comment.match(COMMENT_DIRECTIVE_PATTERN) ?? []),
+    ...[...inner.matchAll(HTML_TAG_PATTERN)].map((match) => match[0]),
+    ...(inner.match(COMMENT_DIRECTIVE_PATTERN) ?? []),
+    ...strayMarkupOf(inner).map(({ markup }) => markup),
   ].join('')
+}
+
+export function isActiveAttribute(name: string) {
+  return ACTIVE.has(name) || (name.startsWith(EVENT_ATTRIBUTE_PREFIX) && name.length > 2)
+}
+
+export function startsWithEquals(message: string) {
+  return LEADING_EQUALS_PATTERN.test(message)
 }
 
 export function markedFreeValuesOf(message: string, options: { freeValues: readonly string[] }) {

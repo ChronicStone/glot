@@ -626,3 +626,35 @@ test('plural forms may each keep their own link', () => {
     }),
   ).toEqual([])
 })
+
+test('a text cannot end on a < that the next text could turn into a tag, nor hide a = in a comment', () => {
+  expect(codes({ source: 'Moins que', target: 'Less than <' })).toEqual(['HTML_TAGS'])
+
+  expect(
+    codes({ source: 'Bonjour <!-- note --> toi', target: 'Hello <!-- onerror=alert(1) --> you' }),
+  ).toEqual(['HTML_TAGS'])
+})
+
+test('no text can carry a script attribute in a comment or at its start, and translating the word before a = is fine', () => {
+  expect(
+    codes({
+      source: 'Prix <!-- note --> HT',
+      target: 'details open <!-- ontoggle=alert(1) --> x <',
+    }),
+  ).toEqual(['HTML_TAGS'])
+
+  expect(
+    codes({ source: '@:lt <b>ok</b>', target: '@:lt <!-- onmouseover=alert(5) --> <b>ok</b>' }),
+  ).toEqual(['HTML_TAGS'])
+
+  expect(codes({ source: 'Quantité = 3', target: '=alert(4) 3' })).toEqual(['HTML_TAGS'])
+
+  for (const [source, target] of [
+    ['Total = {n} €', 'Razem = {n} €'],
+    ['Quantité = 3', 'Quantity = 3'],
+    ['1 point = 1 €', '1 Punkt = 1 €'],
+    ['Frais = 10 %', 'Fee = 10%'],
+  ]) {
+    expect(codes({ source: source ?? '', target: target ?? '' })).toEqual([])
+  }
+})

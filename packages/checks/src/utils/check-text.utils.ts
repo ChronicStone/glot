@@ -12,10 +12,12 @@ import {
   equalsTokensOf,
   hasAbruptComment,
   htmlCommentsOf,
+  isActiveAttribute,
   htmlLinksOf,
   htmlMarkupOf,
   htmlTagsNest,
   markedFreeValuesOf,
+  startsWithEquals,
   strayMarkupOf,
   withoutHtmlComments,
 } from './html.utils.ts'
@@ -116,8 +118,10 @@ function markupFailures(input: {
   const target = input.target.map(withoutHtmlComments)
   const sourceStray = source.flatMap(strayMarkupOf)
   const sourceSegments = new Set(sourceStray.map(({ markup }) => markup))
-  const sourceClosers = Math.max(0, ...source.map(bareClosersOf))
-  const sourceTokens = source.flatMap(equalsTokensOf)
+  const sourceClosers = Math.max(0, ...input.source.map(bareClosersOf))
+  const sourceTokens = new Set(input.source.flatMap(equalsTokensOf))
+  const sourceEquals = Math.max(0, ...input.source.map((form) => equalsTokensOf(form).length))
+  const sourceLeadingEquals = input.source.some(startsWithEquals)
 
   const sourceMarked = new Set(
     input.source.flatMap((form) => markedFreeValuesOf(form, { freeValues: input.freeValues })),
@@ -156,6 +160,10 @@ function markupFailures(input: {
       ({ markup: found }) => !input.exactStray || !sourceSegments.has(found),
     )
 
+    if (input.proseRules && form.endsWith('<')) {
+      stray.push({ markup: '<', closed: false })
+    }
+
     if (stray.length > 0) {
       problems.add(
         `A tag or comment is left open: ${stray.map(({ markup: found }) => found).join(' ')}.${input.exactStray ? '' : ' Write &lt; for a less-than sign.'}`,
@@ -170,15 +178,19 @@ function markupFailures(input: {
       problems.add('A title, alt or label cannot hold < or >.')
     }
 
-    if (input.proseRules && bareClosersOf(form) > sourceClosers) {
+    if (input.proseRules && bareClosersOf(input.target[index] ?? '') > sourceClosers) {
       problems.add(
         'A > is not in the source text: it could close a tag. Use › or the sign the source uses.',
       )
     }
 
+    const tokens = equalsTokensOf(input.target[index] ?? '')
+
     if (
       input.proseRules &&
-      difference({ from: equalsTokensOf(form), without: sourceTokens }).length > 0
+      (tokens.length > sourceEquals ||
+        tokens.some((token) => isActiveAttribute(token) && !sourceTokens.has(token)) ||
+        (startsWithEquals(input.target[index] ?? '') && !sourceLeadingEquals))
     ) {
       problems.add('A = is not where the source has it: it could add an attribute.')
     }

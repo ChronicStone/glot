@@ -293,3 +293,24 @@ test('a > inside an attribute of an Outlook comment does not hide a changed link
     }),
   ).toEqual(['MARKUP'])
 })
+
+test('a stray tag inside an Outlook comment is compared like the rest of the markup', () => {
+  const source =
+    '<!--[if mso]><v:roundrect href="https://agorastore.fr/lot">Voir le lot</v:roundrect><![endif]-->'
+
+  expect(
+    codes({
+      source,
+      target:
+        '<!--[if mso]><v:roundrect href="https://agorastore.fr/lot"><a href="https://evil.example" See the lot</v:roundrect><![endif]-->',
+    }),
+  ).toEqual(['MARKUP'])
+
+  expect(
+    codes({
+      source,
+      target:
+        '<!--[if mso]><v:roundrect href="https://agorastore.fr/lot">See the lot</v:roundrect><![endif]-->',
+    }),
+  ).toEqual([])
+})
