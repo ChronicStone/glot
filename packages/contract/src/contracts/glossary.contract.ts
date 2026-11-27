@@ -12,9 +12,11 @@ import {
   glossaryConceptsInputSchema,
   glossaryConceptUpdateInputSchema,
   glossaryListInputSchema,
+  glossaryRightsSchema,
   glossaryStatusInputSchema,
   glossaryTermSchema,
 } from '../validators/glossary.validator.ts'
+import { workspaceRefInputSchema } from '../validators/people.validator.ts'
 
 const PEOPLE_ONLY_GLOSSARY_ERRORS = { ...GLOSSARY_ERRORS, ...PEOPLE_ONLY_ERRORS }
 
@@ -48,6 +50,21 @@ export const glossaryContract = {
     )
     .input(glossaryConceptsInputSchema)
     .output(z.array(glossaryTermSchema))
+    .errors(NOT_FOUND_ERRORS),
+  rights: oc
+    .meta(
+      openapi({
+        method: 'GET',
+        path: '/workspaces/{workspaceId}/glossary/rights',
+        operationId: 'getGlossaryRights',
+        summary: 'What you can change in the glossary',
+        description:
+          'Whether you can suggest concepts, and the languages whose terms you can change. Owners and admins change every language; reviewers change the languages they review.',
+        tags: ['glossary'],
+      }),
+    )
+    .input(workspaceRefInputSchema)
+    .output(glossaryRightsSchema)
     .errors(NOT_FOUND_ERRORS),
   createConcept: oc
     .meta(

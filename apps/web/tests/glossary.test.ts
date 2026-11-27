@@ -429,6 +429,25 @@ test('owners edit every language, reviewers the languages they review, writers a
   expect(names).not.toContain('buyer')
 })
 
+test('the glossary screen learns what each person may change: owners every language, reviewers theirs, writers and viewers nothing', async () => {
+  const owner = await as('Olga').glossary.rights({ workspaceId })
+
+  expect(owner.suggest).toBe(true)
+  expect(owner.languages).toEqual(expect.arrayContaining(['fr', 'de', 'pl']))
+
+  await expect(as('Rita').glossary.rights({ workspaceId })).resolves.toEqual({
+    suggest: true,
+    languages: ['pl'],
+  })
+
+  for (const name of ['Gina', 'Vic']) {
+    await expect(as(name).glossary.rights({ workspaceId })).resolves.toEqual({
+      suggest: false,
+      languages: [],
+    })
+  }
+})
+
 test('a concept name is unique in a workspace whatever its case, and a stranger sees nothing', async () => {
   await expect(
     as('Olga').glossary.createConcept({
@@ -545,6 +564,7 @@ test('the glossary is in the OpenAPI document and the MCP tools, without the dec
       '/workspaces/{workspaceId}/glossary',
       '/glossary/{conceptId}',
       '/glossary/{conceptId}/status',
+      '/workspaces/{workspaceId}/glossary/rights',
     ]),
   )
 

@@ -8,6 +8,9 @@ export const glossaryRouter = {
   listConcepts: procedures.glossary.listConcepts.handler(({ input, context }) =>
     new GlossaryService(context).listConcepts(input),
   ),
+  rights: procedures.glossary.rights.handler(({ input, context }) =>
+    new GlossaryService(context).rights(input),
+  ),
   createConcept: procedures.glossary.createConcept.handler(({ input, context }) =>
     new GlossaryService(context).createConcept(input),
   ),

@@ -5,6 +5,7 @@ import type {
   GlossaryConceptUpdateInput,
   GlossaryListInput,
   GlossaryStatusInput,
+  WorkspaceRefInput,
 } from '@glot/contract'
 import { GLOSSARY_TERM_STATUSES } from '@glot/database/constants/glossary'
 import type { GlossaryTermStatus } from '@glot/database/types/glossary'
@@ -13,6 +14,7 @@ import type { RequestContext } from '../../../types/context.types.ts'
 import { WorkspaceAccessService } from '../../people/services/workspace-access.service.ts'
 import { ProjectsService } from '../../projects/services/projects.service.ts'
 import {
+  glossaryRightsOf,
   mayChangeLanguages,
   normalizeTerms,
   touchedLanguages,
@@ -45,6 +47,29 @@ export class GlossaryService {
     await new WorkspaceAccessService(this.#context).membershipOf(input.workspaceId)
 
     return this.#concepts(input)
+  }
+
+  async rights(input: WorkspaceRefInput) {
+    const membership = await new WorkspaceAccessService(this.#context).membershipOf(
+      input.workspaceId,
+    )
+
+    const projects = await this.#context.db.projects.findMany({
+      where: { workspaceId: input.workspaceId },
+    })
+
+    const concepts = await this.#concepts({ workspaceId: input.workspaceId })
+
+    return glossaryRightsOf({
+      role: membership.role,
+      languages: membership.languages,
+      workspaceLanguages: [
+        ...new Set([
+          ...projects.flatMap(({ sourceLanguage, languages }) => [sourceLanguage, ...languages]),
+          ...concepts.flatMap(({ terms }) => Object.keys(terms)),
+        ]),
+      ],
+    })
   }
 
   async wordsToCheck(workspaceId: string) {

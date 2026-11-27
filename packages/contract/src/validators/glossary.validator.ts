@@ -71,3 +71,8 @@ export const glossaryConceptUpdateInputSchema = conceptDetailsSchema.extend(
 export const glossaryStatusInputSchema = glossaryConceptRefInputSchema.extend({
   status: glossaryTermStatusSchema,
 })
+
+export const glossaryRightsSchema = z.object({
+  suggest: z.boolean().describe('True when you can suggest concepts and change their terms.'),
+  languages: z.array(languageCodeSchema).describe('The languages whose terms you can change.'),
+})
