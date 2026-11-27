@@ -56,3 +56,5 @@ export const HOST_EVENTS = {
 } as const
 
 export const CARET_STOP = '\u200B'
+
+export const NARROW_SCREEN = '(max-width: 760px)'

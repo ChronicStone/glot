@@ -145,6 +145,10 @@ a {
   .nav {
     gap: 14px;
     padding: 0 16px;
+    white-space: nowrap;
+  }
+  .nav .wide {
+    display: none;
   }
   .page {
     padding: 20px 16px;

@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { DRAFT_STATUSES } from '@glot/database/constants/drafts'
 import { TEXT_STATES } from '@glot/database/constants/texts'
+import { useMediaQuery } from '@vueuse/core'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { App } from 'vue'
 import type { Composer } from 'vue-i18n'
 import { usePageHits } from '../composables/use-page-hits.ts'
 import { usePageTexts } from '../composables/use-page-texts.ts'
 import { useWidgetSession } from '../composables/use-widget-session.ts'
+import { NARROW_SCREEN } from '../constants/widget.constants.ts'
 import type {
   KeyLog,
   OutlineBox,
@@ -35,6 +37,7 @@ const props = defineProps<{
 const drawerOpen = ref<boolean>(false)
 const editing = ref<{ key: string; hitId: string | null } | null>(null)
 const hovered = ref<PlacedHit | null>(null)
+const narrow = useMediaQuery(NARROW_SCREEN)
 
 const { session, client, failure, signingIn, signIn } = useWidgetSession(props.options)
 const { texts, unreachable, replace } = usePageTexts({ session, client, log: props.log })
@@ -224,7 +227,7 @@ function pick(row: PageRow) {
     const element =
       found.hit.node instanceof Element ? found.hit.node : found.hit.node.parentElement
 
-    element?.scrollIntoView({ block: 'center', behavior: 'instant' })
+    element?.scrollIntoView({ block: narrow.value ? 'start' : 'center', behavior: 'instant' })
   }
 
   editing.value = { key: row.key, hitId: found?.hit.id ?? null }
@@ -327,7 +330,7 @@ onBeforeUnmount(() => {
     @saved="refreshEdited"
   />
   <GlotDrawer
-    v-if="drawerOpen && session"
+    v-if="drawerOpen && session && !(narrow && editing)"
     :rows="rows"
     :language="language"
     :languages="languages"

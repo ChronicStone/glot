@@ -4,9 +4,10 @@ import type { DraftView, Text } from '@glot/contract'
 import { TEXT_STATES } from '@glot/database/constants/texts'
 import type { GlotClient } from '@glot/sdk'
 import { TEXT_STATE_CLASSES, TEXT_STATE_LABELS } from '@glot/ui/constants'
+import { useMediaQuery } from '@vueuse/core'
 import { computed, onBeforeUnmount, ref, useTemplateRef, watch } from 'vue'
 import type { Composer } from 'vue-i18n'
-import { WIDGET_LAYOUT } from '../constants/widget.constants.ts'
+import { NARROW_SCREEN, WIDGET_LAYOUT } from '../constants/widget.constants.ts'
 import { nestMessage, withoutPath } from '../utils/message.utils.ts'
 import { translationIn } from '../utils/text.utils.ts'
 import GlotIcon from './GlotIcon.vue'
@@ -100,7 +101,17 @@ function restore() {
   }
 }
 
+const narrow = useMediaQuery(NARROW_SCREEN)
+
 const position = computed(() => {
+  if (narrow.value && props.anchor && props.anchor.top > window.innerHeight / 2) {
+    return { left: '0px', right: '0px', top: '0px', width: 'auto', borderRadius: '0 0 20px 20px' }
+  }
+
+  if (narrow.value) {
+    return { left: '0px', right: '0px', bottom: '0px', width: 'auto' }
+  }
+
   const space = props.drawerOpen ? WIDGET_LAYOUT.DRAWER_SPACE : 0
   const maxLeft = window.innerWidth - space - WIDGET_LAYOUT.EDITOR_WIDTH - WIDGET_LAYOUT.EDGE
 

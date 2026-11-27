@@ -169,6 +169,7 @@
         "@nuxt/kit": "catalog:",
         "@tailwindcss/node": "catalog:",
         "@tailwindcss/oxide": "catalog:",
+        "@vueuse/core": "catalog:",
         "tailwindcss": "catalog:",
         "vue": "catalog:",
       },

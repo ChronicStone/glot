@@ -29,3 +29,21 @@
 .glot-w {
   pointer-events: auto;
 }
+
+@media (max-width: 760px) {
+  .w-drawer {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    height: min(70%, 560px);
+    border-radius: 20px 20px 0 0;
+  }
+
+  .w-edit {
+    z-index: 5;
+    border-radius: 20px 20px 0 0;
+    padding-bottom: 20px;
+  }
+}
