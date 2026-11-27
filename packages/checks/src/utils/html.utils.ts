@@ -6,7 +6,7 @@ const HTML_TAG_PATTERN =
 
 const HTML_ATTRIBUTE_PATTERN = /([^\s"'<>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'<>]+)))?/gu
 
-const STRAY_MARKUP_PATTERN = /<(?:\/?[a-zA-Z]|!|\?|\/(?![a-zA-Z]))[^<>]*/gu
+const STRAY_MARKUP_PATTERN = /<(?:\/?[a-zA-Z]|!|\?|\/)/gu
 
 const VOID_ELEMENTS = new Set<string>(Object.values(HTML_VOID_ELEMENTS))
 
@@ -14,7 +14,7 @@ export function htmlTagsOf(message: string): HtmlTag[] {
   return [...message.matchAll(HTML_TAG_PATTERN)].map((match) => ({
     closing: match[1] === '/',
     name: match[2]?.toLowerCase() ?? '',
-    selfClosing: match[4] === '/',
+    selfClosing: match[4] === '/' && !VOID_ELEMENTS.has(match[2]?.toLowerCase() ?? ''),
     attributes: [...(match[3] ?? '').matchAll(HTML_ATTRIBUTE_PATTERN)].map((attribute) => ({
       name: attribute[1]?.toLowerCase() ?? '',
       value: attribute[2] ?? attribute[3] ?? attribute[4] ?? '',
@@ -70,7 +70,5 @@ export function htmlTagRanges(message: string) {
 }
 
 export function strayMarkupOf(message: string) {
-  return [...withoutHtmlTags(message).matchAll(STRAY_MARKUP_PATTERN)].map((match) =>
-    match[0].trim(),
-  )
+  return [...withoutHtmlTags(message).matchAll(STRAY_MARKUP_PATTERN)].map((match) => match[0])
 }

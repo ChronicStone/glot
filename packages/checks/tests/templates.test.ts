@@ -151,7 +151,7 @@ test('a tag left open is refused: it would turn the rest of the email into a lin
     {
       code: 'MARKUP',
       message:
-        'The markup and links must match the source text: only a Developer changes them. A tag or comment is left open: <a href="https://evil.example/login".',
+        'The markup and links must match the source text: only a Developer changes them. A tag or comment is left open: <a.',
     },
   ])
 
@@ -219,4 +219,15 @@ test('email tags close in the order they open', () => {
       target: '<b><a href="{{url}}">See</b></a>',
     }),
   ).toEqual(['MARKUP'])
+})
+
+test('a placeholder cannot become a tag name in an email', () => {
+  expect(
+    codes({
+      source: 'Bonjour {{firstName}}',
+      target: 'Hello <{{firstName}} style="position:fixed">',
+    }),
+  ).toEqual(['MARKUP'])
+
+  expect(codes({ source: 'Si {{a}}<{{b}} alors', target: 'If {{a}}<{{b}} then' })).toEqual([])
 })

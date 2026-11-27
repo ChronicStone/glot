@@ -8,18 +8,20 @@ export const TEMPLATE_LINK_PROTOCOLS = {
   MAILTO: 'mailto:',
 } as const
 
-export const MESSAGE_LINK_PREFIXES = {
+export const MESSAGE_LINK_PROTOCOLS = {
   HTTPS: 'https:',
   MAILTO: 'mailto:',
-  ANCHOR: '#',
-  PATH: '/',
+  TEL: 'tel:',
 } as const
+
+export const PLACEHOLDER_STAND_IN = 'placeholder'
 
 export const MESSAGE_LOCALIZED_ATTRIBUTES = {
   HREF: 'href',
   TITLE: 'title',
   ALT: 'alt',
   ARIA_LABEL: 'aria-label',
+  LANG: 'lang',
 } as const
 
 export const HTML_VOID_ELEMENTS = {

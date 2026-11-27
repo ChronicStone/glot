@@ -2,6 +2,7 @@ import { createParser } from '@intlify/message-compiler'
 import type { LinkedNode, MessageNode } from '@intlify/message-compiler'
 import {
   MESSAGE_NODE_TYPES,
+  PLACEHOLDER_STAND_IN,
   SYNTAXES,
   SYNTAX_PROBLEMS,
   UNKNOWN_SYNTAX_PROBLEM,
@@ -69,6 +70,18 @@ export function plainTextOf(forms: MessageNode[]) {
         : ' ',
     )
     .join('')
+}
+
+export function renderedForms(forms: MessageNode[]) {
+  return forms.map((form) =>
+    form.items
+      .map((item) =>
+        item.type === MESSAGE_NODE_TYPES.TEXT || item.type === MESSAGE_NODE_TYPES.LITERAL
+          ? (item.value ?? '')
+          : PLACEHOLDER_STAND_IN,
+      )
+      .join(''),
+  )
 }
 
 export function messageSegments(message: string, options: { syntax?: Syntax } = {}): TextSegment[] {

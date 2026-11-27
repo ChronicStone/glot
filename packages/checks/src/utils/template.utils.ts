@@ -1,6 +1,6 @@
-import { TEMPLATE_UNMATCHED_PROBLEM } from '../constants/syntax.constants.ts'
+import { PLACEHOLDER_STAND_IN, TEMPLATE_UNMATCHED_PROBLEM } from '../constants/syntax.constants.ts'
 import type { TextSegment } from '../types/checks.types.ts'
-import { strayMarkupOf, withoutHtmlTags } from './html.utils.ts'
+import { withoutHtmlTags } from './html.utils.ts'
 
 const TEMPLATE_TOKEN_PATTERN = /\{\{\{[\s\S]*?\}\}\}|\{\{[\s\S]*?\}\}|\[\[[\s\S]*?\]\]/gu
 const TEMPLATE_LEFTOVER_PATTERN = /\{\{|\}\}|\[\[|\]\]/u
@@ -62,6 +62,6 @@ export function templateSegments(message: string): TextSegment[] {
   return segments
 }
 
-export function templateStrayMarkupOf(message: string) {
-  return strayMarkupOf(message.replace(TEMPLATE_TOKEN_PATTERN, ' '))
+export function templateRendered(message: string) {
+  return message.replace(TEMPLATE_TOKEN_PATTERN, PLACEHOLDER_STAND_IN)
 }

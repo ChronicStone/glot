@@ -98,7 +98,7 @@ test('HTML tags must be the same as in the source', () => {
     },
   ])
 
-  expect(codes({ source: 'Ligne<br/>suivante', target: 'Next<br>line' })).toEqual(['HTML_TAGS'])
+  expect(codes({ source: 'Ligne<br/>suivante', target: 'Next<br>line' })).toEqual([])
   expect(codes({ source: '<b>{name}</b>', target: '<i>{name}</i>' })).toEqual(['HTML_TAGS'])
   expect(codes({ source: '<b>a</b> <b>b</b>', target: '<b>a</b> <b>b' })).toEqual(['HTML_TAGS'])
 })
@@ -356,5 +356,77 @@ test('vue-i18n tags close in the order they open', () => {
     },
   ])
 
-  expect(codes({ source: '<b>Vite</b><br>', target: '<b>Fast</b><br/>' })).toEqual(['HTML_TAGS'])
+  expect(codes({ source: '<b>Vite</b><br>', target: '<b>Fast</b><br />' })).toEqual([])
+
+  expect(
+    codes({
+      source: '<a href="/x">un</a> | <a href="/x">deux</a>',
+      target: '<a href="/x">one | </a><a href="/x">two</a>',
+    }),
+  ).toEqual(['HTML_TAGS'])
+})
+
+test('a vue-i18n literal or placeholder cannot build a tag or a link the check does not see', () => {
+  const source = 'Voir <a href="/aide">l’aide</a>'
+
+  expect(
+    codes({ source, target: `See <a href="/aide">help</a>{'<'}img src=x onerror=alert(1){'>'}` }),
+  ).toEqual(['HTML_TAGS'])
+
+  expect(codes({ source, target: `See <a href="/{'/'}evil.example">help</a>` })).toEqual(['LINKS'])
+
+  expect(
+    codes({
+      source: 'Bonjour {name}',
+      target: 'Hello <{name} onmouseover=alert(1) style=position:fixed;inset:0>',
+    }),
+  ).toEqual(['HTML_TAGS'])
+
+  expect(codes({ source: "Prix {'<'} {max}", target: "Price {'<'} {max}" })).toEqual([])
+})
+
+test('a stray < the source has is kept with the words after it translated', () => {
+  expect(codes({ source: 'Si a<b alors', target: 'If a<b then' })).toEqual([])
+  expect(codes({ source: 'Si a<b alors', target: 'If a<c then' })).toEqual(['HTML_TAGS'])
+})
+
+test('plural forms are checked one by one, so a language with more forms keeps the tags', () => {
+  const source = '<b>{n}</b> lot | <b>{n}</b> lots'
+
+  expect(
+    checkText({
+      source,
+      target: '<b>{n}</b> partia | <b>{n}</b> partie | <b>{n}</b> partii',
+      avoid: [],
+      language: 'pl',
+    }),
+  ).toEqual([])
+
+  expect(checkText({ source, target: '<b>{n}</b> ロット', avoid: [], language: 'ja' })).toEqual([])
+
+  expect(
+    checkText({
+      source,
+      target: '<b>{n}</b> partia | <b>{n} partie | <b>{n}</b> partii',
+      avoid: [],
+      language: 'pl',
+    }).map(({ code }) => code),
+  ).toEqual(['HTML_TAGS'])
+})
+
+test('a vue-i18n link may move to a relative path or another phone number, never hide behind an entity or a space', () => {
+  const source = 'Appelez <a href="tel:+33100000000" lang="fr">le support</a>'
+
+  for (const target of [
+    'Call <a href="tel:+441000000000" lang="en">support</a>',
+    'Call <a href="support" lang="en">support</a>',
+  ]) {
+    expect(codes({ source, target })).toEqual([])
+  }
+
+  for (const href of ['/&#47;evil.example', '/\t/evil.example', ' https://evil.example']) {
+    expect(codes({ source, target: `Call <a href="${href}" lang="en">support</a>` })).toEqual([
+      'LINKS',
+    ])
+  }
 })
