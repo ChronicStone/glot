@@ -674,12 +674,30 @@ test('a provider failure is a clear 502, a rate limit is retried, and the key ne
   await expect(as('Paul').ai.suggest(input)).rejects.toMatchObject({ code: 'BAD_GATEWAY' })
   expect(await sinkRequests({ url: sink, key: MAIN_KEY })).toHaveLength(3)
 
-  await scriptSink({ url: sink, key: MAIN_KEY, steps: [{ stopReason: 'refusal' }] })
+  const beforeRefusal = await as('Olga').ai.usage({ workspaceId: mainWorkspaceId })
+
+  await scriptSink({
+    url: sink,
+    key: MAIN_KEY,
+    steps: [{ stopReason: 'refusal', usage: { input: 700, output: 300 } }],
+  })
 
   await expect(as('Paul').ai.suggest(input)).rejects.toMatchObject({
     code: 'BAD_GATEWAY',
     message: 'The AI provider declined to answer',
   })
+
+  const afterRefusal = await as('Olga').ai.usage({ workspaceId: mainWorkspaceId })
+
+  expect(afterRefusal.calls - beforeRefusal.calls).toBe(1)
+  expect(afterRefusal.outputTokens - beforeRefusal.outputTokens).toBe(300)
+
+  await scriptSink({ url: sink, key: MAIN_KEY, steps: [{ times: 1, status: 429 }, {}] })
+
+  const started = Date.now()
+
+  await expect(as('Paul').ai.suggest(input)).resolves.toMatchObject({ value: '[pl] Fin le {date}' })
+  expect(Date.now() - started).toBeGreaterThanOrEqual(900)
 })
 
 test('a stored key that cannot be read is said so, and setting it again repairs it', async () => {

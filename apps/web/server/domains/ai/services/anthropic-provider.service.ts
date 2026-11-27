@@ -1,6 +1,10 @@
-import { ORPCError } from '@orpc/server'
-import { AI_ANTHROPIC_VERSION } from '../constants/ai.constants.ts'
-import type { AiCompletion, AiCompletionRequest, AiProviderClient } from '../types/ai.types.ts'
+import { AI_ANTHROPIC_VERSION, AI_STOPS } from '../constants/ai.constants.ts'
+import type {
+  AiCompletion,
+  AiCompletionRequest,
+  AiProviderClient,
+  AiStop,
+} from '../types/ai.types.ts'
 import { anthropicResponseSchema } from '../validators/ai-answer.validator.ts'
 import { AiHttpService } from './ai-http.service.ts'
 
@@ -25,15 +29,13 @@ export class AnthropicProvider implements AiProviderClient {
       }),
     )
 
-    if (response.stop_reason === 'refusal') {
-      throw new ORPCError('BAD_GATEWAY', { message: 'The AI provider declined to answer' })
-    }
-
-    if (response.stop_reason === 'max_tokens') {
-      throw new ORPCError('BAD_GATEWAY', { message: 'The AI answer was cut short' })
+    const stops: Record<string, AiStop> = {
+      refusal: AI_STOPS.REFUSED,
+      max_tokens: AI_STOPS.CUT_SHORT,
     }
 
     return {
+      stopped: stops[response.stop_reason ?? ''] ?? null,
       text: response.content
         .flatMap((block) => (block.type === 'text' ? [block.text ?? ''] : []))
         .join(''),

@@ -16,6 +16,16 @@ export const AI_ENCRYPTION = {
   VERSION: 'v1',
 } as const
 
+export const AI_STOPS = {
+  REFUSED: 'REFUSED',
+  CUT_SHORT: 'CUT_SHORT',
+} as const
+
+export const AI_STOP_MESSAGES = {
+  [AI_STOPS.REFUSED]: 'The AI provider declined to answer',
+  [AI_STOPS.CUT_SHORT]: 'The AI answer was cut short',
+} as const
+
 export const AI_HTTP = {
   ATTEMPTS: 3,
   TIMEOUT_MS: 180_000,

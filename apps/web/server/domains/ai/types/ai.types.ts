@@ -1,4 +1,6 @@
 import type { AiProvider } from '@glot/database/types/ai'
+import type { ValueOf } from '@glot/utils/types'
+import type { AI_STOPS } from '../constants/ai.constants.ts'
 
 export interface AiRuntime {
   encryptionKey: Buffer
@@ -15,10 +17,13 @@ export interface AiCompletionRequest {
   maxTokens: number
 }
 
+export type AiStop = ValueOf<typeof AI_STOPS>
+
 export interface AiCompletion {
   text: string
   inputTokens: number
   outputTokens: number
+  stopped: AiStop | null
 }
 
 export interface AiProviderClient {

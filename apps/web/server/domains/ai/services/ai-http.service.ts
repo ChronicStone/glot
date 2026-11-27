@@ -57,7 +57,8 @@ export class AiHttpService {
   }
 
   #wait(options: { response: Response; attempt: number }) {
-    const seconds = Number(options.response.headers.get('retry-after'))
+    const header = options.response.headers.get('retry-after')
+    const seconds = header === null || header.trim() === '' ? Number.NaN : Number(header)
 
     const delay = Number.isFinite(seconds)
       ? seconds * 1000

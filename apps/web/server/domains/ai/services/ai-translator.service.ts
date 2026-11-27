@@ -3,7 +3,8 @@ import type { GlossaryTerm, Text } from '@glot/contract'
 import { AI_PROVIDERS } from '@glot/database/constants/ai'
 import type { AiProvider, AiUsageKind } from '@glot/database/types/ai'
 import type { RequestContext } from '../../../types/context.types.ts'
-import { AI_BATCH } from '../constants/ai.constants.ts'
+import { ORPCError } from '@orpc/server'
+import { AI_BATCH, AI_STOP_MESSAGES } from '../constants/ai.constants.ts'
 import type { AiProviderClient } from '../types/ai.types.ts'
 import { parseAnswers } from '../utils/ai-answer.utils.ts'
 import { AI_SYSTEM_PROMPT, translationPrompt } from '../utils/ai-prompt.utils.ts'
@@ -60,6 +61,22 @@ export class AiTranslatorService {
         }),
         maxTokens: AI_BATCH.MAX_OUTPUT_TOKENS,
       })
+
+      if (completion.stopped) {
+        await usage.record({
+          workspaceId: project.workspaceId,
+          projectId: project.id,
+          language,
+          kind: options.kind,
+          provider: settings.provider,
+          model: settings.model,
+          inputTokens: completion.inputTokens,
+          outputTokens: completion.outputTokens,
+          texts: 0,
+        })
+
+        throw new ORPCError('BAD_GATEWAY', { message: AI_STOP_MESSAGES[completion.stopped] })
+      }
 
       const answers = parseAnswers(completion.text)
       const refused: typeof pending = []

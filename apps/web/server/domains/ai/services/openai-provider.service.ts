@@ -1,4 +1,4 @@
-import { ORPCError } from '@orpc/server'
+import { AI_STOPS } from '../constants/ai.constants.ts'
 import type { AiCompletion, AiCompletionRequest, AiProviderClient } from '../types/ai.types.ts'
 import { openaiResponseSchema } from '../validators/ai-answer.validator.ts'
 import { AiHttpService } from './ai-http.service.ts'
@@ -25,19 +25,18 @@ export class OpenAiProvider implements AiProviderClient {
       }),
     )
 
-    if (response.status === 'incomplete') {
-      throw new ORPCError('BAD_GATEWAY', { message: 'The AI answer was cut short' })
-    }
-
     const content = response.output
       .filter(({ type }) => type === 'message')
       .flatMap((message) => message.content ?? [])
 
-    if (content.some(({ type }) => type === 'refusal')) {
-      throw new ORPCError('BAD_GATEWAY', { message: 'The AI provider declined to answer' })
-    }
+    const refused = content.some(({ type }) => type === 'refusal')
 
     return {
+      stopped: refused
+        ? AI_STOPS.REFUSED
+        : response.status === 'incomplete'
+          ? AI_STOPS.CUT_SHORT
+          : null,
       text: content
         .flatMap((part) => (part.type === 'output_text' ? [part.text ?? ''] : []))
         .join(''),
