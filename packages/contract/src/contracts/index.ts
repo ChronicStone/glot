@@ -8,6 +8,7 @@ import { projectsContract } from './projects.contract.ts'
 import { releasesContract } from './releases.contract.ts'
 import { reportsContract } from './reports.contract.ts'
 import { reviewsContract } from './reviews.contract.ts'
+import { templatesContract } from './templates.contract.ts'
 import { textsContract } from './texts.contract.ts'
 import { widgetContract } from './widget.contract.ts'
 
@@ -24,4 +25,5 @@ export const contract = {
   reports: reportsContract,
   widget: widgetContract,
   ai: aiContract,
+  templates: templatesContract,
 }

@@ -17,7 +17,14 @@ export const projectSourceSchema = projectSourceSelectSchema.pick({
 })
 
 export const projectSchema = projectSelectSchema
-  .pick({ id: true, workspaceId: true, name: true, sourceLanguage: true, languages: true })
+  .pick({
+    id: true,
+    workspaceId: true,
+    name: true,
+    sourceLanguage: true,
+    languages: true,
+    previewUrl: true,
+  })
   .extend({
     apps: z.array(projectAppSelectSchema.pick({ id: true, name: true, widget: true })),
     sources: z.array(projectSourceSchema),
@@ -60,6 +67,13 @@ export const projectCreateInputSchema = projectInsertSchema
     sourceLanguage: languageCodeSchema,
     languages: languagesInputSchema,
     sources: z.array(projectSourceInputSchema).min(1),
+    previewUrl: z
+      .url({ protocol: /^https?$/u })
+      .nullable()
+      .optional()
+      .describe(
+        'The preview adapter that renders the email, document and SMS templates of the project: Glot sends it a template, a brand, a language and texts, and shows what it returns.',
+      ),
   })
 
 export const projectUpdateInputSchema = projectCreateInputSchema

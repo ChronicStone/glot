@@ -17,6 +17,8 @@ export {
   PROJECT_ERRORS,
   RELEASE_ERRORS,
   REVIEW_REASONS,
+  TEMPLATE_ERRORS,
+  TEMPLATE_KINDS,
   WIDGET_ERRORS,
 } from './constants/contract.constants.ts'
 

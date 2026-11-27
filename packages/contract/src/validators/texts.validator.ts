@@ -1,5 +1,6 @@
 import { checkFailureSchema } from '@glot/checks/validators'
 import { draftSelectSchema } from '@glot/database/validators/drafts'
+import { sourceKindSchema } from '@glot/database/validators/projects'
 import { textStateSchema } from '@glot/database/validators/texts'
 import { userSelectSchema } from '@glot/database/validators/users'
 import * as z from 'zod'
@@ -41,6 +42,9 @@ export const textSchema = z.object({
   key: keyRefSchema,
   source: z.object({ language: languageCodeSchema, value: z.string() }),
   where: z.string().describe('Where readers see it, in words: the source that holds the text.'),
+  syntax: sourceKindSchema.describe(
+    'How its placeholders are written: vue-i18n {name}, or handlebars-html {{name}} for email, document and SMS texts.',
+  ),
   shownIn: z.array(z.string()).describe('The apps that show this text.'),
   translations: z.array(translationSchema),
 })

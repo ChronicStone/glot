@@ -19,6 +19,7 @@ export const PEOPLE_ONLY_PROCEDURES = {
   UPDATE_AI_SETTINGS: 'ai.updateSettings',
   SET_AI_KEY: 'ai.setKey',
   REMOVE_AI_KEY: 'ai.removeKey',
+  SEND_TEST_EMAIL: 'templates.sendTest',
 } as const
 
 export const NOT_FOUND_ERRORS = { NOT_FOUND: { message: 'Not found' } }
@@ -86,6 +87,20 @@ export const AI_ERRORS = {
 export const WIDGET_ERRORS = {
   ...NOT_FOUND_ERRORS,
   FORBIDDEN: { message: 'This app cannot sign in to Glot from here' },
+}
+
+export const TEMPLATE_KINDS = {
+  EMAIL: 'email',
+  DOCUMENT: 'document',
+  SMS: 'sms',
+} as const
+
+export const TEMPLATE_ERRORS = {
+  ...NOT_FOUND_ERRORS,
+  CONFLICT: {
+    message: 'This project has no preview adapter: set its address in the project settings',
+  },
+  BAD_GATEWAY: { message: 'The preview adapter is not answering' },
 }
 
 export const ADMIN_ONLY_ERRORS = { FORBIDDEN: { message: 'Only an admin can do this' } }
