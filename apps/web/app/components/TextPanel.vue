@@ -136,6 +136,12 @@ defineShortcuts({
           <textarea v-model="body" rows="2" placeholder="Write a comment" aria-label="Comment" />
         </label>
       </div>
+      <AiSuggest
+        v-else-if="translation.language === working?.language && (canWrite || canApprove)"
+        :target="target"
+        :syntax="text.syntax"
+        @use="form.setFieldValue('value', $event)"
+      />
     </TextLanguage>
     <button
       v-if="reviewed.length > 0 && !showReviewed"

@@ -17,6 +17,8 @@ const { text, language, sms } = defineProps<{
 
 const emit = defineEmits<{ typing: [value: string]; close: [] }>()
 
+const { project } = useCurrentProject()
+
 const translation = computed(() =>
   text.translations.find((candidate) => candidate.language === language),
 )
@@ -142,6 +144,12 @@ watch(value, (next) => emit('typing', next))
         <UIcon name="i-lucide-lock" class="ic-13" />Placeholders stay as chips · links need a
         Developer
       </div>
+      <AiSuggest
+        :target="{ projectId: project?.id ?? '', textId: text.id, language }"
+        :syntax="text.syntax"
+        style="width: 100%"
+        @use="field.handleChange"
+      />
       <div
         v-if="language !== text.source.language"
         class="well"

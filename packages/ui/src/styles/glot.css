@@ -3424,6 +3424,17 @@
   margin-left: auto;
   align-self: center;
 }
+.ai-sug-off {
+  background: var(--glot-sunken);
+  box-shadow: inset 0 0 0 1px var(--glot-line);
+}
+.ai-sug-off .iconify.spark {
+  color: var(--glot-ink-3);
+}
+.ai-ask {
+  margin-top: 8px;
+  align-self: flex-start;
+}
 .insp-foot {
   display: flex;
   align-items: center;
