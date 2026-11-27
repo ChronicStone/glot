@@ -21,5 +21,5 @@ export type AuthenticatedUser = Pick<User, 'id' | 'email' | 'name' | 'image' | '
 export type ActorKind = ValueOf<typeof ACTOR_KINDS>
 
 export type AuthenticatedActor =
-  | { kind: typeof ACTOR_KINDS.PERSON; user: AuthenticatedUser; sessionId: string }
+  | { kind: typeof ACTOR_KINDS.PERSON; user: AuthenticatedUser; sessionId: string | null }
   | { kind: typeof ACTOR_KINDS.KEY; userId: string; keyId: string }
