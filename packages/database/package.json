@@ -43,6 +43,7 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@glot/checks": "workspace:*",
     "@glot/utils": "workspace:*",
     "better-drizzle": "catalog:",
     "drizzle-kit": "catalog:",

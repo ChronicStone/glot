@@ -127,6 +127,7 @@
       "name": "@glot/database",
       "version": "0.0.0",
       "dependencies": {
+        "@glot/checks": "workspace:*",
         "@glot/utils": "workspace:*",
         "better-drizzle": "catalog:",
         "drizzle-kit": "catalog:",

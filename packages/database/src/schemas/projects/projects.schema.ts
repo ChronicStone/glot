@@ -29,6 +29,7 @@ export const projects = pgTable(
     defaultBranch: text().notNull().default('main'),
     sourceLanguage: text().notNull(),
     languages: text().array().notNull(),
+    previewUrl: text(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },

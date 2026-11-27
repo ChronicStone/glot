@@ -1,5 +1,5 @@
-export const SOURCE_KINDS = {
-  VUE_I18N: 'vue-i18n',
-} as const
+import { SYNTAXES } from '@glot/checks/syntax'
+
+export const SOURCE_KINDS = SYNTAXES
 
 export const SOURCE_LOCALE_TOKEN = '{locale}'
