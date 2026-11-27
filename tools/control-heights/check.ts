@@ -66,6 +66,9 @@ const SCREENS = [
   { name: 'Projects · editor', path: '/settings/projects', click: 'New project' },
   { name: 'API keys', path: '/settings/keys' },
   { name: 'API keys · new key', path: '/settings/keys', click: 'Create a key' },
+  { name: 'AI', path: '/settings/ai' },
+  { name: 'AI · key', path: '/settings/ai', click: 'Replace' },
+  { name: 'Workspace', path: '/settings/workspace' },
   { name: 'Sign in', path: '/sign-in', signedOut: true },
 ] as const
 
