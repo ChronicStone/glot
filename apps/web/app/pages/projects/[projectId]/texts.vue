@@ -24,6 +24,43 @@ const languages = computed(
   () => project.value?.languages.filter((code) => code !== project.value?.sourceLanguage) ?? [],
 )
 
+const ALL_LANGUAGES = 'all'
+
+const languageGroups = computed(() => [
+  {
+    options: [
+      {
+        value: ALL_LANGUAGES,
+        label: 'All languages',
+        icon: 'i-lucide-languages',
+        description: 'Counts every language',
+        context: counts.value.total.toLocaleString('en-US'),
+        contextLabel: 'texts',
+      },
+    ],
+  },
+  {
+    label: 'Target languages',
+    options: counts.value.byLanguage.map((row) => ({
+      value: row.language,
+      code: row.language,
+      label: languageName(row.language),
+      native: nativeLanguageName(row.language),
+      description: `${row.counts[TEXT_STATES.TO_CHECK].toLocaleString('en-US')} to check · ${row.counts[TEXT_STATES.NEEDS_FIX]} ${row.counts[TEXT_STATES.NEEDS_FIX] === 1 ? 'fix' : 'fixes'}`,
+      context: reviewedShare(row),
+      contextLabel: 'reviewed',
+      bars: Object.fromEntries(
+        [
+          TEXT_STATES.REVIEWED,
+          TEXT_STATES.TO_CHECK,
+          TEXT_STATES.NEEDS_FIX,
+          TEXT_STATES.MISSING,
+        ].map((state) => [TEXT_STATE_CLASSES[state], row.counts[state]]),
+      ),
+    })),
+  },
+])
+
 const filters = computed(() => [
   { label: 'All', value: undefined, count: counts.value.total },
   ...[TEXT_STATES.NEEDS_FIX, TEXT_STATES.TO_CHECK, TEXT_STATES.MISSING].map((value) => ({
@@ -219,17 +256,17 @@ defineShortcuts({
               aria-label="Search"
             /><span class="kbd">/</span></label
           >
-          <button
-            type="button"
-            class="btn btn-outline btn-sm"
-            @click="
-              language = languages[(languages.indexOf(language ?? '') + 1) % (languages.length + 1)]
-            "
-          >
-            <UIcon name="i-lucide-languages" />{{
-              language ? languageName(language) : 'All languages'
-            }}<UIcon name="i-lucide-chevron-down" />
-          </button>
+          <AppSelect
+            :model-value="language ?? ALL_LANGUAGES"
+            :groups="languageGroups"
+            button
+            wide
+            footer
+            icon="i-lucide-languages"
+            placeholder="All languages"
+            search="Filter languages"
+            @update:model-value="language = $event === ALL_LANGUAGES ? undefined : $event"
+          />
         </div>
         <div class="tx-chips">
           <button

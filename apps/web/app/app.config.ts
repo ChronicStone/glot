@@ -84,20 +84,6 @@ export default defineAppConfig({
         base: 'rounded-control bg-panel px-3 py-2.5 text-[15px] leading-[22px] ring-1 ring-line-2 ring-inset focus-visible:ring-1 focus-visible:ring-sel-ring focus-visible:shadow-[0_0_0_3px_var(--glot-focus-halo)]',
       },
     },
-    selectMenu: {
-      slots: {
-        base: 'rounded-control bg-panel ring-1 ring-line-2 ring-inset hover:ring-line-3',
-        content: 'rounded-card bg-panel p-1.5 shadow-pop ring-1 ring-line',
-        item: 'h-8 rounded-lg text-[13px] text-ink-2 data-highlighted:text-ink data-highlighted:before:bg-hover',
-      },
-    },
-    select: {
-      slots: {
-        base: 'rounded-control bg-panel ring-1 ring-line-2 ring-inset hover:ring-line-3',
-        content: 'rounded-card bg-panel p-1.5 shadow-pop ring-1 ring-line',
-        item: 'h-8 rounded-lg text-[13px] text-ink-2 data-highlighted:text-ink data-highlighted:before:bg-hover',
-      },
-    },
     formField: {
       slots: {
         label: 'text-[13px] font-medium text-ink-2',
