@@ -188,7 +188,12 @@ defineShortcuts({
   <TextDetails v-else :text="text" />
 
   <div class="insp-foot">
-    <div class="m">Ships to {{ text.shownIn.length }} apps<br />with the next release</div>
+    <div class="m">
+      <template v-if="text.shownIn.length > 0"
+        >Ships to {{ counted({ count: text.shownIn.length, one: 'app', other: 'apps' }) }}<br />with
+        the next release</template
+      ><template v-else>Ships with the next release</template>
+    </div>
     <div v-if="working && commenting" class="btns">
       <button type="button" class="btn btn-ghost" @click="commenting = false">Cancel</button>
       <button

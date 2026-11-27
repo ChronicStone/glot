@@ -14,6 +14,7 @@ const SETTLE_MS = Number(process.env.GLOT_CHECK_SETTLE_MS ?? 2500)
 const TOLERANCE_PX = 0.5
 const ROW_CENTER_PX = 2
 const ROW_GAP_PX = 24
+const ICON_BUTTON_SELECTOR = '.btn-icon'
 
 const CONTROL_SELECTOR = [
   'button',
@@ -90,6 +91,7 @@ type Result = {
   viewport: string
   rows: number
   mismatched: Row[]
+  lopsided: string[]
   error?: string
   absent?: boolean
 }
@@ -141,6 +143,19 @@ function measure(selector: string) {
         right: box.right,
       }
     })
+    .toArray()
+}
+
+function lopsided(selector: string) {
+  return document
+    .querySelectorAll(selector)
+    .values()
+    .map((element) => ({
+      label: element.getAttribute('aria-label') ?? element.getAttribute('title') ?? 'icon button',
+      box: element.getBoundingClientRect(),
+    }))
+    .filter(({ box }) => box.height > 4 && Math.abs(box.width - box.height) > 0.5)
+    .map(({ label, box }) => `${label} ${Math.round(box.width)}×${Math.round(box.height)}`)
     .toArray()
 }
 
@@ -274,7 +289,14 @@ async function check({
     await page.waitForTimeout(SETTLE_MS)
 
     if (!(await open(page, screen))) {
-      return { screen: screen.name, viewport, rows: 0, mismatched: [], absent: true }
+      return {
+        screen: screen.name,
+        viewport,
+        rows: 0,
+        mismatched: [],
+        lopsided: [],
+        absent: true,
+      }
     }
 
     const rows = rowsOf(await page.evaluate(measure, CONTROL_SELECTOR))
@@ -284,6 +306,7 @@ async function check({
       viewport,
       rows: rows.length,
       mismatched: rows.filter(({ spread }) => spread > TOLERANCE_PX),
+      lopsided: await page.evaluate(lopsided, ICON_BUTTON_SELECTOR),
     }
   } catch (error) {
     return {
@@ -291,6 +314,7 @@ async function check({
       viewport,
       rows: 0,
       mismatched: [],
+      lopsided: [],
       error:
         error instanceof Error ? (error.message.split('\n')[0] ?? error.message) : String(error),
     }
@@ -300,7 +324,7 @@ async function check({
 }
 
 function table(results: Result[]) {
-  const lines = results.map(({ screen, viewport, rows, mismatched, error, absent }) => {
+  const lines = results.map(({ screen, viewport, rows, mismatched, lopsided, error, absent }) => {
     const worst = mismatched.toSorted((first, second) => second.spread - first.spread)[0]
 
     const detail = absent
@@ -308,12 +332,12 @@ function table(results: Result[]) {
       : (error ??
         (worst ? worst.controls.map(({ label, height }) => `${label} ${height}`).join(' · ') : ''))
 
-    return `| ${screen} | ${viewport} | ${rows} | ${error ? 'error' : mismatched.length} | ${detail} |`
+    return `| ${screen} | ${viewport} | ${rows} | ${error ? 'error' : mismatched.length} | ${detail} | ${lopsided.join(' · ')} |`
   })
 
   return [
-    '| Screen | Viewport | Control rows | Unequal rows | Worst row |',
-    '| --- | --- | --- | --- | --- |',
+    '| Screen | Viewport | Control rows | Unequal rows | Worst row | Icon buttons not square |',
+    '| --- | --- | --- | --- | --- | --- |',
     ...lines,
   ].join('\n')
 }
@@ -349,5 +373,10 @@ if (REPORT_PATH) {
 }
 
 process.exit(
-  results.some(({ mismatched, error }) => error !== undefined || mismatched.length > 0) ? 1 : 0,
+  results.some(
+    ({ mismatched, lopsided: uneven, error }) =>
+      error !== undefined || mismatched.length > 0 || uneven.length > 0,
+  )
+    ? 1
+    : 0,
 )
