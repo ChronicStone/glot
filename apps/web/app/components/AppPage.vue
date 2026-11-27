@@ -8,21 +8,23 @@ const openPalette = inject<() => void>('openPalette', () => undefined)
 <template>
   <div :class="{ 'page-scroll': scroll }" class="page">
     <div class="m-top">
-      <button
-        type="button"
-        class="btn btn-ghost btn-icon btn-sm"
-        aria-label="Menu"
-        @click="openMenu"
-      >
-        <UIcon name="i-lucide-menu" /></button
-      ><b>{{ context ?? title }}</b><span class="g-grow" /><button
-        type="button"
-        class="btn btn-ghost btn-icon btn-sm"
-        aria-label="Search"
-        @click="openPalette"
-      >
-        <UIcon name="i-lucide-search" />
-      </button>
+      <slot name="mobile">
+        <button
+          type="button"
+          class="btn btn-ghost btn-icon btn-sm"
+          aria-label="Menu"
+          @click="openMenu"
+        >
+          <UIcon name="i-lucide-menu" /></button
+        ><b>{{ context ?? title }}</b><span class="g-grow" /><button
+          type="button"
+          class="btn btn-ghost btn-icon btn-sm"
+          aria-label="Search"
+          @click="openPalette"
+        >
+          <UIcon name="i-lucide-search" />
+        </button>
+      </slot>
     </div>
     <div v-if="$slots.crumb" class="crumb"><slot name="crumb" /></div>
     <div class="ph-row">

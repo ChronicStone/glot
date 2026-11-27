@@ -1,23 +1,28 @@
 <script setup lang="ts">
+import { CHECK_CODES } from '@glot/checks'
 import GlotTextValue from '@glot/ui/components/GlotTextValue.vue'
 import { useMutation, useQuery } from '@tanstack/vue-query'
 import {
+  CHECK_LABELS,
   REVIEW_REASON_LABELS,
   REVIEW_SECONDS_PER_TEXT,
   REVIEW_SESSION_PAGE_SIZE,
+  SESSION_OUTCOMES,
 } from '../../../../constants/review.constants.ts'
 
 const { $api, $queryClient } = useNuxtApp()
 const route = useRoute()
 const toast = useToast()
 const { project } = useCurrentProject()
+const { approve: approvable } = useRights()
 const projectId = computed(() => project.value?.id ?? '')
 const language = computed(() => String(route.params.language))
 const mode = ref<'view' | 'edit' | 'comment'>('view')
-const value = ref<string>('')
+const forms = ref<string[]>([])
 const body = ref<string>('')
-const done = ref<string[]>([])
-const skipped = ref<string[]>([])
+const outcomes = ref<Record<string, string>>({})
+const started = ref<number>(Date.now())
+const now = ref<number>(Date.now())
 
 const focusId = ref<string | undefined>(
   typeof route.query.text === 'string' ? route.query.text : undefined,
@@ -35,7 +40,9 @@ const queue = useQuery(() => ({
 }))
 
 const glossary = useQuery(() => ({
-  ...$api.glossary.list.queryOptions({ input: { projectId: projectId.value } }),
+  ...$api.glossary.list.queryOptions({
+    input: { projectId: projectId.value, language: language.value },
+  }),
   enabled: Boolean(project.value),
 }))
 
@@ -46,11 +53,7 @@ function keyOf(item: Item) {
 }
 
 const items = computed(() => queue.data.value?.items ?? [])
-const remaining = computed(() => items.value.filter((item) => !done.value.includes(keyOf(item))))
-
-const waiting = computed(() =>
-  remaining.value.filter((item) => !skipped.value.includes(keyOf(item))),
-)
+const waiting = computed(() => items.value.filter((item) => !outcomes.value[keyOf(item)]))
 
 const current = computed(
   () => waiting.value.find((item) => item.text.id === focusId.value) ?? waiting.value[0],
@@ -67,28 +70,56 @@ const comments = useQuery(() => ({
   enabled: Boolean(current.value),
 }))
 
-const live = computed(
-  () =>
-    current.value?.text.translations.find((translation) => translation.language === language.value)
-      ?.value ?? '',
+const translation = computed(() =>
+  current.value?.text.translations.find((item) => item.language === language.value),
 )
 
-const proposed = computed(() => current.value?.draft?.value ?? live.value)
-const forms = computed(() => pluralForms({ language: language.value, value: proposed.value }))
+const proposed = computed(() => current.value?.draft?.value ?? translation.value?.value ?? '')
+const rendered = computed(() => pluralForms({ language: language.value, value: proposed.value }))
+const failures = computed(() => current.value?.draft?.failures ?? translation.value?.failures ?? [])
 
 const hits = computed(() => {
   const source = current.value?.text.source.value.toLocaleLowerCase() ?? ''
 
-  return (glossary.data.value ?? []).filter((term) =>
-    source.includes(term.name.toLocaleLowerCase()),
+  return (glossary.data.value ?? []).filter(
+    (term) =>
+      Object.values(term.terms).some((words) => source.includes(words.term.toLocaleLowerCase())) ||
+      source.includes(term.name.toLocaleLowerCase()),
   )
 })
 
-const position = computed(() => done.value.length + skipped.value.length + 1)
-const total = computed(() => done.value.length + (queue.data.value?.total ?? 0))
+const counted = computed(() => Object.values(outcomes.value))
+
+const approvedCount = computed(
+  () => counted.value.filter((value) => value === SESSION_OUTCOMES.APPROVED).length,
+)
+
+const editedCount = computed(
+  () => counted.value.filter((value) => value === SESSION_OUTCOMES.EDITED).length,
+)
+
+const doneCount = computed(() => approvedCount.value + editedCount.value)
+
+const total = computed(() => doneCount.value + (queue.data.value?.total ?? 0))
+
+const position = computed(() => counted.value.length + 1)
+
+const pace = computed(() =>
+  doneCount.value > 0
+    ? `${Math.round((now.value - started.value) / 1000 / doneCount.value)} s`
+    : '—',
+)
 
 const minutesLeft = computed(() =>
   Math.max(1, Math.round((waiting.value.length * REVIEW_SECONDS_PER_TEXT) / 60)),
+)
+
+const segments = computed(() =>
+  items.value.slice(0, 60).map((item) => {
+    const outcome = outcomes.value[keyOf(item)]
+
+    return outcome ?? (item === current.value ? 'cur' : '')
+  }),
 )
 
 const reason = computed(() => {
@@ -102,6 +133,13 @@ const reason = computed(() => {
     ? `Sent for review by ${item.draft.authorName}`
     : REVIEW_REASON_LABELS[item.reason]
 })
+
+const checks = computed(() =>
+  Object.values(CHECK_CODES).map((code) => ({
+    code,
+    failure: failures.value.find((failure) => failure.code === code),
+  })),
+)
 
 watch(
   () => (current.value ? keyOf(current.value) : ''),
@@ -123,13 +161,13 @@ function draftId() {
   return current.value?.draft ? { draftId: current.value.draft.id } : {}
 }
 
-async function leave(message: string) {
+async function leave(options: { outcome: string; message: string }) {
   if (current.value) {
-    done.value = [...done.value, keyOf(current.value)]
+    outcomes.value = { ...outcomes.value, [keyOf(current.value)]: options.outcome }
   }
 
   focusId.value = undefined
-  toast.add({ title: message, color: 'success', icon: 'i-lucide-check' })
+  toast.add({ title: options.message, color: 'success', icon: 'i-lucide-circle-check' })
 
   await Promise.all([
     $queryClient.invalidateQueries({ queryKey: $api.reviews.key() }),
@@ -143,30 +181,22 @@ function failed(error: Error) {
 
 const approve = useMutation({
   mutationFn: () => $api.reviews.approve.call({ ...target(), ...draftId() }),
-  onSuccess: () => leave('Approved'),
+  onSuccess: () => leave({ outcome: SESSION_OUTCOMES.APPROVED, message: 'Approved' }),
   onError: failed,
 })
 
 const approveEdited = useMutation({
-  mutationFn: () => $api.reviews.editAndApprove.call({ ...target(), value: value.value }),
-  onSuccess: () => leave('Approved with your change'),
-  onError: failed,
-})
-
-const sendEdited = useMutation({
-  mutationFn: async () => {
-    const saved = await $api.drafts.save.call({ ...target(), value: value.value })
-
-    return $api.drafts.send.call({ projectId: projectId.value, draftId: saved.id })
-  },
-  onSuccess: () => leave('Sent for review'),
+  mutationFn: () =>
+    $api.reviews.editAndApprove.call({ ...target(), value: forms.value.join(' | ') }),
+  onSuccess: () =>
+    leave({ outcome: SESSION_OUTCOMES.EDITED, message: 'Approved with your change' }),
   onError: failed,
 })
 
 const askChange = useMutation({
   mutationFn: () =>
     $api.reviews.requestChange.call({ ...target(), ...draftId(), body: body.value }),
-  onSuccess: () => leave('Change requested'),
+  onSuccess: () => leave({ outcome: SESSION_OUTCOMES.SKIPPED, message: 'Change requested' }),
   onError: failed,
 })
 
@@ -181,12 +211,19 @@ const comment = useMutation({
   onError: failed,
 })
 
+const approveSame = useMutation({
+  mutationFn: () =>
+    $api.reviews.approveSame.call({ projectId: projectId.value, language: language.value }),
+  onSuccess: async ({ approved }) => {
+    toast.add({ title: `${approved} approved`, color: 'success', icon: 'i-lucide-circle-check' })
+
+    await $queryClient.invalidateQueries({ queryKey: $api.reviews.key() })
+  },
+  onError: failed,
+})
+
 const busy = computed(
-  () =>
-    approve.isPending.value ||
-    approveEdited.isPending.value ||
-    sendEdited.isPending.value ||
-    askChange.isPending.value,
+  () => approve.isPending.value || approveEdited.isPending.value || askChange.isPending.value,
 )
 
 function idle() {
@@ -195,14 +232,14 @@ function idle() {
 
 function skip() {
   if (current.value && idle()) {
-    skipped.value = [...skipped.value, keyOf(current.value)]
+    outcomes.value = { ...outcomes.value, [keyOf(current.value)]: SESSION_OUTCOMES.SKIPPED }
     focusId.value = undefined
   }
 }
 
 function edit() {
   if (idle()) {
-    value.value = proposed.value
+    forms.value = proposed.value.split('|').map((form) => form.trim())
     mode.value = 'edit'
   }
 }
@@ -220,8 +257,14 @@ function approveCurrent() {
 }
 
 function startAgain() {
-  skipped.value = []
+  outcomes.value = Object.fromEntries(
+    Object.entries(outcomes.value).filter(([, outcome]) => outcome !== SESSION_OUTCOMES.SKIPPED),
+  )
 }
+
+useIntervalFn(() => {
+  now.value = Date.now()
+}, 5000)
 
 defineShortcuts({
   s: skip,
@@ -235,252 +278,299 @@ defineShortcuts({
 </script>
 
 <template>
-  <AppPage :title="`Review · ${languageName(language)}`">
-    <template #actions>
-      <UButton
-        label="End session"
-        color="neutral"
-        variant="outline"
-        :to="{ path: `/projects/${projectId}/review`, query: { language } }"
-      />
+  <AppPage :title="`Review · ${languageName(language)}`" class="rv-head" scroll>
+    <template #mobile>
+      <NuxtLink
+        :to="`/projects/${projectId}/texts`"
+        class="btn btn-ghost btn-icon btn-sm"
+        aria-label="End session"
+        ><UIcon name="i-lucide-x"
+      /></NuxtLink>
+      <span class="g-grow" /><span class="pill check"
+        ><UIcon name="i-lucide-eye" />{{ waiting.length }} to check</span
+      >
     </template>
-    <div v-if="current" class="mx-auto grid max-w-5xl gap-6 lg:grid-cols-[1fr_300px]">
-      <div class="flex min-w-0 flex-col gap-4">
-        <div class="flex items-center gap-3 text-sm text-muted">
-          <span class="tabular-nums">{{ position }} of {{ total }}</span>
-          <UProgress
-            :model-value="position - 1"
-            :max="total"
-            size="xs"
-            color="neutral"
-            class="flex-1"
-          />
-          <span class="tabular-nums">~{{ minutesLeft }} min left</span>
-        </div>
-        <section class="overflow-hidden rounded-card border border-default bg-default shadow-card">
-          <p class="flex items-center gap-2 bg-muted px-5 py-3 text-sm text-muted">
-            <UIcon
-              :name="current.draft ? 'i-lucide-send' : 'i-lucide-circle-dot'"
-              class="size-4 text-primary"
-            />
-            {{ reason }}
-          </p>
-          <div class="flex flex-col gap-1 p-5 sm:p-6">
-            <p class="text-sm text-muted">{{ languageName(current.text.source.language) }}</p>
-            <GlotTextValue
-              :value="current.text.source.value"
-              class="text-[20px] leading-snug tracking-tight [overflow-wrap:anywhere]"
-            />
-            <p class="mt-5 text-sm text-muted">
-              {{ languageName(language)
-              }}<template v-if="forms.length > 1"> · rendered by the app</template>
-            </p>
-            <div v-if="mode !== 'edit'" class="flex flex-col gap-2">
-              <div
-                v-for="form in forms"
-                :key="form.label"
-                class="grid gap-x-6"
-                :class="forms.length > 1 ? 'sm:grid-cols-[150px_1fr]' : ''"
-              >
-                <span v-if="forms.length > 1" class="pt-1 text-sm text-muted">{{
-                  form.label
-                }}</span>
-                <span class="text-[20px] leading-snug tracking-tight [overflow-wrap:anywhere]">{{
-                  form.value
-                }}</span>
-              </div>
-            </div>
-            <div v-else class="flex flex-col gap-3">
-              <UTextarea
-                v-model="value"
-                autofocus
-                autoresize
-                :rows="2"
-                size="xl"
-                class="w-full"
-                :aria-label="`${languageName(language)} text`"
-              />
-              <div class="flex flex-wrap gap-2">
-                <UButton
-                  label="Approve with this change"
-                  color="neutral"
-                  :disabled="!value.trim()"
-                  :loading="approveEdited.isPending.value"
-                  @click="approveEdited.mutate()"
-                />
-                <UButton
-                  label="Send for review"
-                  color="neutral"
-                  variant="outline"
-                  :disabled="!value.trim()"
-                  :loading="sendEdited.isPending.value"
-                  @click="sendEdited.mutate()"
-                />
-                <UButton label="Cancel" color="neutral" variant="ghost" @click="mode = 'view'" />
-              </div>
-            </div>
-            <p v-if="current.draft && mode !== 'edit' && live" class="mt-4 text-sm text-muted">
-              Live now: <GlotTextValue :value="live" />
-            </p>
-            <p
-              v-for="failure in current.draft?.failures ?? []"
-              :key="failure.code"
-              class="text-sm text-error"
-            >
-              {{ failure.message }}
-            </p>
-          </div>
-        </section>
-        <div v-if="mode === 'comment'" class="flex flex-col gap-2">
-          <UTextarea
-            v-model="body"
-            autofocus
-            autoresize
-            :rows="2"
-            placeholder="Write a comment"
-            class="w-full"
-            aria-label="Comment"
-          />
-          <div class="flex flex-wrap gap-2">
-            <UButton
-              label="Comment"
-              color="neutral"
-              :disabled="!body.trim()"
-              :loading="comment.isPending.value"
-              @click="comment.mutate()"
-            />
-            <UButton
-              label="Ask for a change"
-              color="neutral"
-              variant="outline"
-              :disabled="!body.trim()"
-              :loading="askChange.isPending.value"
-              @click="askChange.mutate()"
-            />
-            <UButton label="Cancel" color="neutral" variant="ghost" @click="mode = 'view'" />
-          </div>
-        </div>
-        <div
-          class="sticky bottom-0 -mx-4 grid grid-cols-2 gap-2 bg-default/95 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:grid-cols-4 sm:bg-transparent sm:p-0"
+    <template #crumb>{{ project?.name }}<UIcon name="i-lucide-chevron-right" />Review</template>
+    <template #pill>
+      <span class="pill check pill-lg"
+        ><UIcon name="i-lucide-eye" />{{ waiting.length.toLocaleString('en-US') }} to check</span
+      >
+    </template>
+    <template #meta>
+      <span><UIcon name="i-lucide-list" />Every {{ languageName(language) }} text to check</span>
+      <span><UIcon name="i-lucide-user-check" />You review {{ languageName(language) }}</span>
+    </template>
+    <template #actions>
+      <div v-if="approvable.length > 1" class="seg">
+        <NuxtLink
+          v-for="code in approvable"
+          :key="code"
+          :to="`/projects/${projectId}/review/${code}`"
+          :class="{ on: code === language }"
+          ><span class="lc plain">{{ code }}</span>{{ languageName(code) }}</NuxtLink
         >
-          <UButton
-            label="Skip"
-            color="neutral"
-            variant="outline"
-            size="lg"
-            block
-            :disabled="!idle()"
-            @click="skip"
-          >
-            <template #trailing><UKbd value="S" /></template>
-          </UButton>
-          <UButton
-            label="Edit"
-            color="neutral"
-            variant="outline"
-            size="lg"
-            block
-            :disabled="!idle()"
-            @click="edit"
-          >
-            <template #trailing><UKbd value="E" /></template>
-          </UButton>
-          <UButton
-            label="Comment"
-            color="neutral"
-            variant="outline"
-            size="lg"
-            block
-            :disabled="!idle()"
-            @click="startComment"
-          >
-            <template #trailing><UKbd value="C" /></template>
-          </UButton>
-          <UButton
-            label="Approve"
-            color="neutral"
-            size="lg"
-            block
-            :disabled="!idle()"
-            :loading="approve.isPending.value"
-            @click="approveCurrent"
-          >
-            <template #trailing><UKbd value="A" /></template>
-          </UButton>
+      </div>
+      <button
+        v-if="(queue.data.value?.sameElsewhere ?? 0) > 0"
+        type="button"
+        class="btn btn-outline"
+        :class="{ 'is-loading': approveSame.isPending.value }"
+        @click="approveSame.mutate()"
+      >
+        Approve {{ queue.data.value?.sameElsewhere }} identical
+      </button>
+      <NuxtLink :to="`/projects/${projectId}/texts`" class="btn btn-outline">End session</NuxtLink>
+    </template>
+
+    <div class="rv-band">
+      <div class="stats">
+        <div class="stat">
+          <div class="l">Done</div>
+          <div class="v">{{ doneCount }}<small>of {{ total.toLocaleString('en-US') }}</small></div>
+        </div>
+        <div class="stat">
+          <div class="l">Approved</div>
+          <div class="v">{{ approvedCount }}</div>
+        </div>
+        <div class="stat">
+          <div class="l">Edited</div>
+          <div class="v">{{ editedCount }}</div>
+        </div>
+        <div class="stat">
+          <div class="l">Pace</div>
+          <div class="v">{{ pace }}</div>
+        </div>
+        <div class="stat">
+          <div class="l">Left</div>
+          <div class="v">~{{ minutesLeft }} min</div>
         </div>
       </div>
-      <aside class="flex min-w-0 flex-col gap-6">
-        <section class="flex flex-col gap-2">
-          <h2 class="font-semibold text-highlighted">Where it shows</h2>
-          <div class="flex flex-wrap gap-1.5">
-            <UBadge
-              v-for="app in current.text.shownIn"
-              :key="app"
-              :label="app"
-              color="neutral"
-              variant="outline"
-            />
+      <div>
+        <div class="sess">
+          <i v-for="(segment, index) in segments" :key="index" :class="segment" />
+        </div>
+      </div>
+      <div class="m-prog">
+        <span class="num">{{ position }} / {{ total }}</span>
+        <div class="sess">
+          <i v-for="(segment, index) in segments" :key="index" :class="segment" />
+        </div>
+        <span>~{{ minutesLeft }} min</span>
+      </div>
+    </div>
+
+    <div v-if="queue.isPending.value" class="rv">
+      <section class="panel rv-main">
+        <div class="rv-card"><div class="sk" style="height: 180px; border-radius: 16px" /></div>
+      </section>
+    </div>
+
+    <div v-else-if="!current" class="rv-done">
+      <div class="rv-done-in">
+        <span class="big"><UIcon name="i-lucide-check" /></span>
+        <h2>{{ languageName(language) }} is checked</h2>
+        <p>Approved texts ship with the next release.</p>
+        <div class="stats">
+          <div class="stat">
+            <div class="l">Approved</div>
+            <div class="v">{{ approvedCount }}</div>
           </div>
-          <p class="text-sm text-muted">{{ current.text.where }}</p>
+          <div class="stat">
+            <div class="l">Edited</div>
+            <div class="v">{{ editedCount }}</div>
+          </div>
+          <div class="stat">
+            <div class="l">Pace</div>
+            <div class="v">{{ pace }}</div>
+          </div>
+        </div>
+        <div v-if="items.length > 0" class="row-flex">
+          <button type="button" class="btn btn-outline" @click="startAgain">
+            <UIcon name="i-lucide-rotate-ccw" />Back to the skipped texts
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div v-else class="rv">
+      <section class="panel rv-main">
+        <div class="rv-card">
+          <div class="rv-why">
+            <UIcon :name="current.draft ? 'i-lucide-pencil-line' : 'i-lucide-eye'" /><span>{{
+              reason
+            }}</span
+            ><span class="right">{{ position }} of {{ total }}</span>
+          </div>
+          <div class="rv-lbl">
+            <span class="key">{{ current.text.key.path.join('.') }}</span
+            ><span class="faint">·</span>{{ current.text.key.source }}<span class="faint">·</span
+            >{{ languageName(current.text.source.language) }}
+          </div>
+          <div class="rv-fr"><GlotTextValue :value="current.text.source.value" /></div>
+          <div class="rv-lbl">
+            {{ languageName(language) }} · rendered with the app’s plural rules
+          </div>
+          <div class="forms">
+            <div
+              v-for="(form, index) in rendered"
+              :key="index"
+              :class="{ editing: mode === 'edit' }"
+              class="f"
+            >
+              <div class="n"><b>{{ form.name }}</b>{{ form.label }}</div>
+              <div class="v">
+                <label
+                  v-if="mode === 'edit'"
+                  class="input input-lg is-focus"
+                  style="font-size: 18px"
+                  ><input v-model="forms[index]" :aria-label="form.name" autofocus
+                /></label>
+                <GlotTextValue v-else :value="form.value" />
+              </div>
+              <div class="pill-slot" />
+            </div>
+          </div>
+          <div class="checks-row">
+            <span
+              v-for="check in checks"
+              :key="check.code"
+              :class="{ bad: check.failure }"
+              class="pill"
+              :title="check.failure?.message"
+              ><UIcon :name="check.failure ? 'i-lucide-triangle-alert' : 'i-lucide-check'" />{{
+                check.failure ? check.failure.message : CHECK_LABELS[check.code]
+              }}</span
+            >
+          </div>
+          <div v-if="mode === 'comment'" class="editor" style="margin-top: 14px">
+            <label class="input textarea is-focus">
+              <textarea
+                v-model="body"
+                rows="2"
+                autofocus
+                placeholder="What should change, or a note"
+                aria-label="Comment"
+              />
+            </label>
+          </div>
+          <div class="m-rail">
+            <button type="button">
+              <UIcon name="i-lucide-app-window" /><span
+                ><b>Where it shows</b> · {{ current.text.shownIn.join(', ') }}</span
+              ><UIcon name="i-lucide-chevron-right" />
+            </button>
+            <button v-if="hits.length > 0" type="button">
+              <UIcon name="i-lucide-book-open-text" /><span
+                ><b>Glossary</b> ·
+                {{ hits.map((hit) => hit.terms[language]?.term ?? hit.name).join(', ') }}</span
+              ><UIcon name="i-lucide-chevron-right" />
+            </button>
+          </div>
+          <div v-if="mode === 'edit'" class="rv-acts">
+            <button type="button" class="btn btn-outline" @click="mode = 'view'">
+              Cancel<span class="kbd">esc</span>
+            </button>
+            <span />
+            <span />
+            <button
+              type="button"
+              class="btn btn-primary"
+              :class="{ 'is-loading': approveEdited.isPending.value }"
+              @click="approveEdited.mutate()"
+            >
+              <UIcon name="i-lucide-check" />Approve with change
+            </button>
+          </div>
+          <div v-else-if="mode === 'comment'" class="rv-acts">
+            <button type="button" class="btn btn-outline" @click="mode = 'view'">
+              Cancel<span class="kbd">esc</span>
+            </button>
+            <span />
+            <button
+              type="button"
+              class="btn btn-outline"
+              :disabled="!body.trim()"
+              :class="{ 'is-loading': comment.isPending.value }"
+              @click="comment.mutate()"
+            >
+              Comment
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              :disabled="!body.trim()"
+              :class="{ 'is-loading': askChange.isPending.value }"
+              @click="askChange.mutate()"
+            >
+              Ask for a change
+            </button>
+          </div>
+          <div v-else class="rv-acts">
+            <button type="button" class="btn btn-outline" @click="skip">
+              <UIcon name="i-lucide-skip-forward" />Skip<span class="kbd">S</span>
+            </button>
+            <button type="button" class="btn btn-outline" @click="edit">
+              <UIcon name="i-lucide-pencil" />Edit<span class="kbd">E</span>
+            </button>
+            <button type="button" class="btn btn-outline" @click="startComment">
+              <UIcon name="i-lucide-message-circle" />Comment<span class="kbd">C</span>
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              :class="{ 'is-loading': approve.isPending.value }"
+              @click="approveCurrent"
+            >
+              <UIcon name="i-lucide-check" />Approve<span class="kbd">A</span>
+            </button>
+          </div>
+        </div>
+      </section>
+      <aside class="panel rv-rail">
+        <section>
+          <h4>Where it shows<span class="meta">{{ current.text.key.source }}</span></h4>
+          <div class="rows">
+            <div v-for="app in current.text.shownIn" :key="app" class="r" style="padding: 9px 0">
+              <UIcon name="i-lucide-app-window" class="muted" /><span class="g-grow">{{
+                app
+              }}</span>
+            </div>
+          </div>
         </section>
-        <section v-if="hits.length > 0" class="flex flex-col gap-2">
-          <h2 class="font-semibold text-highlighted">Glossary</h2>
+        <section>
+          <h4>Glossary<span class="meta">{{ hits.length }} terms</span></h4>
+          <div class="gl">
+            <div v-for="hit in hits" :key="hit.id" class="g">
+              <div class="t">
+                {{ hit.name }}<UIcon name="i-lucide-arrow-right" />{{
+                  hit.terms[language]?.term ?? hit.name
+                }}<s v-for="word in hit.terms[language]?.avoid ?? []" :key="word">{{ word }}</s>
+              </div>
+              <div class="d">{{ hit.definition }}</div>
+            </div>
+            <p v-if="hits.length === 0" class="muted" style="font-size: 13px">
+              No glossary term in this text.
+            </p>
+          </div>
+        </section>
+        <section>
+          <h4>Comments<span class="meta">{{ comments.data.value?.length ?? 0 }}</span></h4>
           <div
-            v-for="term in hits"
-            :key="term.id"
-            class="rounded-control bg-muted px-3 py-2.5 text-sm"
+            v-for="item in comments.data.value ?? []"
+            :key="item.id"
+            class="cmt"
+            style="margin-bottom: 10px"
           >
-            <p>
-              <b class="font-semibold">{{ term.name }}</b>
-              <template v-if="term.terms[language]">
-                → {{ term.terms[language]?.term }}
-                <s
-                  v-for="word in term.terms[language]?.avoid ?? []"
-                  :key="word"
-                  class="ml-2 text-error"
-                  >{{ word }}</s
-                >
-              </template>
-            </p>
-            <p class="mt-0.5 text-muted">{{ term.definition }}</p>
-          </div>
-        </section>
-        <section v-if="(comments.data.value ?? []).length > 0" class="flex flex-col gap-2">
-          <h2 class="font-semibold text-highlighted">Comments</h2>
-          <div v-for="item in comments.data.value" :key="item.id" class="flex items-start gap-2.5">
-            <UAvatar :alt="item.authorName" size="sm" />
-            <p class="text-sm">
-              <span class="font-medium">{{ item.authorName }}</span>
-              <span v-if="item.kind === 'CHANGE_REQUEST'" class="text-muted">
-                asked for a change</span
-              >
-              <span class="block text-muted">{{ item.body }}</span>
-            </p>
+            <AppAvatar :name="item.authorName" size="sm" />
+            <div>
+              <b>{{ item.authorName }}</b>&nbsp;<span class="when">{{
+                item.kind === 'CHANGE_REQUEST' ? 'asks for a change' : ''
+              }}</span
+              ><br />{{ item.body }}
+            </div>
           </div>
         </section>
       </aside>
-    </div>
-    <div v-else-if="queue.isPending.value" class="py-10 text-center text-muted">Loading…</div>
-    <div v-else class="mx-auto flex max-w-md flex-col items-center gap-3 py-16 text-center">
-      <UIcon name="i-lucide-circle-check-big" class="size-8 text-primary" />
-      <p class="text-lg font-semibold text-highlighted">
-        {{ done.length > 0 ? `${done.length} reviewed` : 'Nothing to review' }}
-      </p>
-      <p class="text-muted">{{ languageName(language) }}</p>
-      <div class="flex gap-2">
-        <UButton
-          v-if="remaining.length > 0"
-          label="Show the skipped ones"
-          color="neutral"
-          variant="outline"
-          @click="startAgain"
-        />
-        <UButton
-          label="Back to the queue"
-          color="neutral"
-          :to="{ path: `/projects/${projectId}/review`, query: { language } }"
-        />
-      </div>
     </div>
   </AppPage>
 </template>

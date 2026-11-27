@@ -4011,6 +4011,11 @@
     background: linear-gradient(to bottom, transparent, var(--glot-panel) 18px);
   }
 }
+.rv-lbl {
+  flex-wrap: wrap;
+  row-gap: 2px;
+  white-space: nowrap;
+}
 
 .split {
   flex: 1;

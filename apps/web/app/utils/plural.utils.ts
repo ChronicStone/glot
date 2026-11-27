@@ -12,9 +12,9 @@ function pluralCategories(language: string) {
     counts.set(category, [...(counts.get(category) ?? []), count])
   }
 
-  return [...counts.entries()]
-    .toSorted(([a], [b]) => CATEGORY_ORDER.indexOf(a) - CATEGORY_ORDER.indexOf(b))
-    .map(([, found]) => found)
+  return [...counts.entries()].toSorted(
+    ([a], [b]) => CATEGORY_ORDER.indexOf(a) - CATEGORY_ORDER.indexOf(b),
+  )
 }
 
 function describeCounts(counts: number[]) {
@@ -37,15 +37,15 @@ function describeCounts(counts: number[]) {
   return `${ranges.join(', ')}${counts.length > listed.length ? '…' : ''}`
 }
 
-const DEFAULT_FORMS: Record<number, Array<{ label: string; sample: number }>> = {
+const DEFAULT_FORMS: Record<number, Array<{ name: string; label: string; sample: number }>> = {
   2: [
-    { label: '1', sample: 1 },
-    { label: '0, 2 or more', sample: 2 },
+    { name: 'One', label: '1', sample: 1 },
+    { name: 'Other', label: '0, 2 or more', sample: 2 },
   ],
   3: [
-    { label: '0', sample: 0 },
-    { label: '1', sample: 1 },
-    { label: '2 or more', sample: 2 },
+    { name: 'Zero', label: '0', sample: 0 },
+    { name: 'One', label: '1', sample: 1 },
+    { name: 'Other', label: '2 or more', sample: 2 },
   ],
 }
 
@@ -53,16 +53,22 @@ function formTargets(options: { language: string; count: number }) {
   const categories = pluralCategories(options.language)
 
   if (categories.length === options.count) {
-    return categories.map((counts) => ({
+    return categories.map(([category, counts]) => ({
+      name: `${category.charAt(0).toUpperCase()}${category.slice(1)}`,
       label: describeCounts(counts),
       sample: counts.find((count) => count > 0) ?? 1,
     }))
   }
 
+  if (options.count === 1) {
+    return [{ name: 'Text', label: '', sample: 1 }]
+  }
+
   return (
     DEFAULT_FORMS[options.count] ??
     Array.from({ length: options.count }, (_, index) => ({
-      label: `Form ${index + 1}`,
+      name: `Form ${index + 1}`,
+      label: '',
       sample: index + 1,
     }))
   )
@@ -73,7 +79,9 @@ export function pluralForms(options: { language: string; value: string }) {
   const targets = formTargets({ language: options.language, count: forms.length })
 
   return forms.map((form, index) => ({
+    name: targets[index]?.name ?? '',
     label: targets[index]?.label ?? '',
+    form,
     value: form.replaceAll(/\{(?:count|n)\}/gu, String(targets[index]?.sample ?? index + 1)),
   }))
 }
