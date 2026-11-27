@@ -4,6 +4,7 @@ import { RELEASE_STATUSES } from '@glot/database/constants/releases'
 import GlotTextValue from '@glot/ui/components/GlotTextValue.vue'
 import { useMutation, useQuery } from '@tanstack/vue-query'
 import { formatTimeAgo } from '@vueuse/core'
+import { RELEASE_LANGUAGE_COLORS } from '../../../constants/releases.constants.ts'
 import { CONFLICT_REASON_LABELS, TIMELINE_HOURS } from '../../../constants/review.constants.ts'
 
 const { $api, $queryClient } = useNuxtApp()
@@ -19,6 +20,24 @@ const next = useQuery(() => ({
   ...$api.releases.next.queryOptions({ input: { projectId: projectId.value } }),
   enabled: Boolean(project.value),
 }))
+
+const languageColors = Object.values(RELEASE_LANGUAGE_COLORS)
+
+const ready = computed(() => {
+  const found = next.data.value?.ready
+
+  return {
+    changes: found?.changes ?? 0,
+    sources: found?.sources ?? [],
+    items: found?.items ?? [],
+    more: Math.max((found?.changes ?? 0) - (found?.items.length ?? 0), 0),
+    languages: (found?.languages ?? []).map((entry, index) => ({
+      ...entry,
+      name: languageName(entry.language),
+      color: languageColors[Math.min(index, languageColors.length - 1)],
+    })),
+  }
+})
 
 const history = useQuery(() => ({
   ...$api.releases.history.queryOptions({ input: { projectId: projectId.value, limit: 20 } }),
@@ -483,15 +502,47 @@ useIntervalFn(() => {
         <div class="stats">
           <div class="stat">
             <div class="l">Texts</div>
-            <div class="v">{{ next.data.value?.ready.changes ?? 0 }}</div>
+            <div class="v">{{ ready.changes }}</div>
           </div>
           <div class="stat">
-            <div class="l">Approvals</div>
-            <div class="v">{{ next.data.value?.ready.approvals ?? 0 }}</div>
+            <div class="l">Languages</div>
+            <div class="v">{{ ready.languages.length }}</div>
           </div>
-          <div class="stat">
-            <div class="l">Held back</div>
-            <div class="v">{{ next.data.value?.conflicts ?? 0 }}</div>
+          <div class="stat" :title="ready.sources.join(', ')">
+            <div class="l">Apps</div>
+            <div class="v">{{ ready.sources.length }}</div>
+          </div>
+        </div>
+        <template v-if="ready.languages.length > 0">
+          <div class="sbar" role="img" :aria-label="`Approved texts per language`">
+            <i
+              v-for="entry in ready.languages"
+              :key="entry.language"
+              :style="{ flex: entry.changes, background: entry.color }"
+            />
+          </div>
+          <div class="legend">
+            <span v-for="entry in ready.languages" :key="entry.language"
+              ><i class="swatch" :style="{ background: entry.color }" />{{ entry.name }}
+              <b>{{ entry.changes }}</b></span
+            >
+          </div>
+        </template>
+        <div v-if="ready.items.length > 0" class="rows">
+          <div v-for="item in ready.items" :key="`${item.textId}|${item.language}`" class="r">
+            <span class="lc plain">{{ item.language }}</span>
+            <div class="g-grow" style="min-width: 0">
+              <div class="ellipsis">
+                <GlotTextValue :value="item.value" :syntax="item.syntax" />
+              </div>
+              <div class="r-sub">
+                <AppTextKey :source="item.key.source" :path="item.key.path.join('.')" />
+              </div>
+            </div>
+            <span v-if="item.authorName" class="meta">{{ item.authorName }}</span>
+          </div>
+          <div v-if="ready.more > 0" class="r">
+            <span class="g-grow muted">{{ ready.more }} more</span>
           </div>
         </div>
         <div v-if="next.data.value?.open" class="rows">
