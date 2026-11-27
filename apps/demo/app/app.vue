@@ -11,16 +11,18 @@ async function change(event: Event) {
 </script>
 
 <template>
-  <header class="nav">
-    <NuxtLink :to="localePath('/')" class="logo"><i />agorastore</NuxtLink>
-    <NuxtLink :to="localePath('/')">{{ t('nav.auctions') }}</NuxtLink>
-    <span>{{ t('nav.categories') }}</span>
-    <span>{{ t('nav.howItWorks') }}</span>
-    <select :value="locale" aria-label="Language" @change="change">
-      <option v-for="entry in locales" :key="entry.code" :value="entry.code">
-        {{ entry.code }}
-      </option>
-    </select>
-  </header>
-  <NuxtPage />
+  <UApp>
+    <header class="nav">
+      <NuxtLink :to="localePath('/')" class="logo"><i />agorastore</NuxtLink>
+      <NuxtLink :to="localePath('/')">{{ t('nav.auctions') }}</NuxtLink>
+      <span>{{ t('nav.categories') }}</span>
+      <span>{{ t('nav.howItWorks') }}</span>
+      <select :value="locale" aria-label="Language" @change="change">
+        <option v-for="entry in locales" :key="entry.code" :value="entry.code">
+          {{ entry.code }}
+        </option>
+      </select>
+    </header>
+    <NuxtPage />
+  </UApp>
 </template>

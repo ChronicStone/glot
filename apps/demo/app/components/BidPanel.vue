@@ -20,7 +20,18 @@ function euros(value: number) {
       />
       <button type="submit">{{ t('marketplace.bid.placeBid') }}</button>
     </form>
-    <a href="#viewing" class="secondary">{{ t('marketplace.lot.requestViewing') }}</a>
+    <UModal :title="t('marketplace.lot.requestViewing')" data-demo="viewing">
+      <button type="button" class="secondary">{{ t('marketplace.lot.requestViewing') }}</button>
+      <template #body>
+        <form class="viewing" @submit.prevent>
+          <UInput
+            :placeholder="t('marketplace.bid.yourBid')"
+            :aria-label="t('marketplace.bid.yourBid')"
+          />
+          <UButton type="submit">{{ t('actions.save') }}</UButton>
+        </form>
+      </template>
+    </UModal>
     <div class="fee">{{ t('marketplace.bid.fees', { amount: euros(fees) }) }}</div>
   </section>
 </template>

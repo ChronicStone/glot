@@ -10,8 +10,11 @@
   },
   "dependencies": {
     "@glot/nuxt": "workspace:*",
+    "@iconify-json/lucide": "catalog:",
+    "@nuxt/ui": "catalog:",
     "@nuxtjs/i18n": "10.7.0",
     "nuxt": "catalog:",
+    "tailwindcss": "catalog:",
     "vue": "catalog:"
   },
   "devDependencies": {

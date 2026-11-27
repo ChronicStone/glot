@@ -1,9 +1,11 @@
 export default defineNuxtConfig({
   compatibilityDate: '2026-11-01',
-  modules: ['@nuxtjs/i18n', '@glot/nuxt'],
+  modules: ['@nuxt/ui', '@nuxtjs/i18n', '@glot/nuxt'],
   buildDir: process.env.DEMO_BUILD_DIR ?? '.nuxt',
   devServer: { port: Number(process.env.DEMO_PORT ?? 3200) },
-  css: ['~/assets/demo.css'],
+  css: ['~/assets/main.css'],
+  ui: { fonts: false },
+  icon: { mode: 'svg', serverBundle: { collections: ['lucide'] } },
   nitro: { output: { dir: process.env.DEMO_OUTPUT_DIR ?? '.output' } },
   runtimeConfig: {
     locales: {

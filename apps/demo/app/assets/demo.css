@@ -106,12 +106,17 @@ a {
   color: #fff;
   cursor: pointer;
 }
+.viewing {
+  display: flex;
+  gap: 8px;
+}
 .secondary {
   display: inline-block;
   margin-top: 14px;
   font-size: 14px;
   color: var(--brand);
   text-decoration: underline;
+  cursor: pointer;
 }
 .fee {
   margin-top: 10px;
