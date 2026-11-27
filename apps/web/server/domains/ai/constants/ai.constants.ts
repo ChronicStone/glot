@@ -26,6 +26,10 @@ export const AI_STOP_MESSAGES = {
   [AI_STOPS.CUT_SHORT]: 'The AI answer was cut short',
 } as const
 
+export const AI_FILL_CLOCK = {
+  TICK_MS: 5_000,
+} as const
+
 export const AI_HTTP = {
   ATTEMPTS: 3,
   TIMEOUT_MS: 180_000,

@@ -3,6 +3,8 @@ import { auth } from '../config/auth.config.ts'
 import { catalog, git } from '../config/catalog.config.ts'
 import { database } from '../config/database.config.ts'
 import { mailer } from '../config/mail.config.ts'
+import { previews } from '../config/templates.config.ts'
+import { AI_FILL_CLOCK } from '../domains/ai/constants/ai.constants.ts'
 import { AiFillJobsService } from '../domains/ai/services/ai-fill-jobs.service.ts'
 import { DigestJobsService } from '../domains/digests/services/digest-jobs.service.ts'
 import { RELEASE_CLOCK } from '../domains/releases/constants/releases.constants.ts'
@@ -22,14 +24,14 @@ export default defineNitroPlugin(() => {
 
   const digests = mailer
     ? new DigestJobsService({
-        context: { auth, db: database.db, catalog, git, ai },
+        context: { auth, db: database.db, catalog, git, ai, previews },
         send: mailer,
         appUrl: env.APP_URL,
       })
     : undefined
 
   const fills = new AiFillJobsService({
-    context: { auth, db: database.db, catalog, git, ai },
+    context: { auth, db: database.db, catalog, git, ai, previews },
   })
 
   let ticking = false
@@ -67,5 +69,5 @@ export default defineNitroPlugin(() => {
       .finally(() => {
         filling = false
       })
-  }, RELEASE_CLOCK.TICK_MS).unref()
+  }, AI_FILL_CLOCK.TICK_MS).unref()
 })
