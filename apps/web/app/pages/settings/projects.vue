@@ -66,7 +66,7 @@ function edit(project: ProjectView | undefined) {
     </template>
     <SettingsTabs />
     <section class="panel">
-      <AppDataTable :table="table" :loading="false" empty="No project yet.">
+      <AppDataTable class="ptbl" :table="table" :loading="false" empty="No project yet.">
         <template #cell-name="{ row }">
           <div class="who">
             <span class="ptile check" style="width: 32px; height: 32px; border-radius: 10px"

@@ -83,7 +83,12 @@ function openModal(person: Person | undefined) {
           >
         </div>
       </div>
-      <AppDataTable :table="table" :loading="people.isPending.value" empty="Nobody matches.">
+      <AppDataTable
+        class="ptbl"
+        :table="table"
+        :loading="people.isPending.value"
+        empty="Nobody matches."
+      >
         <template #cell-person="{ row }">
           <div class="who">
             <AppAvatar :name="row.user.name" size="md" />

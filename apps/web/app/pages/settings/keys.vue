@@ -50,7 +50,13 @@ const table = useAppTable({ columns, data, getRowId: (key) => key.id })
           </button>
         </div>
       </div>
-      <AppDataTable v-else :table="table" :loading="keys.isPending.value" empty="No key yet.">
+      <AppDataTable
+        class="ptbl"
+        v-else
+        :table="table"
+        :loading="keys.isPending.value"
+        empty="No key yet."
+      >
         <template #cell-name="{ row }">
           <div class="who">
             <span class="ico-tile"><UIcon name="i-lucide-key-round" /></span>

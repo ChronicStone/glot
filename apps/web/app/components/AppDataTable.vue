@@ -7,16 +7,22 @@ defineProps<{
   table: ReturnType<typeof useAppTable<TData>>
   loading?: boolean | undefined
   empty: string
+  selectedId?: string | undefined
 }>()
 
-defineSlots<Record<`cell-${string}`, (props: { row: TData }) => unknown>>()
+const emit = defineEmits<{ select: [rowId: string] }>()
+
+defineSlots<
+  Record<`cell-${string}`, (props: { row: TData }) => unknown> &
+    Record<`header-${string}`, () => unknown>
+>()
 </script>
 
 <template>
-  <table class="tbl ptbl">
+  <table class="tbl">
     <thead>
       <tr v-for="group in table.getHeaderGroups()" :key="group.id">
-        <th v-for="header in group.headers" :key="header.id" scope="col" style="padding-top: 16px">
+        <th v-for="header in group.headers" :key="header.id" scope="col">
           <button
             v-if="header.column.getCanSort()"
             type="button"
@@ -24,7 +30,7 @@ defineSlots<Record<`cell-${string}`, (props: { row: TData }) => unknown>>()
             style="gap: 4px"
             @click="header.column.toggleSorting()"
           >
-            <FlexRender :header="header" />
+            <slot :name="`header-${header.column.id}`"><FlexRender :header="header" /></slot>
             <UIcon
               v-if="header.column.getIsSorted()"
               :name="
@@ -33,7 +39,9 @@ defineSlots<Record<`cell-${string}`, (props: { row: TData }) => unknown>>()
               class="ic-13"
             />
           </button>
-          <FlexRender v-else-if="!header.isPlaceholder" :header="header" />
+          <slot v-else-if="!header.isPlaceholder" :name="`header-${header.column.id}`">
+            <FlexRender :header="header" />
+          </slot>
         </th>
       </tr>
     </thead>
@@ -50,7 +58,13 @@ defineSlots<Record<`cell-${string}`, (props: { row: TData }) => unknown>>()
           <div class="empty"><p>{{ empty }}</p></div>
         </td>
       </tr>
-      <tr v-for="row in table.getRowModel().rows" v-else :key="row.id">
+      <tr
+        v-for="row in table.getRowModel().rows"
+        v-else
+        :key="row.id"
+        :class="{ on: row.id === selectedId }"
+        @click="emit('select', row.id)"
+      >
         <td
           v-for="cell in row.getAllCells()"
           :key="cell.id"
