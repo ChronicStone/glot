@@ -13,7 +13,7 @@ bun install
 bun run demo
 ```
 
-One command starts PostgreSQL, a fresh demo workspace, Glot on http://localhost:3100, an auction site in five languages with the in-app editor on http://localhost:3200, and a preview adapter for its emails. Sign in as `marie@glot.test` (owner) or `anna@glot.test` (Polish and German reviewer): the sign-in link prints in the terminal.
+One command starts PostgreSQL, a fresh demo workspace, Glot on http://localhost:3100, an auction site in five languages with the in-app editor on http://localhost:3200, and a preview adapter for its emails. Sign in as `marie@glot.test` (owner) or `anna@glot.test` (Polish and German reviewer): the sign-in link prints in the terminal. [docs/showcase.md](docs/showcase.md) walks through it in ten minutes: a wrong word fixed in the page, reviewed, released and live.
 
 ## What is in the box
 
