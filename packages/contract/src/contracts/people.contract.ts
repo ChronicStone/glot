@@ -5,6 +5,7 @@ import {
   ADMIN_ONLY_ERRORS,
   MEMBERSHIP_ERRORS,
   NOT_FOUND_ERRORS,
+  PEOPLE_ONLY_ERRORS,
 } from '../constants/contract.constants.ts'
 import {
   accessSchema,
@@ -12,6 +13,7 @@ import {
   personInviteInputSchema,
   personSchema,
   personUpdateInputSchema,
+  preferencesSchema,
   workspaceRefInputSchema,
 } from '../validators/people.validator.ts'
 
@@ -43,6 +45,32 @@ export const peopleContract = {
     .input(workspaceRefInputSchema)
     .output(accessSchema)
     .errors(NOT_FOUND_ERRORS),
+  preferences: oc
+    .meta(
+      openapi({
+        method: 'GET',
+        path: '/me/preferences',
+        operationId: 'getMyPreferences',
+        summary: 'My preferences',
+        description: 'Whether the daily email of what needs the caller is sent to them.',
+        tags: ['people'],
+      }),
+    )
+    .output(preferencesSchema),
+  updatePreferences: oc
+    .meta(
+      openapi({
+        method: 'PATCH',
+        path: '/me/preferences',
+        operationId: 'updateMyPreferences',
+        summary: 'Change my preferences',
+        description: 'Turn the daily email on or off. People only.',
+        tags: ['people'],
+      }),
+    )
+    .input(preferencesSchema)
+    .output(preferencesSchema)
+    .errors(PEOPLE_ONLY_ERRORS),
   invite: oc
     .meta(
       openapi({

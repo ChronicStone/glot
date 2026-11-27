@@ -1,3 +1,4 @@
+import { countWords } from '@glot/checks'
 import type {
   ApproveInput,
   ApproveSameInput,
@@ -35,47 +36,49 @@ export class ReviewsService {
     return { write, approve }
   }
 
-  async queue(input: QueueInput) {
-    const { project } = await new RightsService(this.#context).requireApprove(input)
-    const texts = new TextsService(this.#context)
-    const userId = actorUserId(this.#context.actor)
+  async items(options: {
+    project: { id: string; workspaceId: string }
+    language: string
+    texts: Text[]
+  }) {
+    const { project, language } = options
 
-    const [all, drafts, changeRequests, approvals, reviewers, words] = await Promise.all([
-      texts.all(input.projectId),
+    const [drafts, changeRequests, approvals, reviewers] = await Promise.all([
       this.#context.db.drafts.findMany({
-        where: {
-          projectId: input.projectId,
-          language: input.language,
-          status: DRAFT_STATUSES.IN_REVIEW,
-        },
+        where: { projectId: project.id, language, status: DRAFT_STATUSES.IN_REVIEW },
         include: { author: true },
         orderBy: { updatedAt: 'asc' },
       }),
       this.#context.db.comments.findMany({
-        where: {
-          projectId: input.projectId,
-          language: input.language,
-          kind: COMMENT_KINDS.CHANGE_REQUEST,
-        },
+        where: { projectId: project.id, language, kind: COMMENT_KINDS.CHANGE_REQUEST },
       }),
-      this.#context.db.approvals.findMany({
-        where: { projectId: input.projectId, language: input.language },
-      }),
+      this.#context.db.approvals.findMany({ where: { projectId: project.id, language } }),
       new RightsService(this.#context).reviewerCount({
         workspaceId: project.workspaceId,
-        language: input.language,
+        language,
       }),
-      texts.words(project.workspaceId),
     ])
 
-    const items = queueItems({
-      texts: all,
-      language: input.language,
+    return queueItems({
+      texts: options.texts,
+      language,
       drafts,
       changeRequests,
       approvals,
-      hideAuthorId: reviewers >= 2 ? userId : null,
+      hideAuthorId: reviewers >= 2 ? actorUserId(this.#context.actor) : null,
     })
+  }
+
+  async queue(input: QueueInput) {
+    const { project } = await new RightsService(this.#context).requireApprove(input)
+    const texts = new TextsService(this.#context)
+
+    const [all, words] = await Promise.all([
+      texts.all(input.projectId),
+      texts.words(project.workspaceId),
+    ])
+
+    const items = await this.items({ project, language: input.language, texts: all })
 
     const pairs = approvedPairs({ texts: all, language: input.language })
     const offset = input.cursor ? Number(input.cursor) : 0
@@ -194,6 +197,7 @@ export class ReviewsService {
               language: input.language,
               sourceHash: hashText(text.source.value),
               targetHash: hashText(translation.value ?? ''),
+              words: countWords(translation.value ?? ''),
               reviewerId: userId,
             },
           ]
@@ -365,11 +369,13 @@ export class ReviewsService {
       targetHash: hashText(options.value),
     }
 
+    const words = countWords(options.value)
+
     await this.#context.db.transaction(async (tx) => {
       await tx.approvals.upsert({
         where: pair,
-        create: { ...pair, reviewerId, selfApproved: options.selfApproved },
-        update: { reviewerId, selfApproved: options.selfApproved },
+        create: { ...pair, reviewerId, selfApproved: options.selfApproved, words },
+        update: { reviewerId, selfApproved: options.selfApproved, words },
       })
 
       if (!change) {

@@ -2,11 +2,13 @@ import type {
   MembershipRefInput,
   PersonInviteInput,
   PersonUpdateInput,
+  Preferences,
   WorkspaceRefInput,
 } from '@glot/contract'
 import type { WorkspaceRole } from '@glot/database/types/workspaces'
 import { ORPCError } from '@orpc/server'
 import type { RequestContext } from '../../../types/context.types.ts'
+import { actorUserId } from '../../../utils/actor.utils.ts'
 import { INVITATION_CALLBACK_PATH } from '../constants/people.constants.ts'
 import { toPerson } from '../utils/people.utils.ts'
 import { WorkspaceAccessService } from './workspace-access.service.ts'
@@ -58,6 +60,25 @@ export class PeopleService {
     const { role, languages, expiresAt } = await this.#access.membershipOf(input.workspaceId)
 
     return { role, languages, expiresAt }
+  }
+
+  async preferences() {
+    const user = await this.#context.db.user
+      .findFirst({ where: { id: actorUserId(this.#context.actor) } })
+      .throw()
+
+    return { receivesDigest: user.receivesDigest }
+  }
+
+  async updatePreferences(input: Preferences) {
+    const user = await this.#context.db.user
+      .update({
+        where: { id: actorUserId(this.#context.actor) },
+        data: { receivesDigest: input.receivesDigest },
+      })
+      .throw()
+
+    return { receivesDigest: user.receivesDigest }
   }
 
   async invite(input: PersonInviteInput) {

@@ -5,6 +5,7 @@ import type {
   personInviteInputSchema,
   personSchema,
   personUpdateInputSchema,
+  preferencesSchema,
   workspaceRefInputSchema,
 } from '../validators/people.validator.ts'
 
@@ -19,3 +20,5 @@ export type Access = z.infer<typeof accessSchema>
 export type PersonInviteInput = z.infer<typeof personInviteInputSchema>
 
 export type PersonUpdateInput = z.infer<typeof personUpdateInputSchema>
+
+export type Preferences = z.infer<typeof preferencesSchema>

@@ -15,3 +15,7 @@ export * from './health.validator.ts'
 export * from './people.validator.ts'
 
 export * from './releases.validator.ts'
+
+export * from './home.validator.ts'
+
+export * from './reports.validator.ts'

@@ -14,6 +14,7 @@ export const PEOPLE_ONLY_PROCEDURES = {
   INVITE_PERSON: 'people.invite',
   UPDATE_PERSON: 'people.update',
   REMOVE_PERSON: 'people.remove',
+  UPDATE_MY_PREFERENCES: 'people.updatePreferences',
 } as const
 
 export const NOT_FOUND_ERRORS = { NOT_FOUND: { message: 'Not found' } }

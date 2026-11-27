@@ -6,6 +6,12 @@ export const peopleRouter = {
     new PeopleService(context).list(input),
   ),
   me: procedures.people.me.handler(({ input, context }) => new PeopleService(context).me(input)),
+  preferences: procedures.people.preferences.handler(({ context }) =>
+    new PeopleService(context).preferences(),
+  ),
+  updatePreferences: procedures.people.updatePreferences.handler(({ input, context }) =>
+    new PeopleService(context).updatePreferences(input),
+  ),
   invite: procedures.people.invite.handler(({ input, context }) =>
     new PeopleService(context).invite(input),
   ),

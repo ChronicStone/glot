@@ -26,6 +26,12 @@ export const personSchema = workspaceMembershipSelectSchema
     signedIn: z.boolean().describe('False until the person opens their first sign-in link.'),
   })
 
+export const preferencesSchema = userSelectSchema.pick({ receivesDigest: true }).extend({
+  receivesDigest: userSelectSchema.shape.receivesDigest.describe(
+    'Whether the daily email of what needs you is sent. It is only sent on days something needs you.',
+  ),
+})
+
 export const accessSchema = personSchema.pick({ role: true, languages: true, expiresAt: true })
 
 const membershipChangesSchema = workspaceMembershipInsertSchema
