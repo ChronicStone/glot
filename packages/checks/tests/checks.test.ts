@@ -679,3 +679,25 @@ test('an attribute name cannot be split across texts', () => {
 
   expect(codes({ source: 'Data = {date}', target: 'Data = {date}' })).toEqual([])
 })
+
+test('nothing can be glued after a linked text either', () => {
+  expect(codes({ source: '@:k <b>ok</b>', target: "@:k{'lick'} <b>ok</b>" })).toEqual(['HTML_TAGS'])
+
+  expect(codes({ source: '@:a @:b', target: '@:a@:b' })).toEqual(['HTML_TAGS'])
+  expect(codes({ source: '@:a@:b', target: '@:a@:b' })).toEqual([])
+  expect(codes({ source: 'Voir @:brand.', target: 'See @:brand.' })).toEqual([])
+})
+
+test('a glue the source allows stays on its own linked text', () => {
+  const source = '@:d @:k <b>ok</b> = 1'
+
+  expect(codes({ source, target: "@:d @:k{'lick'}=alert(document.domain) <b>ok</b>" })).toEqual([
+    'HTML_TAGS',
+  ])
+
+  expect(
+    codes({ source: '@:d @:k <b>ok</b> (v@:v)', target: '@:d on@:k <b>ok</b> (v @:v)' }),
+  ).toEqual(['HTML_TAGS'])
+
+  expect(codes({ source: '@:d @:k (v@:v)', target: '@:d @:k (v@:v)' })).toEqual([])
+})

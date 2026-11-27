@@ -355,14 +355,20 @@ export function checkText(input: {
     }
   }
 
-  const glued = renderedForms(target.forms, { written: true }).map(gluedLinksOf)
+  const sourceGlued = source.problem ? [] : source.forms.map(gluedLinksOf)
 
-  const sourceGlued = Math.max(
-    0,
-    ...(source.problem ? [] : renderedForms(source.forms, { written: true }).map(gluedLinksOf)),
-  )
+  const gluedApart =
+    !source.problem &&
+    target.forms.some((form, index) => {
+      const allowed =
+        sourceGlued.length === target.forms.length ? [sourceGlued[index] ?? []] : sourceGlued
 
-  if (glued.some((count) => count > sourceGlued)) {
+      return !allowed.some(
+        (keys) => difference({ from: gluedLinksOf(form), without: keys }).length === 0,
+      )
+    })
+
+  if (gluedApart) {
     failures.push({
       code: CHECK_CODES.HTML_TAGS,
       message:

@@ -94,10 +94,30 @@ function renderedItem(item: MessageNode['items'][number], options: { written: bo
   return options.written ? '{}' : placeholderStandIn('')
 }
 
-const GLUED_LINK_PATTERN = /[A-Za-z0-9_-]@[.:]/gu
+const WORD_EDGE_START = /^[\w:-]/u
 
-export function gluedLinksOf(written: string) {
-  return written.match(GLUED_LINK_PATTERN)?.length ?? 0
+const WORD_EDGE_END = /[\w:-]$/u
+
+function touches(item: MessageNode['items'][number] | undefined, edge: RegExp) {
+  if (!item) {
+    return false
+  }
+
+  if (item.type === MESSAGE_NODE_TYPES.TEXT || item.type === MESSAGE_NODE_TYPES.LITERAL) {
+    return edge.test(item.value ?? '')
+  }
+
+  return true
+}
+
+export function gluedLinksOf(form: MessageNode) {
+  return form.items.flatMap((item, index) =>
+    item.type === MESSAGE_NODE_TYPES.LINKED &&
+    (touches(form.items[index - 1], WORD_EDGE_END) ||
+      touches(form.items[index + 1], WORD_EDGE_START))
+      ? [linkedKey(item.key)]
+      : [],
+  )
 }
 
 export function renderedForms(forms: MessageNode[], options: { written: boolean }) {
