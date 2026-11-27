@@ -72,12 +72,17 @@ export class AiUsageService {
   }
 
   async requireBudget(workspaceId: string) {
-    const [rows, budget] = await Promise.all([
-      this.#month({ workspaceId, now: new Date() }),
+    const now = new Date()
+
+    const [costs, budget] = await Promise.all([
+      this.#context.db.aiUsage.findMany({
+        where: { workspaceId, createdAt: { gte: monthStart(now), lt: monthEnd(now) } },
+        select: { costMicros: true },
+      }),
       new AiSettingsService(this.#context).budgetMicros(workspaceId),
     ])
 
-    if (rows.reduce((sum, row) => sum + row.costMicros, 0) >= budget) {
+    if (costs.reduce((sum, row) => sum + row.costMicros, 0) >= budget) {
       throw new ORPCError('CONFLICT', {
         message: 'The monthly AI budget is reached',
         data: { reason: AI_FILL_STOP_REASONS.BUDGET_REACHED },
