@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ProjectUpdateInput, ProjectView } from '@glot/contract'
-import { projectCreateInputSchema, projectUpdateInputSchema } from '@glot/contract/validators'
+import { projectCreateInputSchema, projectSourceInputSchema } from '@glot/contract/validators'
 import { SOURCE_KINDS } from '@glot/database/constants/projects'
 import { useForm } from '@tanstack/vue-form'
 import { useMutation } from '@tanstack/vue-query'
@@ -65,7 +65,6 @@ const defaultValues: Omit<ProjectUpdateInput, 'projectId'> = {
 
 const form = useForm({
   defaultValues,
-  validators: { onSubmit: projectUpdateInputSchema.omit({ projectId: true }) },
   onSubmit: ({ value }) => {
     serverError.value = ''
 
@@ -111,7 +110,11 @@ function codes(input: string) {
       style="gap: 16px"
       @submit.prevent.stop="form.handleSubmit()"
     >
-      <form.Field v-slot="{ field }" name="name">
+      <form.Field
+        v-slot="{ field }"
+        name="name"
+        :validators="{ onSubmit: projectCreateInputSchema.shape.name }"
+      >
         <div class="field">
           <span class="label">Name people see</span>
           <label :class="{ 'is-error': field.state.meta.errors.length > 0 }" class="input"
@@ -120,6 +123,9 @@ function codes(input: string) {
               aria-label="Name"
               @input="field.handleChange(inputValue($event))"
           /></label>
+          <span v-if="errorMessage(field.state.meta.errors)" class="hint err">{{
+            errorMessage(field.state.meta.errors)
+          }}</span>
         </div>
       </form.Field>
       <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px">
@@ -134,7 +140,11 @@ function codes(input: string) {
           /></label>
           <span v-if="repositoryError" class="hint err">{{ repositoryError }}</span>
         </div>
-        <form.Field v-slot="{ field }" name="defaultBranch">
+        <form.Field
+          v-slot="{ field }"
+          name="defaultBranch"
+          :validators="{ onSubmit: projectCreateInputSchema.shape.defaultBranch }"
+        >
           <div class="field">
             <span class="label">Branch</span>
             <label :class="{ 'is-error': field.state.meta.errors.length > 0 }" class="input"
@@ -145,6 +155,9 @@ function codes(input: string) {
                 aria-label="Branch"
                 @input="field.handleChange(inputValue($event))"
             /></label>
+            <span v-if="errorMessage(field.state.meta.errors)" class="hint err">{{
+              errorMessage(field.state.meta.errors)
+            }}</span>
           </div>
         </form.Field>
       </div>
@@ -170,6 +183,7 @@ function codes(input: string) {
         <form.Field
           v-slot="{ field }"
           name="languages"
+          :validators="{ onSubmit: projectCreateInputSchema.shape.languages }"
           :listeners="{
             onChange: ({ value }: { value: string[] }) => syncSources({ languages: value }),
           }"
@@ -183,6 +197,9 @@ function codes(input: string) {
                 aria-label="Languages"
                 @input="field.handleChange(codes(inputValue($event)))"
             /></label>
+            <span v-if="errorMessage(field.state.meta.errors)" class="hint err">{{
+              errorMessage(field.state.meta.errors)
+            }}</span>
           </div>
         </form.Field>
       </div>
@@ -202,15 +219,26 @@ function codes(input: string) {
               style="grid-template-columns: 20px minmax(0, 1fr) minmax(0, 1.6fr) auto"
             >
               <UIcon name="i-lucide-grip-vertical" class="grip" />
-              <form.Field v-slot="{ field: name }" :name="`sources[${index}].name`">
+              <form.Field
+                v-slot="{ field: name }"
+                :name="`sources[${index}].name`"
+                :validators="{ onSubmit: projectSourceInputSchema.shape.name }"
+              >
                 <label class="input" style="height: 32px"
                   ><input
                     :value="name.state.value"
                     aria-label="Source name"
                     @input="name.handleChange(inputValue($event))"
                 /></label>
+                <span v-if="errorMessage(name.state.meta.errors)" class="hint err">{{
+                  errorMessage(name.state.meta.errors)
+                }}</span>
               </form.Field>
-              <form.Field v-slot="{ field: path }" :name="`sources[${index}].pathPattern`">
+              <form.Field
+                v-slot="{ field: path }"
+                :name="`sources[${index}].pathPattern`"
+                :validators="{ onSubmit: projectSourceInputSchema.shape.pathPattern }"
+              >
                 <label
                   :class="{ 'is-error': path.state.meta.errors.length > 0 }"
                   class="input"
@@ -221,6 +249,9 @@ function codes(input: string) {
                     aria-label="Files"
                     @input="path.handleChange(inputValue($event))"
                 /></label>
+                <span v-if="errorMessage(path.state.meta.errors)" class="hint err">{{
+                  errorMessage(path.state.meta.errors)
+                }}</span>
               </form.Field>
               <button
                 type="button"

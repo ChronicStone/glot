@@ -3,3 +3,13 @@ export function inputValue(event: Event) {
     ? event.target.value
     : ''
 }
+
+export function errorMessage(errors: readonly unknown[]) {
+  const first = errors.flat(2).find(Boolean)
+
+  if (typeof first === 'string') {
+    return first
+  }
+
+  return first && typeof first === 'object' && 'message' in first ? String(first.message) : ''
+}
