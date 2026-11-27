@@ -55,9 +55,13 @@ const languages = computed(() => {
   const project = session.value?.project
   const wanted = [project?.sourceLanguage, ...(session.value?.languages ?? []), language.value]
 
-  return [...new Set(wanted)].filter(
-    (code): code is string => !!code && props.composer.availableLocales.includes(code),
-  )
+  return [
+    ...new Set(
+      wanted.flatMap(
+        (code) => props.composer.availableLocales.find((available) => available === code) ?? [],
+      ),
+    ),
+  ]
 })
 
 const clickableKeys = computed(() => new Set(placed.value.flatMap(({ hit }) => hit.keys)))
@@ -234,12 +238,18 @@ function pick(row: PageRow) {
 }
 
 async function switchLanguage(code: string) {
+  const target = props.composer.availableLocales.find((available) => available === code)
+
+  if (!target) {
+    return
+  }
+
   editing.value = null
 
   if (canSetLocale(props.composer)) {
-    await props.composer.setLocale(code)
+    await props.composer.setLocale(target)
   } else {
-    props.composer.locale.value = code
+    props.composer.locale.value = target
   }
 }
 
