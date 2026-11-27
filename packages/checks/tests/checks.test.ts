@@ -851,3 +851,12 @@ test('a linked text cannot sit in a comment, and comment words cannot become att
 
   expect(checkSource({ source: "Bienvenue sur @:{'brand'} !" })).toEqual([])
 })
+
+test('a comment is removed where it stands, not where its text first appears', () => {
+  expect(
+    codes({
+      source: '<i title="&lt;!-- x --&gt;">a</i> <!-- x -->',
+      target: '<i title="<!-- x -->">a</i> <!-- x --> <b',
+    }),
+  ).toContain('HTML_TAGS')
+})

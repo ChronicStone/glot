@@ -90,7 +90,14 @@ export function htmlTagRanges(message: string) {
 }
 
 function markupTokensOf(message: string) {
-  const tokens: Array<{ kind: 'tag' | 'comment' | 'stray'; text: string; closed: boolean }> = []
+  const tokens: Array<{
+    kind: 'tag' | 'comment' | 'stray'
+    text: string
+    closed: boolean
+    start: number
+    end: number
+  }> = []
+
   let at = message.indexOf('<')
 
   while (at !== -1) {
@@ -119,6 +126,8 @@ function markupTokensOf(message: string) {
         kind: commentEnd !== -1 ? 'comment' : tag ? 'tag' : 'stray',
         text: message.slice(at, end),
         closed: commentEnd !== -1 || Boolean(tag) || close !== -1,
+        start: at,
+        end,
       })
     }
 
@@ -141,7 +150,8 @@ export function htmlCommentsOf(message: string) {
 export function withoutHtmlComments(message: string) {
   return markupTokensOf(message)
     .filter(({ kind }) => kind === 'comment')
-    .reduce((rest, { text }) => rest.replace(text, ' '), message)
+    .toReversed()
+    .reduce((rest, { start, end }) => `${rest.slice(0, start)} ${rest.slice(end)}`, message)
 }
 
 export function rawTextElementsOf(message: string) {
