@@ -8,6 +8,7 @@ import { WORKSPACE_ROLES } from '@glot/database/constants/workspaces'
 import { createDatabase } from '@glot/database/server'
 import { createGlotClient } from '@glot/sdk'
 import { seedDemoProject } from '@glot/seed'
+import { DEMO_SOURCE } from '@glot/seed/fixtures'
 import { seedDemoRepository } from '@glot/seed/repository'
 import { hashText } from '@glot/utils/hash'
 import { migrate } from 'drizzle-orm/node-postgres/migrator'
@@ -789,6 +790,53 @@ test('an array index past the end of the target file is never written, one at th
   } finally {
     await connection.close()
   }
+})
+
+test('a release stays mergeable when a language is removed from the project after it was prepared', async () => {
+  const demo = (await as('Olga').projects.list()).find(({ id }) => id === projectId)
+
+  const created = await as('Olga').projects.create({
+    workspaceId: demo?.workspaceId ?? '',
+    name: 'Languages',
+    repository: 'glot/release-languages',
+    defaultBranch: 'main',
+    sourceLanguage: 'fr',
+    languages: ['fr', 'en', 'de', 'pl', 'nl'],
+    sources: [{ ...DEMO_SOURCE, kind: 'vue-i18n' }],
+  })
+
+  const directory = (
+    await seedDemoRepository({
+      root: inject('repositoriesRoot'),
+      repository: 'glot/release-languages',
+    })
+  ).directory
+
+  await approveDraft({ project: created.id, source: 'Enregistrer', value: 'Zapisz' })
+
+  await expect(as('Dave').releases.run({ projectId: created.id })).resolves.toMatchObject({
+    status: 'OPEN',
+    changes: 1,
+    approvals: 1,
+  })
+
+  await as('Olga').projects.update({
+    projectId: created.id,
+    name: 'Languages',
+    defaultBranch: 'main',
+    sourceLanguage: 'fr',
+    languages: ['fr', 'en', 'de', 'nl'],
+    sources: [{ ...DEMO_SOURCE, kind: 'vue-i18n', languages: ['fr', 'en', 'de', 'nl'] }],
+  })
+
+  await mergeReleaseBranch(directory)
+  await as('Dave').projects.sync({ projectId: created.id })
+
+  await expect(as('Dave').releases.next({ projectId: created.id })).resolves.toMatchObject({
+    open: null,
+  })
+
+  expect((await as('Dave').releases.history({ projectId: created.id })).total).toBe(1)
 })
 
 test('values are replaced and added in place in a file with its own formatting', async () => {

@@ -15,7 +15,7 @@ import type {
   GitWriter,
 } from '../../catalogs/types/catalog.types.ts'
 import { approvalKey } from '../../catalogs/utils/approval-key.utils.ts'
-import { catalogPaths } from '../../catalogs/utils/catalog.utils.ts'
+import { catalogPaths, targetLanguages } from '../../catalogs/utils/catalog.utils.ts'
 import { RELEASE_BRANCH } from '../constants/releases.constants.ts'
 import type { ReleasePlan } from '../types/releases.types.ts'
 import { releaseMessage } from '../utils/release-message.utils.ts'
@@ -41,9 +41,12 @@ export class ReleaseRunnerService {
       ? await this.#catalog.sync(project)
       : await this.#catalog.read(project)
 
+    const languages = targetLanguages(project)
+
     const drafts = await this.#db.drafts.findMany({
       where: {
         projectId: project.id,
+        language: { in: languages },
         status: { in: [DRAFT_STATUSES.APPROVED, DRAFT_STATUSES.CONFLICT] },
       },
       orderBy: { updatedAt: 'asc' },
@@ -52,8 +55,10 @@ export class ReleaseRunnerService {
     const approvals = await this.#db.approvals.findMany({
       where: {
         projectId: project.id,
+        language: { in: languages },
         OR: [{ releasedAt: null }, { textId: { in: drafts.map(({ textId }) => textId) } }],
       },
+      orderBy: { createdAt: 'asc' },
     })
 
     const plan = planRelease({ catalog, drafts, approvals, excluded: new Set() })
@@ -248,7 +253,11 @@ export class ReleaseRunnerService {
       return
     }
 
-    const changes = await this.#db.releaseChanges.findMany({ where: { releaseId: open.id } })
+    const languages = targetLanguages(options.project)
+
+    const changes = await this.#db.releaseChanges.findMany({
+      where: { releaseId: open.id, language: { in: languages } },
+    })
     const values = new Map<string, string | null>()
 
     for (const entry of options.catalog.entries) {
@@ -262,7 +271,7 @@ export class ReleaseRunnerService {
     )
 
     const waiting = await this.#db.approvals.count({
-      where: { releaseId: open.id, releasedAt: null },
+      where: { releaseId: open.id, releasedAt: null, language: { in: languages } },
     })
 
     if (written && waiting === 0) {

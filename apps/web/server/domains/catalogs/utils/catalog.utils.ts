@@ -16,7 +16,7 @@ export function reviewsPath(language: string) {
   return `${GLOT_REPOSITORY.REVIEWS_DIRECTORY}/${language}${GLOT_REPOSITORY.REVIEWS_EXTENSION}`
 }
 
-function targetLanguages(project: CatalogProject) {
+export function targetLanguages(project: CatalogProject) {
   return project.languages.filter((language) => language !== project.sourceLanguage)
 }
 
