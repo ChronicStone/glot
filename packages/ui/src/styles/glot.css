@@ -7015,7 +7015,36 @@ pre.src {
     row-gap: 2px;
   }
   .panel-h .meta {
-    margin-left: 0;
-    flex-basis: 100%;
+    min-width: min(100%, max-content);
+  }
+}
+
+@media (max-width: 760px) {
+  .home,
+  .rel2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .tl-grid {
+    grid-template-columns: 84px minmax(0, 1fr);
+  }
+  .tl-axis span:nth-child(even) {
+    display: none;
+  }
+  .next-rel .row-flex {
+    flex-wrap: wrap;
+  }
+  .r-line {
+    flex-wrap: wrap;
+    white-space: normal;
+    row-gap: 2px;
+  }
+  .r-line .text-key {
+    flex: 1 1 100%;
+  }
+  .r-line .faint {
+    display: none;
+  }
+  .home .acts .meta {
+    display: none;
   }
 }
