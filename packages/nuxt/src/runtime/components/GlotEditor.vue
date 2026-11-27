@@ -183,8 +183,10 @@ const position = computed(() => {
     WIDGET_LAYOUT.EDITOR_WIDTH -
     WIDGET_LAYOUT.EDGE
 
+  const lastLeft = window.innerWidth - WIDGET_LAYOUT.EDITOR_WIDTH - WIDGET_LAYOUT.EDGE
+
   if (!props.anchor) {
-    return { left: `${Math.max(maxLeft, minLeft)}px`, top: '80px' }
+    return { left: `${Math.min(Math.max(maxLeft, minLeft), lastLeft)}px`, top: '80px' }
   }
 
   const below = props.anchor.bottom + WIDGET_LAYOUT.EDITOR_GAP
@@ -192,7 +194,7 @@ const position = computed(() => {
   const top = fits ? below : props.anchor.top - WIDGET_LAYOUT.EDITOR_GAP - height.value
 
   return {
-    left: `${Math.max(minLeft, Math.min(props.anchor.left, maxLeft))}px`,
+    left: `${Math.max(WIDGET_LAYOUT.EDGE, Math.min(Math.max(minLeft, Math.min(props.anchor.left, maxLeft)), lastLeft))}px`,
     top: `${Math.max(WIDGET_LAYOUT.EDGE, top)}px`,
   }
 })
