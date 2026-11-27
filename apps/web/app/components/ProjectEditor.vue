@@ -166,6 +166,7 @@ function addSource() {
     tone="check"
   >
     <form
+      novalidate
       id="project-form"
       class="stack"
       style="gap: 16px"

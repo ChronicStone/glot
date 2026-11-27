@@ -37,7 +37,7 @@ const submitting = form.useSelector((state) => state.isSubmitting)
         </button>
       </div>
     </div>
-    <form v-else class="auth-in" @submit.prevent.stop="form.handleSubmit()">
+    <form novalidate v-else class="auth-in" @submit.prevent.stop="form.handleSubmit()">
       <span class="mark"><GlotMark /></span>
       <div class="auth-strip">
         <span class="lc base">fr</span><span class="lc ok">en</span><span class="lc ok">de</span
@@ -58,8 +58,8 @@ const submitting = form.useSelector((state) => state.isSubmitting)
               @input="field.handleChange(inputValue($event))"
               @blur="field.handleBlur"
           /></label>
-          <span v-if="field.state.meta.errors[0]" class="hint err">{{
-            field.state.meta.errors[0]?.message
+          <span v-if="errorMessage(field.state.meta.errors)" class="hint err">{{
+            errorMessage(field.state.meta.errors)
           }}</span>
         </div>
       </form.Field>

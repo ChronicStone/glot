@@ -135,6 +135,7 @@ function dateValue(input: string) {
     :icon="person ? 'i-lucide-user-cog' : 'i-lucide-user-plus'"
   >
     <form
+      novalidate
       id="person-form"
       class="stack"
       style="gap: 16px"
@@ -153,8 +154,8 @@ function dateValue(input: string) {
                 @input="field.handleChange(inputValue($event))"
                 @blur="field.handleBlur"
             /></label>
-            <span v-if="field.state.meta.errors[0]" class="hint err">{{
-              field.state.meta.errors[0]?.message
+            <span v-if="errorMessage(field.state.meta.errors)" class="hint err">{{
+              errorMessage(field.state.meta.errors)
             }}</span>
           </div>
         </form.Field>

@@ -93,6 +93,7 @@ const submitting = form.useSelector((state) => state.isSubmitting)
     tone="check"
   >
     <form
+      novalidate
       id="concept-form"
       class="stack"
       style="gap: 16px"

@@ -14,8 +14,26 @@ export function errorMessage(errors: readonly unknown[]) {
     return first
   }
 
-  if (first && typeof first === 'object' && 'code' in first && first.code === 'too_small') {
-    return 'Required.'
+  if (first && typeof first === 'object' && 'code' in first) {
+    const origin = 'origin' in first ? first.origin : undefined
+
+    if (first.code === 'too_small' && 'minimum' in first) {
+      if (origin === 'number') {
+        return `Use ${String(first.minimum)} or more.`
+      }
+
+      return Number(first.minimum) <= 1
+        ? 'Required.'
+        : `Use at least ${String(first.minimum)} characters.`
+    }
+
+    if (first.code === 'too_big' && 'maximum' in first && origin === 'number') {
+      return `Use ${String(first.maximum)} or less.`
+    }
+  }
+
+  if (first && typeof first === 'object' && 'format' in first && first.format === 'email') {
+    return 'Write an email address, such as name@example.com.'
   }
 
   if (first && typeof first === 'object' && 'format' in first && first.format === 'url') {

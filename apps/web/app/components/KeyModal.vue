@@ -51,7 +51,7 @@ watch(open, (isOpen) => {
         }}
       </button>
     </div>
-    <form v-else id="key-form" @submit.prevent.stop="form.handleSubmit()">
+    <form novalidate v-else id="key-form" @submit.prevent.stop="form.handleSubmit()">
       <form.Field v-slot="{ field }" name="name">
         <div class="field">
           <span class="label">Name</span>
@@ -63,8 +63,8 @@ watch(open, (isOpen) => {
               aria-label="Name"
               @input="field.handleChange(inputValue($event))"
           /></label>
-          <span v-if="field.state.meta.errors[0]" class="hint err">{{
-            field.state.meta.errors[0]?.message
+          <span v-if="errorMessage(field.state.meta.errors)" class="hint err">{{
+            errorMessage(field.state.meta.errors)
           }}</span>
         </div>
       </form.Field>

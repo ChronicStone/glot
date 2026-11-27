@@ -85,7 +85,13 @@ onMounted(async () => {
           <NuxtLink to="/sign-in" class="btn btn-primary btn-sm">Go to sign in</NuxtLink>
         </div>
       </div>
-      <form v-else id="setup-form" class="body" @submit.prevent.stop="form.handleSubmit()">
+      <form
+        novalidate
+        v-else
+        id="setup-form"
+        class="body"
+        @submit.prevent.stop="form.handleSubmit()"
+      >
         <div>
           <h2>Create the first admin</h2>
           <div class="muted" style="margin-top: 4px">
@@ -104,8 +110,8 @@ onMounted(async () => {
                 @input="field.handleChange(inputValue($event))"
                 @blur="field.handleBlur"
             /></label>
-            <span v-if="field.state.meta.errors[0]" class="hint err">{{
-              field.state.meta.errors[0]?.message
+            <span v-if="errorMessage(field.state.meta.errors)" class="hint err">{{
+              errorMessage(field.state.meta.errors)
             }}</span>
           </div>
         </form.Field>
