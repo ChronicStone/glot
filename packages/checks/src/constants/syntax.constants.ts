@@ -14,7 +14,7 @@ export const MESSAGE_LINK_PROTOCOLS = {
   TEL: 'tel:',
 } as const
 
-export const PLACEHOLDER_STAND_IN = 'placeholder'
+export const RAW_PLACEHOLDER_PREFIX = 'raw-'
 
 export const MESSAGE_LOCALIZED_ATTRIBUTES = {
   HREF: 'href',

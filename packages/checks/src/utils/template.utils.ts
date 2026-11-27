@@ -1,6 +1,10 @@
-import { PLACEHOLDER_STAND_IN, TEMPLATE_UNMATCHED_PROBLEM } from '../constants/syntax.constants.ts'
+import {
+  RAW_PLACEHOLDER_PREFIX,
+  TEMPLATE_UNMATCHED_PROBLEM,
+} from '../constants/syntax.constants.ts'
 import type { TextSegment } from '../types/checks.types.ts'
 import { withoutHtmlTags } from './html.utils.ts'
+import { placeholderStandIn } from './stand-in.utils.ts'
 
 const TEMPLATE_TOKEN_PATTERN = /\{\{\{[\s\S]*?\}\}\}|\{\{[\s\S]*?\}\}|\[\[[\s\S]*?\]\]/gu
 const TEMPLATE_LEFTOVER_PATTERN = /\{\{|\}\}|\[\[|\]\]/u
@@ -63,5 +67,9 @@ export function templateSegments(message: string): TextSegment[] {
 }
 
 export function templateRendered(message: string) {
-  return message.replace(TEMPLATE_TOKEN_PATTERN, PLACEHOLDER_STAND_IN)
+  return message.replace(TEMPLATE_TOKEN_PATTERN, (token) =>
+    placeholderStandIn(
+      `${token.startsWith('{{{') ? RAW_PLACEHOLDER_PREFIX : ''}${tokenName(token)}`,
+    ),
+  )
 }

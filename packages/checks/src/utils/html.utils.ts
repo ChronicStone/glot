@@ -6,7 +6,9 @@ const HTML_TAG_PATTERN =
 
 const HTML_ATTRIBUTE_PATTERN = /([^\s"'<>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'<>]+)))?/gu
 
-const STRAY_MARKUP_PATTERN = /<(?:\/?[a-zA-Z]|!|\?|\/)/gu
+const STRAY_OPENER_PATTERN = /^<(?:\/?[a-zA-Z][a-zA-Z0-9-]*|!|\?|\/)/u
+
+const STRAY_MARKUP_PATTERN = /<(?:\/?[a-zA-Z][a-zA-Z0-9-]*|!|\?|\/)[^<>]*/gu
 
 const VOID_ELEMENTS = new Set<string>(Object.values(HTML_VOID_ELEMENTS))
 
@@ -70,5 +72,15 @@ export function htmlTagRanges(message: string) {
 }
 
 export function strayMarkupOf(message: string) {
-  return [...withoutHtmlTags(message).matchAll(STRAY_MARKUP_PATTERN)].map((match) => match[0])
+  const tags = htmlTagRanges(message)
+
+  return [...message.matchAll(STRAY_MARKUP_PATTERN)].flatMap((match) =>
+    tags.some(({ start, end }) => match.index >= start && match.index < end)
+      ? []
+      : [{ markup: match[0].trim(), closed: message.includes('>', match.index) }],
+  )
+}
+
+export function strayOpenerOf(markup: string) {
+  return STRAY_OPENER_PATTERN.exec(markup)?.[0] ?? markup
 }

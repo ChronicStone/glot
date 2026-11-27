@@ -2,12 +2,12 @@ import { createParser } from '@intlify/message-compiler'
 import type { LinkedNode, MessageNode } from '@intlify/message-compiler'
 import {
   MESSAGE_NODE_TYPES,
-  PLACEHOLDER_STAND_IN,
   SYNTAXES,
   SYNTAX_PROBLEMS,
   UNKNOWN_SYNTAX_PROBLEM,
 } from '../constants/syntax.constants.ts'
 import type { Syntax, TextSegment } from '../types/checks.types.ts'
+import { placeholderStandIn } from './stand-in.utils.ts'
 import { templateSegments } from './template.utils.ts'
 
 export function parseMessage(message: string) {
@@ -72,16 +72,30 @@ export function plainTextOf(forms: MessageNode[]) {
     .join('')
 }
 
-export function renderedForms(forms: MessageNode[]) {
-  return forms.map((form) =>
-    form.items
-      .map((item) =>
-        item.type === MESSAGE_NODE_TYPES.TEXT || item.type === MESSAGE_NODE_TYPES.LITERAL
-          ? (item.value ?? '')
-          : PLACEHOLDER_STAND_IN,
-      )
-      .join(''),
-  )
+function renderedItem(item: MessageNode['items'][number], options: { written: boolean }) {
+  if (item.type === MESSAGE_NODE_TYPES.TEXT || item.type === MESSAGE_NODE_TYPES.LITERAL) {
+    return item.value ?? ''
+  }
+
+  if (item.type === MESSAGE_NODE_TYPES.NAMED) {
+    return options.written ? `{${item.key}}` : placeholderStandIn(item.key)
+  }
+
+  if (item.type === MESSAGE_NODE_TYPES.LIST) {
+    return options.written ? `{${item.index}}` : placeholderStandIn(String(item.index))
+  }
+
+  if (item.type === MESSAGE_NODE_TYPES.LINKED) {
+    const key = linkedKey(item.key)
+
+    return options.written ? `@:${key}` : placeholderStandIn(key)
+  }
+
+  return options.written ? '{}' : placeholderStandIn('')
+}
+
+export function renderedForms(forms: MessageNode[], options: { written: boolean }) {
+  return forms.map((form) => form.items.map((item) => renderedItem(item, options)).join(''))
 }
 
 export function messageSegments(message: string, options: { syntax?: Syntax } = {}): TextSegment[] {

@@ -6,7 +6,13 @@ import {
   TEMPLATE_LINK_PROTOCOLS,
 } from '../constants/syntax.constants.ts'
 import type { CheckCode, CheckFailure, Syntax } from '../types/checks.types.ts'
-import { htmlLinksOf, htmlMarkupOf, htmlTagsNest, strayMarkupOf } from './html.utils.ts'
+import {
+  htmlLinksOf,
+  htmlMarkupOf,
+  htmlTagsNest,
+  strayMarkupOf,
+  strayOpenerOf,
+} from './html.utils.ts'
 import { parseMessage, placeholdersOf, plainTextOf, renderedForms } from './message.utils.ts'
 import { integerPluralCategories } from './plural.utils.ts'
 import { parseTemplate, templatePlainText, templateRendered } from './template.utils.ts'
@@ -49,7 +55,7 @@ function isTemplateLink(link: string) {
 }
 
 function isMessageLink(link: string) {
-  if (link.startsWith('//') || /[\s\\]|&#|&[a-z]+;/iu.test(link)) {
+  if (link.startsWith('//') || /[\s\\{}]|@:|&#|&[a-z]+;/iu.test(link)) {
     return false
   }
 
@@ -90,13 +96,16 @@ function markupFailures(input: {
   target: string[]
   links: { source: string[]; target: string[] }
   freeValues: readonly string[]
+  exactStray: boolean
   heading: string
   code: CheckCode
   isLink: (link: string) => boolean
   linkRule: string
 }) {
   const failures: CheckFailure[] = []
-  const sourceStray = new Set(input.source.flatMap(strayMarkupOf))
+  const sourceStray = input.source.flatMap(strayMarkupOf)
+  const sourceSegments = new Set(sourceStray.map(({ markup }) => markup))
+  const sourceOpeners = new Set(sourceStray.map(({ markup }) => strayOpenerOf(markup)))
   const problems = new Set<string>()
 
   input.target.forEach((form, index) => {
@@ -107,10 +116,14 @@ function markupFailures(input: {
       target: htmlMarkupOf(form, { freeValues: input.freeValues }),
     })
 
-    const stray = strayMarkupOf(form).filter((opener) => !sourceStray.has(opener))
+    const stray = strayMarkupOf(form).filter(({ markup, closed }) =>
+      input.exactStray
+        ? !sourceSegments.has(markup)
+        : closed || markup.includes('=') || !sourceOpeners.has(strayOpenerOf(markup)),
+    )
 
     if (stray.length > 0) {
-      problems.add(`A tag or comment is left open: ${stray.join(' ')}.`)
+      problems.add(`A tag or comment is left open: ${stray.map(({ markup }) => markup).join(' ')}.`)
     }
 
     if (!markup && htmlTagsNest(source) && !htmlTagsNest(form)) {
@@ -167,6 +180,7 @@ function checkTemplate(input: { source: string; target: string; avoid: string[];
       target: [templateRendered(input.target)],
       links: { source: htmlLinksOf(input.source), target: htmlLinksOf(input.target) },
       freeValues: [],
+      exactStray: true,
       heading: 'The markup and links must match the source text: only a Developer changes them.',
       code: CHECK_CODES.MARKUP,
       isLink: isTemplateLink,
@@ -206,8 +220,12 @@ export function checkText(input: {
 
   const source = parseMessage(input.source)
   const failures: CheckFailure[] = []
-  const sourceForms = source.problem ? [input.source] : renderedForms(source.forms)
-  const targetForms = renderedForms(target.forms)
+
+  const sourceForms = source.problem
+    ? [input.source]
+    : renderedForms(source.forms, { written: false })
+
+  const targetForms = renderedForms(target.forms, { written: false })
 
   if (!source.problem) {
     const placeholders = mismatch({
@@ -243,10 +261,14 @@ export function checkText(input: {
       source: sourceForms,
       target: targetForms,
       links: {
-        source: sourceForms.flatMap(htmlLinksOf),
-        target: targetForms.flatMap(htmlLinksOf),
+        source: (source.problem
+          ? [input.source]
+          : renderedForms(source.forms, { written: true })
+        ).flatMap(htmlLinksOf),
+        target: renderedForms(target.forms, { written: true }).flatMap(htmlLinksOf),
       },
       freeValues: Object.values(MESSAGE_LOCALIZED_ATTRIBUTES),
+      exactStray: false,
       heading: 'The HTML tags must match the source text.',
       code: CHECK_CODES.HTML_TAGS,
       isLink: isMessageLink,

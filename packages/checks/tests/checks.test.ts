@@ -430,3 +430,57 @@ test('a vue-i18n link may move to a relative path or another phone number, never
     ])
   }
 })
+
+test('a placeholder cannot become a link, and a stray < in the source does not open the door to a tag with attributes', () => {
+  expect(
+    codes({
+      source: 'Voir <a href="/aide">l’aide</a> {url}',
+      target: 'See <a href="{url}">help</a>',
+    }),
+  ).toEqual(['LINKS'])
+
+  expect(
+    codes({ source: 'Voir <a href="{url}">l’aide</a>', target: 'See <a href="{url}">help</a>' }),
+  ).toEqual([])
+
+  expect(codes({ source: 'Taille x<i', target: 'Size x<img src=x onerror=alert(1)' })).toEqual([
+    'HTML_TAGS',
+  ])
+
+  expect(codes({ source: 'Si a<b alors', target: 'If a<b onmouseover=alert(1) then' })).toEqual([
+    'HTML_TAGS',
+  ])
+})
+
+test('a stray < the source has never lets a tag close after it, nor a placeholder or linked text become a link', () => {
+  expect(
+    codes({ source: 'Si x<i alors', target: 'If x <img src=x onerror=alert(1) x<1> then' }),
+  ).toEqual(['HTML_TAGS'])
+
+  expect(
+    codes({
+      source: 'Si a<b alors',
+      target: 'If a<b x<1 onmouseover=alert(1) style=position:fixed;inset:0>then',
+    }),
+  ).toEqual(['HTML_TAGS'])
+
+  const source = 'Bienvenue sur @:brand <a href="/aide">Aide</a> {name} {0}'
+
+  for (const href of ["@:brand{''}", '{name}', '{0}']) {
+    expect(
+      codes({ source, target: `Welcome to @:brand <a href="${href}">Help</a> {name} {0}` }),
+    ).toEqual(['LINKS'])
+  }
+})
+
+test('a failure names a placeholder as the translator wrote it', () => {
+  expect(
+    checkText({
+      source: 'Bonjour {name}',
+      target: 'Hello <{name} onmouseover=alert(1)>',
+      avoid: [],
+    })
+      .map(({ message }) => message)
+      .join(' '),
+  ).toContain('<name onmouseover="alert(1)">')
+})

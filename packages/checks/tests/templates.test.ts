@@ -151,7 +151,7 @@ test('a tag left open is refused: it would turn the rest of the email into a lin
     {
       code: 'MARKUP',
       message:
-        'The markup and links must match the source text: only a Developer changes them. A tag or comment is left open: <a.',
+        'The markup and links must match the source text: only a Developer changes them. A tag or comment is left open: <a href="https://evil.example/login".',
     },
   ])
 
@@ -197,7 +197,7 @@ test('an attribute cannot smuggle a link or a style past the markup check', () =
   }
 })
 
-test('an email text cannot open a comment or a declaration, but keeps a < its source has', () => {
+test('an email text cannot open a comment or a declaration, and keeps a stray < exactly as its source writes it', () => {
   for (const target of [
     'Pay <!-- the rest',
     'Pay <![CDATA[ the rest',
@@ -207,9 +207,11 @@ test('an email text cannot open a comment or a declaration, but keeps a < its so
     expect(codes({ source: 'Payez la suite', target })).toEqual(['MARKUP'])
   }
 
+  expect(codes({ source: 'Taille {{min}}<{{max}}', target: 'Size {{min}}<{{max}}' })).toEqual([])
+
   expect(
     codes({ source: 'Prix {{min}}<{{max}} et x<y', target: 'Price {{min}}<{{max}} and x<y' }),
-  ).toEqual([])
+  ).toEqual(['MARKUP'])
 })
 
 test('email tags close in the order they open', () => {
@@ -229,5 +231,14 @@ test('a placeholder cannot become a tag name in an email', () => {
     }),
   ).toEqual(['MARKUP'])
 
-  expect(codes({ source: 'Si {{a}}<{{b}} alors', target: 'If {{a}}<{{b}} then' })).toEqual([])
+  expect(codes({ source: 'Si {{a}}<{{b}}', target: 'If {{a}}<{{b}}' })).toEqual([])
+})
+
+test('an unescaped placeholder cannot take the place of an escaped one in a link', () => {
+  expect(
+    codes({
+      source: '<a href="{{url}}">Voir</a> {{{body}}}',
+      target: '<a href="{{{body}}}">See</a> {{url}}',
+    }),
+  ).toEqual(['MARKUP'])
 })
