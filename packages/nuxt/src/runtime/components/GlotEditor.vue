@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { CHECK_CODES, checkText } from '@glot/checks'
 import type { DraftView, Text } from '@glot/contract'
 import { TEXT_STATES } from '@glot/database/constants/texts'
 import type { GlotClient } from '@glot/sdk'
@@ -46,7 +47,18 @@ const value = ref<string>(ownDraft.value?.value ?? translation.value?.value ?? '
 const draft = ref<DraftView | null>(ownDraft.value)
 const busy = ref<boolean>(false)
 const status = ref<string>('')
-const failures = computed(() => draft.value?.failures ?? translation.value?.failures ?? [])
+const savedValue = ref<string>(value.value)
+
+const typed = computed(() =>
+  checkText({ source: props.text.source.value, target: value.value, avoid: [] }),
+)
+
+const failures = computed(() =>
+  value.value === savedValue.value
+    ? (draft.value?.failures ?? translation.value?.failures ?? [])
+    : typed.value,
+)
+
 const state = computed(() => translation.value?.state ?? TEXT_STATES.MISSING)
 const height = ref<number>(0)
 
@@ -61,6 +73,10 @@ function valueAt(messages: unknown) {
 }
 
 function preview(next: string) {
+  if (typed.value.some((failure) => failure.code === CHECK_CODES.SYNTAX)) {
+    return
+  }
+
   props.composer.mergeLocaleMessage(
     props.language,
     nestMessage({ path: props.text.key.path, value: next }),
@@ -113,6 +129,7 @@ async function save() {
       language: props.language,
       value: value.value,
     })
+    savedValue.value = value.value
     status.value = 'Draft saved'
     emit('saved')
 

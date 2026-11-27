@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 const { value } = defineProps<{ value: string }>()
 const copied = ref<boolean>(false)
+const segments = computed(() => value.split('.'))
 
 async function copy() {
   await navigator.clipboard.writeText(value).catch(() => {})
@@ -16,11 +17,16 @@ async function copy() {
     type="button"
     class="key"
     :title="copied ? 'Copied' : 'Copy the key'"
+    :aria-label="`Copy the key ${value}`"
     data-glot="key"
-    :style="{ whiteSpace: 'normal', overflowWrap: 'anywhere', textAlign: 'left', cursor: 'copy' }"
+    :data-key="value"
+    :style="{ whiteSpace: 'normal', overflowWrap: 'normal', textAlign: 'left', cursor: 'copy' }"
     @click.stop="copy"
     @keydown.enter.stop
   >
-    {{ copied ? 'Copied' : value }}
+    <template v-if="copied">Copied</template>
+    <template v-for="(segment, index) in segments" v-else :key="index"
+      ><template v-if="index > 0">.<wbr /></template>{{ segment }}</template
+    >
   </button>
 </template>

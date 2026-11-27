@@ -1,39 +1,43 @@
 import { PAGE_OWNER } from '../constants/widget.constants.ts'
 import type { KeyLog, PageHit, PageNode } from '../types/widget.types.ts'
 
-function textMatch(options: { texts: Map<string, string>; text: string }) {
+function textMatches(options: { texts: Map<string, string>; text: string }) {
   const wanted = options.text.trim()
-  const exact = [...options.texts].filter(([, value]) => value.trim() === wanted && wanted)
+  const exact = [...options.texts].filter(([, value]) => wanted && value.trim() === wanted)
 
   if (exact.length > 0) {
     const start = options.text.indexOf(wanted)
 
-    return { keys: exact.map(([key]) => key), start, end: start + wanted.length }
+    return [{ keys: exact.map(([key]) => key), start, end: start + wanted.length }]
   }
 
-  const contained = [...options.texts]
-    .filter(([, value]) => value.trim().length > 1 && options.text.includes(value.trim()))
-    .toSorted(([, a], [, b]) => b.length - a.length)
-    .at(0)
+  const taken: Array<{ keys: string[]; start: number; end: number }> = []
 
-  if (!contained) {
-    return null
+  const candidates = [...options.texts]
+    .flatMap(([key, value]) => (value.trim().length > 1 ? [{ key, value: value.trim() }] : []))
+    .toSorted((a, b) => b.value.length - a.value.length)
+
+  for (const { key, value } of candidates) {
+    const start = options.text.indexOf(value)
+    const end = start + value.length
+    const overlaps = taken.some((hit) => start < hit.end && end > hit.start)
+
+    if (start >= 0 && !overlaps) {
+      taken.push({ keys: [key], start, end })
+    }
   }
 
-  const value = contained[1].trim()
-  const start = options.text.indexOf(value)
-
-  return { keys: [contained[0]], start, end: start + value.length }
+  return taken
 }
 
-function nodeMatch(options: { node: PageNode; log: KeyLog }) {
+function nodeMatches(options: { node: PageNode; log: KeyLog }) {
   let owner = options.node.owner
 
   while (owner) {
     const texts = options.log.owners.get(owner.uid)
-    const found = texts ? textMatch({ texts, text: options.node.text }) : null
+    const found = texts ? textMatches({ texts, text: options.node.text }) : []
 
-    if (found) {
+    if (found.length > 0) {
       return found
     }
 
@@ -42,25 +46,21 @@ function nodeMatch(options: { node: PageNode; log: KeyLog }) {
 
   const page = options.log.owners.get(PAGE_OWNER)
 
-  return page ? textMatch({ texts: page, text: options.node.text }) : null
+  return page ? textMatches({ texts: page, text: options.node.text }) : []
 }
 
 export function matchPageNodes(options: { nodes: PageNode[]; log: KeyLog }): PageHit[] {
   return options.nodes.flatMap((node, index) => {
-    const found = nodeMatch({ node, log: options.log })
+    const ranged = !node.attribute && node.node instanceof Text
 
-    return found
-      ? [
-          {
-            id: `${index}:${node.attribute ?? ''}:${found.keys[0]}`,
-            keys: found.keys,
-            node: node.node,
-            attribute: node.attribute,
-            start: node.attribute || !(node.node instanceof Text) ? 0 : found.start,
-            end: node.attribute || !(node.node instanceof Text) ? 0 : found.end,
-          },
-        ]
-      : []
+    return nodeMatches({ node, log: options.log }).map((found) => ({
+      id: `${index}:${node.attribute ?? ''}:${found.keys[0]}`,
+      keys: found.keys,
+      node: node.node,
+      attribute: node.attribute,
+      start: ranged ? found.start : 0,
+      end: ranged ? found.end : 0,
+    }))
   })
 }
 

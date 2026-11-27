@@ -32,12 +32,17 @@ async function widgetCss(resolver: ReturnType<typeof createResolver>) {
 async function widgetIcons() {
   const require = createRequire(import.meta.url)
 
-  const set: { icons: Record<string, { body: string }> } = JSON.parse(
-    await readFile(require.resolve('@iconify-json/lucide/icons.json'), 'utf8'),
-  )
+  const set: {
+    icons: Record<string, { body: string }>
+    aliases?: Record<string, { parent: string }>
+  } = JSON.parse(await readFile(require.resolve('@iconify-json/lucide/icons.json'), 'utf8'))
 
   return Object.fromEntries(
-    Object.values(WIDGET_ICONS).map((name) => [name, set.icons[name]?.body ?? '']),
+    Object.values(WIDGET_ICONS).map((name) => {
+      const icon = set.icons[name] ?? set.icons[set.aliases?.[name]?.parent ?? '']
+
+      return [name, icon?.body ?? '']
+    }),
   )
 }
 
