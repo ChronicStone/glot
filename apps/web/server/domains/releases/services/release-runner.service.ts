@@ -258,6 +258,7 @@ export class ReleaseRunnerService {
     const changes = await this.#db.releaseChanges.findMany({
       where: { releaseId: open.id, language: { in: languages } },
     })
+
     const values = new Map<string, string | null>()
 
     for (const entry of options.catalog.entries) {
