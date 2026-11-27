@@ -55,7 +55,7 @@ const place = computed(() => {
     ? { x: origin.value.x + offset.value.dx, y: origin.value.y + offset.value.dy }
     : position
 
-  if (!point || viewport.width.value === 0) return {}
+  if (!point || viewport.width.value === 0 || viewport.height.value === 0) return {}
 
   const clamped = clampPoint({ point, size: size() })
 
